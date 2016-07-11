@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2014 SLUB Dresden
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<OAI-PMH xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://www.openarchives.org/OAI/2.0/"
+         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+    <responseDate>2014-06-08T11:43:00Z</responseDate>
+    <request verb="ListIdentifiers" metadataPrefix="oai_dc">http://localhost:8080/fedora/oai</request>
+    <ListIdentifiers>
+        <header>
+            <identifier>oai:example.org:qucosa:1044</identifier>
+            <datestamp>2014-05-06T17:33:25Z</datestamp>
+        </header>
+        <resumptionToken completeListSize="1515" cursor="0"/>
+    </ListIdentifiers>
+</OAI-PMH>
