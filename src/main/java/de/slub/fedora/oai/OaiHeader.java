@@ -17,8 +17,6 @@
 package de.slub.fedora.oai;
 
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.annotation.NonNull;

@@ -21,13 +21,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
 
 import de.slub.fedora.oai.OaiHarvesterTestIT;
-import de.slub.fedora.oai.OaiRunResult;
 
 /**
  * Helper class for JUnit tests 
