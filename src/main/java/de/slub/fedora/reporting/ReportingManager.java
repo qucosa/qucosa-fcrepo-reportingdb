@@ -51,13 +51,14 @@ public class ReportingManager {
 		PersistenceService persistenceService = new PostgrePersistenceService(prop.getPostgreSQLDatabaseURL(), prop.getPostgreSQLUser(), prop.getPostgreSQLPasswd());
 		
 		try {
-			OaiHarvester oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL(urlProductionServer))
+			OaiHarvester oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL(urlTestServer))
 					.setPollingInterval(new TimeValue(15, TimeUnit.SECONDS))
 					.setPersistenceService(persistenceService)
 					.setLogger(LoggerFactory.getLogger(OaiHarvester.class))
 					.setOaiHeaderFilter(new QucosaDocumentFilter())
 					.build();
-			oaiHarvester.run();
+			Thread thread = new Thread(oaiHarvester);
+			thread.start();
 		} catch (MalformedURLException | URISyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
