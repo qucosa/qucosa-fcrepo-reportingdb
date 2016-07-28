@@ -59,6 +59,7 @@ import de.slub.util.TerminateableRunnable;
 
 public class OaiHarvesterTestIT {
 
+
 	private static final boolean FCREPO3_COMPATIBILITY_MODE = false;
 
 	private static final String OAI_LIST_IDENTIFIERS_XML = "/oai/listIdentifiers.xml";
@@ -69,13 +70,15 @@ public class OaiHarvesterTestIT {
 	private static final String OAI_EMPTY_RESUMPTION_TOKEN_XML = "/oai/emptyResumptionToken.xml";
 	private static final String OAI_IDENTIFIERS_TO_FILTER_XML = "/oai/ListIdentifiersToFilter.xml";
 
+	private static final String CREATE_SEQUENCES_AND_TABLES_SQL = "/persistence/createSequencesAndTables.sql";
+	private static final String TRUNCATE_TABLES_SQL = "/persistence/truncateTables.sql";
+	private static final String INSERT_OAI_RUN_RESULTS_SQL = "/persistence/insertOAIRunResults.sql";
+
 	// TODO read from Properties file??
 	private static final String DATABASE_URL = "jdbc:postgresql://localhost:5432/reportingUnitTest";
 	private static final String DATABASE_USER = "reportingDBUnitTest";
 	private static final String DATABASE_PASSWORD = "76Sp)qpH2D";
 
-	private static final String CREATE_SEQUENCES_AND_TABLES_SQL = "/persistence/createSequencesAndTables.sql";
-	private static final String TRUNCATE_TABLES_SQL = "/persistence/truncateTables.sql";
 
 	private EmbeddedHttpHandler embeddedHttpHandler;
 	private ReportingProperties reportingProperties = ReportingProperties.getInstance();
@@ -95,11 +98,12 @@ public class OaiHarvesterTestIT {
 		embeddedHttpHandler.resourcePath = OAI_LIST_IDENTIFIERS_XML;
 		runAndWait(oaiHarvester);
 
+		List<OaiHeader> actualOaiHeaders = persistenceService.getOaiHeaders();
 		assertEquals("List of harvested headers should contain two elements", 2,
-				oaiHarvester.getHarvestedHeaders().size());
+				actualOaiHeaders.size());
 
 		Date datestamp1 = DatatypeConverter.parseDateTime("2014-05-06T17:33:25Z").getTime();
-		@SuppressWarnings("null")
+
 		OaiHeader oaiHeader1 = new OaiHeader("oai:example.org:qucosa:1044", datestamp1, false);
 
 		Date datestamp2 = DatatypeConverter.parseDateTime("2016-07-12T17:33:25Z").getTime();
@@ -112,13 +116,10 @@ public class OaiHarvesterTestIT {
 
 		OaiHeader oaiHeader2 = new OaiHeader("oai:example.org:qucosa:1234", datestamp2, true);
 
-		assertTrue(oaiHarvester.getHarvestedHeaders().contains(oaiHeader1));
-		assertTrue(oaiHarvester.getHarvestedHeaders().contains(oaiHeader2));
+		assertTrue(actualOaiHeaders.contains(oaiHeader1));
+		assertTrue(actualOaiHeaders.contains(oaiHeader2));
 	}
 
-	// TODO @Ralf is there a better way to make sure that exactly the last two
-	// rows have not been deleted? Should we also test what happens, if
-	// timestampOfRun in the future are in database? (they won't be deleted)
 	/**
 	 * Test the cleanup of OaiRunResults in database. Assert that the last
 	 * inserted statement is always kept, even if it is older than the specified
@@ -130,9 +131,7 @@ public class OaiHarvesterTestIT {
 	public void cleanupOaiRunResultHistoryAlwaysKeepLastResult() throws Exception {
 
 		// write 3 OaiRunResults to database that are older than one day
-		// TODO the file is shared by several tests. How to make sure it is not
-		// modified to be used in another test? Use separate files?
-		testPersistenceService.executeQueriesFromFile("/persistence/insertOAIRunResults.sql");
+		testPersistenceService.executeQueriesFromFile(INSERT_OAI_RUN_RESULTS_SQL);
 		assertEquals("Wrong number of OaiRunResults in database, precondition of test failed!", 3,
 				testPersistenceService.countOaiRunResults());
 
@@ -175,13 +174,11 @@ public class OaiHarvesterTestIT {
 		assertEquals(expected, actual);
 	}
 
-	// TODO @Ralf is there a better way to make sure that exactly the last two
-	// rows have not been deleted? Should we also test what happens, if
-	// timestampOfRun in the future are in database? (they won't be deleted)
+
 	/**
 	 * Test the cleanup of OaiRunResults in database. Assert that all
 	 * OaiRunResults are kept that are newer than the specified oldest
-	 * OaiRunResults to keep. The test simulates three old results to delete and
+	 * OaiRunResult to keep. The test simulates three old results to delete and
 	 * two new results to keep.<br />
 	 * The test also involves the OaiHarvester, asserting that the cleanup is
 	 * triggered after a successful run.
@@ -192,9 +189,7 @@ public class OaiHarvesterTestIT {
 	public void cleanupOaiRunResultHistoryTimestampFilter() throws Exception {
 
 		// write 3 OaiRunResults to database that are older than one day
-		// TODO the file is shared by several tests. How to make sure it is not
-		// modified to be used in another test? Use separate files?
-		testPersistenceService.executeQueriesFromFile("/persistence/insertOAIRunResults.sql");
+		testPersistenceService.executeQueriesFromFile(INSERT_OAI_RUN_RESULTS_SQL);
 
 		// write a 4th result to database that must not be deleted
 		OaiRunResult fourthResult = new OaiRunResult(now(), now(), "", null, null);
@@ -206,7 +201,7 @@ public class OaiHarvesterTestIT {
 		// new OaiHarvester that keeps a history of 1 day
 		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
 				.setPollingInterval(new TimeValue(1, TimeUnit.SECONDS)).setPersistenceService(persistenceService)
-				.setLogger(LoggerFactory.getLogger(getClass())).setOaiRunResultHistory(new TimeValue(1, TimeUnit.DAYS))
+				.setOaiRunResultHistory(new TimeValue(1, TimeUnit.DAYS))
 				.build();
 
 		// just let the harvester do something to have one successful loop,
@@ -218,9 +213,9 @@ public class OaiHarvesterTestIT {
 		// check that only two results are remaining in database
 		assertEquals("Wrong number of OaiRunResults in database.", 2, testPersistenceService.countOaiRunResults());
 
-		// make sure the 5th OaiRunResult is returned as the most recently
-		// inserted.
-		// timestampOfRun can not be checked since it was set by the harvester
+		// Make sure the 5th OaiRunResult is returned as the most recently
+		// inserted. It's timestampOfRun can not be checked since it was set by
+		// the harvester
 		// itself.
 		Date responseDate = DatatypeConverter.parseDateTime("2014-06-08T11:43:00Z").getTime();
 		String token = "111111111111111";
@@ -233,6 +228,9 @@ public class OaiHarvesterTestIT {
 				lastRun.getResumptionToken());
 		assertEquals("Resumption token expiration dates are not equal, the OaiRunResult inserted last was deleted.",
 				expirationDate, lastRun.getResumptionTokenExpirationDate());
+
+		// TODO assert, that the other OaiRunResult in database is the one that
+		// had been inserted as number four
 	}
 
 	/**
@@ -245,16 +243,14 @@ public class OaiHarvesterTestIT {
 	public void noCleanupOfOaiRunResultHistoryAfterUnsuccessfulRun() throws Exception {
 
 		// write 3 OaiRunResults to database that are older than one day
-		// TODO the file is shared by several tests. How to make sure it is not
-		// modified to be used in another test? Use separate files?
-		testPersistenceService.executeQueriesFromFile("/persistence/insertOAIRunResults.sql");
+		testPersistenceService.executeQueriesFromFile(INSERT_OAI_RUN_RESULTS_SQL);
 		assertEquals("Wrong number of OaiRunResults in database, precondition of test failed!", 3,
 				testPersistenceService.countOaiRunResults());
 
 		// new OaiHarvester that keeps a history of 1 day
 		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
 				.setPollingInterval(new TimeValue(1, TimeUnit.SECONDS)).setPersistenceService(persistenceService)
-				.setLogger(LoggerFactory.getLogger(getClass())).setOaiRunResultHistory(new TimeValue(1, TimeUnit.DAYS))
+				.setOaiRunResultHistory(new TimeValue(1, TimeUnit.DAYS))
 				.build();
 
 		// let the harvester receive a http 404 to have one UNsuccessful loop,
@@ -299,103 +295,6 @@ public class OaiHarvesterTestIT {
 
 	}
 
-	// FIXME: @Ralf what has been tested here before? That any last run document
-	// exists? Shouldn't we look for a specific document?
-	// Writing OaiRunResults to and reading them from database is now tested in
-	// PersistenceServiceTest
-	// so this test may be removed.
-	// @Test
-	// @Ignore
-	// public void writesLastrunTimestamp() throws Exception {
-	// embeddedHttpHandler.resourcePath = OAI_LIST_RECORDS_XML;
-	// runAndWait(oaiHarvester);
-	//
-	// OaiRunResult result = persistenceService.getLastOaiRunResult();
-	//
-	// GetResponse response = esNode.client().get(new GetRequest("_river",
-	// "fedora", "_last")).actionGet();
-	// assertTrue("Last run index document is not present",
-	// response.isExists());
-	// assertTrue("Last run index document doesn't contain timestamp field",
-	// response.getSourceAsMap().containsKey("timestamp"));
-	// }
-
-	// TODO @Ralf do we really need this test? What is it used for - that the
-	// harvester is running if the last run was one year ago?
-	// @Test
-	// public void runWhenLastrunIsInPast() throws Exception {
-	// Calendar cal = Calendar.getInstance();
-	// cal.add(Calendar.YEAR, -1);
-	//
-	// esNode.client().prepareIndex("_river", "fedora", "_last")
-	// .setSource(jsonBuilder().startObject().field("timestamp",
-	// cal).endObject()).execute().actionGet();
-	//
-	// embeddedHttpHandler.resourcePath = OAI_LIST_RECORDS_XML;
-	// runAndWait(oaiHarvester);
-	//
-	// GetResponse response = esNode.client().get(new GetRequest("_river",
-	// "fedora", "_last")).actionGet();
-	//
-	// TimeValue lastRunTime = TimeValue.timeValueMillis(cal.getTimeInMillis());
-	// TimeValue actualRunTime = TimeValue.timeValueMillis(DatatypeConverter
-	// .parseDateTime(String.valueOf(response.getSourceAsMap().get("timestamp"))).getTimeInMillis());
-	//
-	// assertTrue("Actual run should happen after last run",
-	// actualRunTime.getMillis() > lastRunTime.getMillis());
-	// }
-
-	// TODO @Ralf: I can't test this anymore since it is not possible to write
-	// such a corrupted test in database - field timestampOfRun is of type
-	// timestamp and NOT NULL
-	// @Test
-	// public void runWhenLastrunIsCorrupted() throws Exception {
-	// esNode.client()
-	// .prepareIndex("_river", "fedora",
-	// "_last").setSource(jsonBuilder().startObject().field("timestamp", "")
-	// .field("expiration_date", "BAR").field("resumption_token",
-	// "BAZ").endObject())
-	// .execute().actionGet();
-	//
-	// embeddedHttpHandler.resourcePath = OAI_LIST_RECORDS_XML;
-	// runAndWait(oaiHarvester);
-	//
-	// GetResponse response = esNode.client().get(new GetRequest("_river",
-	// "fedora", "_last")).actionGet();
-	//
-	// assertNotNull("There should be a /_river/fedora/_last document",
-	// response);
-	// assertTrue("Timestamp should be set",
-	// response.getSourceAsMap().containsKey("timestamp"));
-	// }
-
-	// TODO check if this test is still required after changing the
-	// from-Parameter to use the remote server's last responseDate instead of
-	// our local timestampLastRun.
-	// @Test
-	// public void waitWhenLastrunIsInFuture() throws Exception {
-	// Calendar cal = Calendar.getInstance();
-	// cal.add(Calendar.SECOND, 3);
-	//
-	// esNode.client().prepareIndex("_river", "fedora", "_last")
-	// .setSource(jsonBuilder().startObject().field("timestamp",
-	// cal).endObject()).execute().actionGet();
-	//
-	// embeddedHttpHandler.resourcePath = OAI_LIST_RECORDS_XML;
-	// runAndWait(oaiHarvester);
-	//
-	// GetResponse response = esNode.client().get(new GetRequest("_river",
-	// "fedora", "_last")).actionGet();
-	//
-	// TimeValue expectedRunTime =
-	// TimeValue.timeValueMillis(cal.getTimeInMillis());
-	// TimeValue actualRunTime = TimeValue.timeValueMillis(DatatypeConverter
-	// .parseDateTime(String.valueOf(response.getSourceAsMap().get("timestamp"))).getTimeInMillis());
-	//
-	// assertFalse("Actual run should not happen before last run",
-	// expectedRunTime.getMillis() > actualRunTime.getMillis());
-	// }
-
 	/*----  test filtering of harvested OAI headers  ----*/
 
 	/**
@@ -409,14 +308,14 @@ public class OaiHarvesterTestIT {
 
 		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
 				.setPollingInterval(new TimeValue(1, TimeUnit.SECONDS)).setPersistenceService(persistenceService)
-				.setLogger(LoggerFactory.getLogger(getClass())).setOaiHeaderFilter(new QucosaDocumentFilter()).build();
+				.setOaiHeaderFilter(new QucosaDocumentFilter()).build();
 
 		embeddedHttpHandler.resourcePath = OAI_IDENTIFIERS_TO_FILTER_XML;
 		runAndWait(oaiHarvester);
-		assertEquals("Wrong number of headers, filter does not work.", 6, oaiHarvester.getHarvestedHeaders().size());
+		assertEquals("Wrong number of headers, filter does not work.", 6, persistenceService.getOaiHeaders().size());
 
 		List<String> actualIDs = new LinkedList<>();
-		for (OaiHeader header : oaiHarvester.getHarvestedHeaders()) {
+		for (OaiHeader header : persistenceService.getOaiHeaders()) {
 			actualIDs.add(header.getRecordIdentifier());
 		}
 
@@ -642,13 +541,12 @@ public class OaiHarvesterTestIT {
 	/**
 	 * The OAI data provides's response contains an empty resumptionToken, the
 	 * new {@link OaiRunResult} to store must have a nextFromTimestamp equal to
-	 * its timestampOfRun. //TODO what to do? use current timestamp or
-	 * nextFromTimestamp from last run???
+	 * its timestampOfRun.
 	 * 
 	 * @throws Exception
 	 */
 	@Test
-	public void createOaiRunResultEmptyResumptionTokenNewNextFromTimestamp() throws Exception {
+	public void createOaiRunResultExpectedEmptyResumptionTokenNewNextFromTimestamp() throws Exception {
 
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 		Date timestampLastRun = dateFormat.parse("2014-01-01T01:01:00");
@@ -907,7 +805,7 @@ public class OaiHarvesterTestIT {
 	private void createOaiHarvester() throws Exception {
 		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
 				.setPollingInterval(new TimeValue(1, TimeUnit.SECONDS)).setPersistenceService(persistenceService)
-				.setLogger(LoggerFactory.getLogger(getClass())).build();
+				.build();
 	}
 
 	private void runAndWait(TerminateableRunnable runnable) throws InterruptedException {

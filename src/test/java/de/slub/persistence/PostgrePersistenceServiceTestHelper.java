@@ -86,6 +86,7 @@ public class PostgrePersistenceServiceTestHelper {
 	private Connection getConnection() throws Exception{
 		if (connection == null || !connection.isValid(2)){ //2 seconds timeout
 			//TODO do we need to close the Connection in unit test code?  
+			// -> yes, should be closed in a tearDown() after all tests are done. 
 			connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
 		}
 		return connection;

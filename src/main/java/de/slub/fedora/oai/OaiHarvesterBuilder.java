@@ -43,7 +43,6 @@ public class OaiHarvesterBuilder {
 		}
 	};
 
-	private Logger logger;
 	private URL url;
 	private PersistenceService persistenceService;
 	private TimeValue pollingInterval;
@@ -56,7 +55,7 @@ public class OaiHarvesterBuilder {
 				(pollingInterval == null) ? DEFAULT_POLLING_INTERVAL : pollingInterval, 
 				persistenceService,
 				(oaiRunResultHistory == null) ? DEFAULT_OAI_RUN_RESULT_HISTORY_MILLIS : oaiRunResultHistory,
-				(oaiHeaderFilter == null) ? DEFAULT_OAI_HEADER_FILTER : oaiHeaderFilter, logger);
+				(oaiHeaderFilter == null) ? DEFAULT_OAI_HEADER_FILTER : oaiHeaderFilter);
 	}
 
 	public OaiHarvesterBuilder settings(Map<String, Object> oaiSettings) throws MalformedURLException {
@@ -71,13 +70,6 @@ public class OaiHarvesterBuilder {
 		return this;
 	}
 
-
-	// TODO: why do we want to set a logger?
-	@NonNull
-	public OaiHarvesterBuilder setLogger(@NonNull Logger logger) {
-		this.logger = logger;
-		return this;
-	}
 
 	@NonNull
 	public OaiHarvesterBuilder setUrl(@NonNull URL url) {

@@ -20,5 +20,6 @@ import java.util.List;
 
 public abstract class OaiHeaderFilter {
 
+
 	public abstract List<OaiHeader> filterOaiHeaders(List<OaiHeader> identifiers);
 }

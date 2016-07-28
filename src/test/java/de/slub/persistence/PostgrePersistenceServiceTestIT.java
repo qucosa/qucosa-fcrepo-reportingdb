@@ -37,8 +37,7 @@ import org.junit.Test;
 import de.slub.fedora.oai.OaiHeader;
 import de.slub.fedora.oai.OaiRunResult;
 
-//TODO move all tests to OaiHarvesterTestIT?
-public class PostgrePersistenceServiceTest {
+public class PostgrePersistenceServiceTestIT {
 
 	// TODO read from Properties file??
 	private static final String DATABASE_URL = "jdbc:postgresql://localhost:5432/reportingUnitTest";

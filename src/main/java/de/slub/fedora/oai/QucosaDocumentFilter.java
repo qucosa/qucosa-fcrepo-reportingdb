@@ -36,12 +36,6 @@ public class QucosaDocumentFilter extends OaiHeaderFilter {
 			String id = header.getRecordIdentifier();
 
 			if (id.matches(ACCEPTED_QUCOSA_ID_REG_EX)) {
-
-				// TODO do we still have concurrentmodificatioExceptions when
-				// deleting? If so, is the exception caused because we are
-				// removing an object from the list that is iterated over? If
-				// so, copy it locally and traverse the copy while removing from
-				// original list?
 				acceptedHeaders.add(header);
 			} else {
 				logger.debug("Removing header with id '{}'", id);

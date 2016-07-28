@@ -21,6 +21,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.FileBasedConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.elasticsearch.common.unit.TimeValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +41,8 @@ import de.slub.persistence.ReportingProperties;
 public class ReportingManager {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
+	
+	private static final String DEFAULT_PROPERTIES_FILE_NAME = "/reporting.properties";
 	
 	//FIXME: load from properties
 	private static final String URL_OAI_SERVER_TEST = "http://sdvcmr-app01:8080/fedora/oai";
@@ -53,13 +61,13 @@ public class ReportingManager {
 		try {
 			OaiHarvester oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL(URL_OAI_SERVER_TEST))
 					.setPollingInterval(new TimeValue(15, TimeUnit.SECONDS)).setPersistenceService(persistenceService)
-					.setLogger(LoggerFactory.getLogger(OaiHarvester.class))
 					.setOaiHeaderFilter(new QucosaDocumentFilter()).build();
+			
 			Thread thread = new Thread(oaiHarvester);
 			thread.start();
+
 		} catch (MalformedURLException | URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("OAI harvester was not started. Exception: " + e);
 		}
 		
 	}
@@ -68,6 +76,22 @@ public class ReportingManager {
 	
 	public static void main(String[] args) {
 
+//		Parameters params = new Parameters();
+//		FileBasedConfigurationBuilder<FileBasedConfiguration> builder =
+//		    new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
+//		    .configure(params.properties()
+//		        .setFileName(DEFAULT_PROPERTIES_FILE_NAME));
+//		try
+//		{
+//		    Configuration config = builder.getConfiguration();
+//
+//		}
+//		catch(ConfigurationException cex)
+//		{
+//		    // loading of the configuration file failed
+//		}
+		
+		
 		new ReportingManager().init();
 	}
 

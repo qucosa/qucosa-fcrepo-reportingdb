@@ -21,10 +21,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class ReportingProperties {
 	
 	private static final String PROPERTIES_FILE_NAME = "/reporting.properties";
+	
+	private final Logger logger = LoggerFactory.getLogger(getClass());
+	
 	private static ReportingProperties instance;
 	private final Properties props = new Properties(); 
 	
@@ -35,8 +41,10 @@ public class ReportingProperties {
 	        props.load(reader);
 
 	    } catch (IOException ex) {
-	    	//TODO do exception handling: log and terminate ?
-	    	ex.printStackTrace();
+	    	logger.error("Fatal error. Can not load configuration from properties file '{}'."
+	    			+ " There is no default. Nothing can be daone without configuration parameter."
+	    			+ "Exiting. Exception details: {}", PROPERTIES_FILE_NAME, ex);
+	    	System.exit(1);
 	    }
 	}
 	

@@ -53,6 +53,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.eclipse.jdt.annotation.Nullable;
 import org.elasticsearch.common.unit.TimeValue;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -98,15 +99,13 @@ public class OaiHarvester extends TerminateableRunnable {
 	private final TimeValue oaiRunResultHistoryInterval;
 	private final PersistenceService persistenceService;
 
-	// TODO create myself, add public getter, remove parameter from constructor
-	private final List<OaiHeader> harvestedHeaders;
+	private List<OaiHeader> harvestedHeaders = new LinkedList<>();
 	private final OaiHeaderFilter oaiHeaderFilter;
-	private final Logger logger;
-	// private final RiverName riverName;
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 	private final URI uri;
 
 	protected OaiHarvester(URL harvestingUrl, TimeValue pollInterval, PersistenceService persistenceService,
-			TimeValue oaiRunResultHistoryInterval, OaiHeaderFilter oaiHeaderFilter, Logger logger)
+			TimeValue oaiRunResultHistoryInterval, OaiHeaderFilter oaiHeaderFilter)
 			throws URISyntaxException {
 
 		this.uri = harvestingUrl.toURI();
@@ -114,11 +113,8 @@ public class OaiHarvester extends TerminateableRunnable {
 		this.oaiRunResultHistoryInterval = oaiRunResultHistoryInterval;
 		this.persistenceService = persistenceService;
 		this.oaiHeaderFilter = oaiHeaderFilter;
-		this.logger = logger;
 
 		this.logger.info("Harvesting URL: {} every {}", this.uri.toASCIIString(), this.pollInterval.format());
-
-		this.harvestedHeaders = new LinkedList<>();
 
 		this.URI_TIMESTAMP_FORMAT = (FCREPO3_COMPATIBILITY_MODE) ? FCREPO3_TIMESTAMP_FORMAT
 				: DEFAULT_URI_TIMESTAMP_FORMAT;
@@ -137,28 +133,20 @@ public class OaiHarvester extends TerminateableRunnable {
 		while (isRunning()) {
 			if (waitForNextRun(getLastrunParameters())) {
 
-				// TODO clear() should be done after writing the data to db, but
-				// doing it at the beginning of the (next) run allows easier
-				// unit testing
-				harvestedHeaders.clear();
-
-				// update last run info in case it has been changed while
-				// waiting
 				final OaiRunResult lastRun = getLastrunParameters();
 				final OaiRunResult currentRun = harvest(lastRun);
 
 				if (currentRun.hasTimestampOfRun()) {
 
-					List<OaiHeader> filteredResults = oaiHeaderFilter.filterOaiHeaders(harvestedHeaders);
-					harvestedHeaders.clear();
-					harvestedHeaders.addAll(filteredResults);
+					harvestedHeaders = oaiHeaderFilter.filterOaiHeaders(harvestedHeaders);
 
 					boolean headersWritten = persistenceService.addOrUpdateHeaders(harvestedHeaders);
 					if (headersWritten) {
+						harvestedHeaders.clear();
 						boolean runResultWritten = persistenceService.storeOaiRunResult(currentRun);
 						if (!runResultWritten) {
 							logger.error("The status of the current run could not be persisted, "
-									+ "the previous OaiRunResult is still the most recent one.");
+									+ "the previous OaiRunResult remains the most recent one.");
 						}
 					} else {
 						logger.error("Harvested headers could not be persisted. This run was not successful, "
@@ -172,7 +160,6 @@ public class OaiHarvester extends TerminateableRunnable {
 		}
 	}
 
-	// TODO do we want to clean up history in every loop?
 	private void cleanupOaiRunResultsInDB(OaiRunResult currentOaiRunResult) {
 
 		Date currentRun = currentOaiRunResult.getTimestampOfRun();
@@ -191,8 +178,6 @@ public class OaiHarvester extends TerminateableRunnable {
 			logger.debug("The current harvesting run was not successful. "
 					+ "Skipping cleanup of OaiRunResults in database.");
 		}
-		// else: Current harvest loop was not successful. Do not clean up
-		// history.
 	}
 
 	private boolean waitForNextRun(OaiRunResult lastrun) {
@@ -202,14 +187,12 @@ public class OaiHarvester extends TerminateableRunnable {
 		Date timestampLastRun = lastrun.getTimestampOfRun();
 		if (timestampLastRun != null && lastrun.isInFutureOf(start)) {
 
-			// FIXME: do we really want this calculation here? If last run was
-			// in future, the error must at least be written to log
-			long delta = timestampLastRun.getTime() - start.getTime();
-			waitTime = TimeValue.timeValueMillis(delta);
+			logger.error("The timestamp of the last run seems to be in the future. "
+					+ "Either the database is corrupted or the local servers clock travels in time...");
+
 		} else if (lastrun.hasResumptionToken()) {
 
-			// TODO: why do we need to wait here? Is this the interval between
-			// two paginated requests?
+			// Is this the interval between two paginated requests
 			waitTime = TimeValue.timeValueSeconds(1);
 		}
 
@@ -241,8 +224,8 @@ public class OaiHarvester extends TerminateableRunnable {
 			if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 				HttpEntity httpEntity = httpResponse.getEntity();
 				if (httpEntity != null) {
-					// TODO validate httpEntity.getContent() - is it valid
-					// OAI-PMH?
+					// TODO nice-to-have validate httpEntity.getContent()
+					// against schema - is it valid OAI-PMH?
 					result = handleXmlResult(httpEntity.getContent(), startTimeOfCurrentRun, lastRunResult);
 				} else {
 					logger.warn("Got empty response from OAI service.");
@@ -309,7 +292,7 @@ public class OaiHarvester extends TerminateableRunnable {
 			builder.queryParam("metadataPrefix", "oai_dc");
 
 			if (lastrun.hasNextFromTimestamp()) {
-				builder.queryParam("from", FCREPO3_TIMESTAMP_FORMAT.format(lastrun.getNextFromTimestamp()));
+				builder.queryParam("from", URI_TIMESTAMP_FORMAT.format(lastrun.getNextFromTimestamp()));
 			}
 		}
 
@@ -558,9 +541,5 @@ public class OaiHarvester extends TerminateableRunnable {
 		return date;
 	}
 
-	// FIXME: this shouldn't be public since we need it for testing only.
-	public List<OaiHeader> getHarvestedHeaders() {
-		return harvestedHeaders;
-	}
 
 }

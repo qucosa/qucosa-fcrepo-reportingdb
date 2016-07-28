@@ -81,7 +81,7 @@ public class PostgrePersistenceService implements PersistenceService {
 	@Override
 	@Nullable
 	public OaiRunResult getLastOaiRunResult() {
-		// TODO return "empty" new OaiRunResult() instead of null?
+
 		OaiRunResult oaiRunResult = null;
 
 		String errorMsg = "Could not fetch OAI run result data from database. "
@@ -162,12 +162,10 @@ public class PostgrePersistenceService implements PersistenceService {
 
 	@Override
 	public boolean cleanupOaiRunResults(@NonNull Date oldestResultToKeep) {
-		// TODO Auto-generated method stub
 
 		boolean successfulDelete = false;
 
-		// first, get last inserted row - this row will be kept
-		Integer lastOaiRunResultID = null;
+		Integer lastOaiRunResultIDtoKeep = null;
 		String getID = "SELECT \"ID\" FROM \"OAIRunResult\" order by \"ID\" desc limit 1";
 
 		try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
@@ -177,7 +175,7 @@ public class PostgrePersistenceService implements PersistenceService {
 			int rowCount = 0;
 			while (rs.next()) {
 				++rowCount;
-				lastOaiRunResultID = rs.getInt("ID");
+				lastOaiRunResultIDtoKeep = rs.getInt("ID");
 			}
 			if (rowCount == 0) {
 				logger.debug("Could not fetch any OAI run result from database.");
@@ -189,7 +187,7 @@ public class PostgrePersistenceService implements PersistenceService {
 		}
 
 		//
-		if (lastOaiRunResultID != null) {
+		if (lastOaiRunResultIDtoKeep != null) {
 
 			String deleteHistory = "DELETE FROM \"OAIRunResult\" WHERE \"timestampOfRun\" <= ? AND \"ID\" != ?";
 
@@ -197,7 +195,7 @@ public class PostgrePersistenceService implements PersistenceService {
 					PreparedStatement pst = con.prepareStatement(deleteHistory)) {
 
 				pst.setTimestamp(1, convertJAVADateToSQLTimestamp(oldestResultToKeep));
-				pst.setInt(2, lastOaiRunResultID);
+				pst.setInt(2, lastOaiRunResultIDtoKeep);
 				int result = pst.executeUpdate();
 
 				logger.debug("Number of deleted OaiRunResults: " + result);
@@ -277,7 +275,6 @@ public class PostgrePersistenceService implements PersistenceService {
 
 		String errorMsg = "Could not fetch OaiHeader from database. ";
 
-		// TODO need to specify sorting here?
 		String stm = "SELECT \"recordIdentifier\", \"datestamp\" , \"statusIsDeleted\" from \"OAIHeader\" LIMIT 1000";
 
 		try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
@@ -325,7 +322,6 @@ public class PostgrePersistenceService implements PersistenceService {
 		// database
 		String stm = "DELETE FROM \"OAIHeader\" WHERE \"recordIdentifier\" = ? AND \"datestamp\" = ? AND \"statusIsDeleted\" = ?";
 
-		boolean noException = true;
 		int[] results = {};
 
 		try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
@@ -348,7 +344,6 @@ public class PostgrePersistenceService implements PersistenceService {
 
 		} catch (SQLException e) {
 			// TODO do exception handling here??
-			noException = false;
 			logger.error("Could not remove any OaiHeader. Exception details: ", e);
 		}
 
