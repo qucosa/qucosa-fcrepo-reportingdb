@@ -19,15 +19,8 @@ package de.slub.fedora.reporting;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.elasticsearch.common.unit.TimeValue;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +53,7 @@ public class ReportingManager {
 		
 		try {
 			OaiHarvester oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL(URL_OAI_SERVER_TEST))
-					.setPollingInterval(new TimeValue(15, TimeUnit.SECONDS)).setPersistenceService(persistenceService)
+					.setPollingInterval(Duration.standardSeconds(15)).setPersistenceService(persistenceService)
 					.setOaiHeaderFilter(new QucosaDocumentFilter()).build();
 			
 			Thread thread = new Thread(oaiHarvester);

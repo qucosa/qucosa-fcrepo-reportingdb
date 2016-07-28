@@ -39,13 +39,12 @@ import javax.xml.bind.DatatypeConverter;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.annotation.NonNull;
-import org.elasticsearch.common.unit.TimeValue;
+import org.joda.time.Duration;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -200,8 +199,8 @@ public class OaiHarvesterTestIT {
 
 		// new OaiHarvester that keeps a history of 1 day
 		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
-				.setPollingInterval(new TimeValue(1, TimeUnit.SECONDS)).setPersistenceService(persistenceService)
-				.setOaiRunResultHistory(new TimeValue(1, TimeUnit.DAYS))
+				.setPollingInterval(Duration.standardSeconds(1)).setPersistenceService(persistenceService)
+				.setOaiRunResultHistory(Duration.standardDays(1))
 				.build();
 
 		// just let the harvester do something to have one successful loop,
@@ -249,8 +248,8 @@ public class OaiHarvesterTestIT {
 
 		// new OaiHarvester that keeps a history of 1 day
 		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
-				.setPollingInterval(new TimeValue(1, TimeUnit.SECONDS)).setPersistenceService(persistenceService)
-				.setOaiRunResultHistory(new TimeValue(1, TimeUnit.DAYS))
+				.setPollingInterval(Duration.standardSeconds(1)).setPersistenceService(persistenceService)
+				.setOaiRunResultHistory(Duration.standardDays(1))
 				.build();
 
 		// let the harvester receive a http 404 to have one UNsuccessful loop,
@@ -307,7 +306,7 @@ public class OaiHarvesterTestIT {
 	public void filterHarvestedOaiHeaders() throws Exception {
 
 		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
-				.setPollingInterval(new TimeValue(1, TimeUnit.SECONDS)).setPersistenceService(persistenceService)
+				.setPollingInterval(Duration.standardSeconds(1)).setPersistenceService(persistenceService)
 				.setOaiHeaderFilter(new QucosaDocumentFilter()).build();
 
 		embeddedHttpHandler.resourcePath = OAI_IDENTIFIERS_TO_FILTER_XML;
@@ -804,7 +803,7 @@ public class OaiHarvesterTestIT {
 
 	private void createOaiHarvester() throws Exception {
 		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
-				.setPollingInterval(new TimeValue(1, TimeUnit.SECONDS)).setPersistenceService(persistenceService)
+				.setPollingInterval(Duration.standardSeconds(1)).setPersistenceService(persistenceService)
 				.build();
 	}
 

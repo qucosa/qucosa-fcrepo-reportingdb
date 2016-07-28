@@ -21,21 +21,17 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNull;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.support.XContentMapValues;
-import org.slf4j.Logger;
+import org.joda.time.Duration;
 
 import de.slub.persistence.PersistenceService;
 
 public class OaiHarvesterBuilder {
 
 	public static final String DEFAULT_URL = "http://localhost:8080/fedora/oai";
-	public static final TimeValue DEFAULT_POLLING_INTERVAL = new TimeValue(5, TimeUnit.MINUTES);
-	private static final TimeValue DEFAULT_OAI_RUN_RESULT_HISTORY_MILLIS = new TimeValue(2, TimeUnit.DAYS);
+	public static final Duration DEFAULT_POLLING_INTERVAL = Duration.standardMinutes(5);
+	private static final Duration DEFAULT_OAI_RUN_RESULT_HISTORY = Duration.standardDays(2);
 	private static final OaiHeaderFilter DEFAULT_OAI_HEADER_FILTER = new OaiHeaderFilter() {
 		@Override
 		public List<OaiHeader> filterOaiHeaders(List<OaiHeader> identifiers) {
@@ -45,8 +41,8 @@ public class OaiHarvesterBuilder {
 
 	private URL url;
 	private PersistenceService persistenceService;
-	private TimeValue pollingInterval;
-	private TimeValue oaiRunResultHistory;
+	private Duration pollingInterval;
+	private Duration oaiRunResultHistory;
 	private OaiHeaderFilter oaiHeaderFilter;
 
 
@@ -54,20 +50,8 @@ public class OaiHarvesterBuilder {
 		return new OaiHarvester((url == null) ? new URL(DEFAULT_URL) : url,
 				(pollingInterval == null) ? DEFAULT_POLLING_INTERVAL : pollingInterval, 
 				persistenceService,
-				(oaiRunResultHistory == null) ? DEFAULT_OAI_RUN_RESULT_HISTORY_MILLIS : oaiRunResultHistory,
+				(oaiRunResultHistory == null) ? DEFAULT_OAI_RUN_RESULT_HISTORY : oaiRunResultHistory,
 				(oaiHeaderFilter == null) ? DEFAULT_OAI_HEADER_FILTER : oaiHeaderFilter);
-	}
-
-	public OaiHarvesterBuilder settings(Map<String, Object> oaiSettings) throws MalformedURLException {
-
-		if (oaiSettings.containsKey("poll_interval")) {
-			pollingInterval = TimeValue.parseTimeValue(String.valueOf(oaiSettings.get("poll_interval")),
-					DEFAULT_POLLING_INTERVAL);
-		}
-		if (oaiSettings.containsKey("url")) {
-			url = new URL(XContentMapValues.nodeStringValue(oaiSettings.get("url"), DEFAULT_URL));
-		}
-		return this;
 	}
 
 
@@ -78,13 +62,13 @@ public class OaiHarvesterBuilder {
 	}
 
 	@NonNull
-	public OaiHarvesterBuilder setPollingInterval(@NonNull TimeValue interval) {
+	public OaiHarvesterBuilder setPollingInterval(@NonNull Duration interval) {
 		this.pollingInterval = interval;
 		return this;
 	}
 
 	@NonNull
-	public OaiHarvesterBuilder setOaiRunResultHistory(@NonNull TimeValue oaiRunResultHistory) {
+	public OaiHarvesterBuilder setOaiRunResultHistory(@NonNull Duration oaiRunResultHistory) {
 		this.oaiRunResultHistory = oaiRunResultHistory;
 		return this;
 	}

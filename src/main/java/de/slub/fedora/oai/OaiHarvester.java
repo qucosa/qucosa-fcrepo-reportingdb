@@ -51,7 +51,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.eclipse.jdt.annotation.Nullable;
-import org.elasticsearch.common.unit.TimeValue;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -92,12 +92,13 @@ public class OaiHarvester extends TerminateableRunnable {
 
 	private static final OaiRunResult EMPTY_OAI_RUN_RESULT = new OaiRunResult();
 
-	// private final Client client;
-	private final TimeValue pollInterval;
+	private final Duration pollInterval;
+	private static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.standardSeconds(1);
+
 	/**
 	 * Time span to keep OaiRunResults in database.
 	 */
-	private final TimeValue oaiRunResultHistoryInterval;
+	private final Duration oaiRunResultHistoryLength;
 	private final PersistenceService persistenceService;
 
 	private List<OaiHeader> harvestedHeaders = new LinkedList<>();
@@ -105,16 +106,18 @@ public class OaiHarvester extends TerminateableRunnable {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	private final URI uri;
 
-	protected OaiHarvester(URL harvestingUrl, TimeValue pollInterval, PersistenceService persistenceService,
-			TimeValue oaiRunResultHistoryInterval, OaiHeaderFilter oaiHeaderFilter) throws URISyntaxException {
+	protected OaiHarvester(URL harvestingUrl, Duration pollInterval, PersistenceService persistenceService,
+			Duration oaiRunResultHistoryInterval, OaiHeaderFilter oaiHeaderFilter) throws URISyntaxException {
 
 		this.uri = harvestingUrl.toURI();
-		this.pollInterval = pollInterval;
-		this.oaiRunResultHistoryInterval = oaiRunResultHistoryInterval;
+		this.pollInterval = pollInterval.isShorterThan(MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS)
+				? MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS : pollInterval;
+		
+		this.oaiRunResultHistoryLength = oaiRunResultHistoryInterval;
 		this.persistenceService = persistenceService;
 		this.oaiHeaderFilter = oaiHeaderFilter;
 
-		this.logger.info("Harvesting URL: {} every {}", this.uri.toASCIIString(), this.pollInterval.format());
+		this.logger.info("Harvesting URL: {} every {}", this.uri.toASCIIString(), this.pollInterval.toString());
 
 		this.URI_TIMESTAMP_FORMAT = (FCREPO3_COMPATIBILITY_MODE) ? FCREPO3_TIMESTAMP_FORMAT
 				: DEFAULT_URI_TIMESTAMP_FORMAT;
@@ -185,7 +188,7 @@ public class OaiHarvester extends TerminateableRunnable {
 		Date currentRun = currentOaiRunResult.getTimestampOfRun();
 		if (currentRun != null) {
 
-			Date lastRunToKeep = new Date(currentRun.getTime() - oaiRunResultHistoryInterval.getMillis());
+			Date lastRunToKeep = new Date(currentRun.getTime() - oaiRunResultHistoryLength.getMillis());
 
 			try {
 				persistenceService.cleanupOaiRunResults(lastRunToKeep);
@@ -201,7 +204,7 @@ public class OaiHarvester extends TerminateableRunnable {
 
 	private boolean waitForNextRun(OaiRunResult lastrun) {
 		Date start = now();
-		TimeValue waitTime = pollInterval;
+		Duration waitTime = pollInterval;
 
 		Date timestampLastRun = lastrun.getTimestampOfRun();
 		if (timestampLastRun != null && lastrun.isInFutureOf(start)) {
@@ -212,7 +215,7 @@ public class OaiHarvester extends TerminateableRunnable {
 		} else if (lastrun.hasResumptionToken()) {
 
 			// Is this the interval between two paginated requests
-			waitTime = TimeValue.timeValueSeconds(1);
+			waitTime = MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS;
 		}
 
 		try {
