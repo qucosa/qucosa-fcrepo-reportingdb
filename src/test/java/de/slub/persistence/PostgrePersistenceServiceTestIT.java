@@ -114,8 +114,7 @@ public class PostgrePersistenceServiceTestIT {
 		// since OaiRunResult is immutable, it's save to pass the same object to
 		// PersistenceService for storage and compare it to the result read from
 		// PersistenceService
-		boolean written = persistenceService.storeOaiRunResult(expectedOaiRunResult);
-		assertTrue("OaiRunResult has not been written to database", written);
+		persistenceService.storeOaiRunResult(expectedOaiRunResult);
 
 		OaiRunResult actualOaiRunResult = persistenceService.getLastOaiRunResult();
 		assertNotNull("Could not load OaiRunResult from database", actualOaiRunResult);
@@ -131,11 +130,10 @@ public class PostgrePersistenceServiceTestIT {
 	 * 
 	 * @throws Exception
 	 */
-	@Test
+	@Test(expected=PersistenceException.class)
 	public void doNotWriteEmptyLastRunResult() throws Exception {
 
-		boolean written = persistenceService.storeOaiRunResult(new OaiRunResult());
-		assertFalse("OaiRunResult should not have been written to database", written);
+		persistenceService.storeOaiRunResult(new OaiRunResult());		
 	}
 
 	/**
@@ -165,10 +163,8 @@ public class PostgrePersistenceServiceTestIT {
 		OaiRunResult oaiRunResult_2 = new OaiRunResult(lastRun, responseDate_2, resumptionToken_2,
 				resumptionTokenExpiration_2, expectedNextFromValue);
 
-		boolean written_1 = persistenceService.storeOaiRunResult(oaiRunResult_1);
-		assertTrue("oaiRunResult_1 has not been written to database", written_1);
-		boolean written_2 = persistenceService.storeOaiRunResult(oaiRunResult_2);
-		assertTrue("oaiRunResult_2 has not been written to database", written_2);
+		persistenceService.storeOaiRunResult(oaiRunResult_1);
+		persistenceService.storeOaiRunResult(oaiRunResult_2);
 
 		OaiRunResult actualOaiRunResult = persistenceService.getLastOaiRunResult();
 		assertNotNull("Could not load any OaiRunResult from database", actualOaiRunResult);
@@ -205,10 +201,8 @@ public class PostgrePersistenceServiceTestIT {
 		OaiRunResult oaiRunResult_2 = new OaiRunResult(lastRun_2, responseDate_2, resumptionToken_2,
 				resumptionTokenExpiration_2, expectedNextFromValue_2);
 
-		boolean written_1 = persistenceService.storeOaiRunResult(oaiRunResult_1);
-		assertTrue("oaiRunResult_1 has not been written to database", written_1);
-		boolean written_2 = persistenceService.storeOaiRunResult(oaiRunResult_2);
-		assertTrue("oaiRunResult_2 has not been written to database", written_2);
+		persistenceService.storeOaiRunResult(oaiRunResult_1);
+		persistenceService.storeOaiRunResult(oaiRunResult_2);
 
 		OaiRunResult actualOaiRunResult = persistenceService.getLastOaiRunResult();
 		assertNotNull("Could not load any OaiRunResult from database", actualOaiRunResult);

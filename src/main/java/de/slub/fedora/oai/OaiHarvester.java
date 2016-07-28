@@ -60,6 +60,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import de.slub.persistence.PersistenceException;
 import de.slub.persistence.PersistenceService;
 import de.slub.util.TerminateableRunnable;
 
@@ -105,8 +106,7 @@ public class OaiHarvester extends TerminateableRunnable {
 	private final URI uri;
 
 	protected OaiHarvester(URL harvestingUrl, TimeValue pollInterval, PersistenceService persistenceService,
-			TimeValue oaiRunResultHistoryInterval, OaiHeaderFilter oaiHeaderFilter)
-			throws URISyntaxException {
+			TimeValue oaiRunResultHistoryInterval, OaiHeaderFilter oaiHeaderFilter) throws URISyntaxException {
 
 		this.uri = harvestingUrl.toURI();
 		this.pollInterval = pollInterval;
@@ -140,19 +140,39 @@ public class OaiHarvester extends TerminateableRunnable {
 
 					harvestedHeaders = oaiHeaderFilter.filterOaiHeaders(harvestedHeaders);
 
-					boolean headersWritten = persistenceService.addOrUpdateHeaders(harvestedHeaders);
-					if (headersWritten) {
+					try {
+						persistenceService.addOrUpdateHeaders(harvestedHeaders);
 						harvestedHeaders.clear();
-						boolean runResultWritten = persistenceService.storeOaiRunResult(currentRun);
-						if (!runResultWritten) {
-							logger.error("The status of the current run could not be persisted, "
-									+ "the previous OaiRunResult remains the most recent one.");
-						}
-					} else {
-						logger.error("Harvested headers could not be persisted. This run was not successful, "
-								+ "the previous OaiRunResult is still the most recent one.");
 
+						try {
+							persistenceService.storeOaiRunResult(currentRun);
+						} catch (PersistenceException exception) {
+							logger.error("The status of the current run could not be persisted, "
+									+ "the previous OaiRunResult remains the most recent one.", exception);
+						}
+
+					} catch (PersistenceException exception) {
+						logger.error("Harvested headers could not be persisted. This run was not successful, "
+								+ "the previous OaiRunResult is still the most recent one. ", exception);
 					}
+
+					// <------------
+					// boolean headersWritten =
+					// persistenceService.addOrUpdateHeaders(harvestedHeaders);
+					// if (headersWritten) {
+					// harvestedHeaders.clear();
+					// boolean runResultWritten =
+					// persistenceService.storeOaiRunResult(currentRun);
+					// if (!runResultWritten) {
+					// logger.error("The status of the current run could not be
+					// persisted, "
+					// + "the previous OaiRunResult remains the most recent
+					// one.");
+					// }
+					// } else {
+					// }
+					// ------------>
+
 				}
 
 				cleanupOaiRunResultsInDB(currentRun);
@@ -167,16 +187,15 @@ public class OaiHarvester extends TerminateableRunnable {
 
 			Date lastRunToKeep = new Date(currentRun.getTime() - oaiRunResultHistoryInterval.getMillis());
 
-			boolean success = persistenceService.cleanupOaiRunResults(lastRunToKeep);
-			if (!success) {
-				// TODO do logging here? It has also been done in persistence
-				// layer.
-				logger.warn("Could not cleanup OaiRunResults in database.");
+			try {
+				persistenceService.cleanupOaiRunResults(lastRunToKeep);
+			} catch (PersistenceException exception) {
+				logger.warn("Could not cleanup OaiRunResults in persistence layer.", exception);
 			}
 
 		} else {
 			logger.debug("The current harvesting run was not successful. "
-					+ "Skipping cleanup of OaiRunResults in database.");
+					+ "Skipping cleanup of OaiRunResults in persistence layer.");
 		}
 	}
 
@@ -540,6 +559,5 @@ public class OaiHarvester extends TerminateableRunnable {
 		}
 		return date;
 	}
-
 
 }

@@ -135,9 +135,7 @@ public class PostgrePersistenceService implements PersistenceService {
 	 * oai.OaiRunResult)
 	 */
 	@Override
-	public boolean storeOaiRunResult(@NonNull OaiRunResult oaiRunResult) {
-
-		boolean success = false;
+	public void storeOaiRunResult(@NonNull OaiRunResult oaiRunResult) throws PersistenceException {
 
 		String insertStm = "INSERT INTO \"OAIRunResult\"(\"timestampOfRun\", \"responseDate\", \"resumptionToken\", \"resumptionTokenExpirationDate\", \"nextFromTimestamp\") VALUES(?, ?, ?, ?, ?)";
 
@@ -150,20 +148,15 @@ public class PostgrePersistenceService implements PersistenceService {
 			pst.setTimestamp(4, convertJAVADateToSQLTimestamp(oaiRunResult.getResumptionTokenExpirationDate()));
 			pst.setTimestamp(5, convertJAVADateToSQLTimestamp(oaiRunResult.getNextFromTimestamp()));
 			pst.executeUpdate();
-			success = true;
 
 		} catch (SQLException e) {
-			// TODO do exception handling here??
 
-			logger.error("Could not store OaiRunResult in database. Exception details: ", e);
+			throw new PersistenceException("Could not store OaiRunResult in database.", e);
 		}
-		return success;
 	}
 
 	@Override
-	public boolean cleanupOaiRunResults(@NonNull Date oldestResultToKeep) {
-
-		boolean successfulDelete = false;
+	public void cleanupOaiRunResults(@NonNull Date oldestResultToKeep) throws PersistenceException {
 
 		Integer lastOaiRunResultIDtoKeep = null;
 		String getID = "SELECT \"ID\" FROM \"OAIRunResult\" order by \"ID\" desc limit 1";
@@ -182,8 +175,8 @@ public class PostgrePersistenceService implements PersistenceService {
 			}
 
 		} catch (SQLException e) {
-			// TODO do exception handling here??
-			logger.error("Could not fetch OAI run result data from database. " + "Exception details:", e);
+
+			throw new PersistenceException("Could not fetch OAI run result to keep from database.", e);
 		}
 
 		//
@@ -199,24 +192,18 @@ public class PostgrePersistenceService implements PersistenceService {
 				int result = pst.executeUpdate();
 
 				logger.debug("Number of deleted OaiRunResults: " + result);
-				successfulDelete = true;
 
 			} catch (SQLException e) {
-				// TODO do exception handling here??
-
-				logger.error("Could not store OaiRunResult in database. Exception details: ", e);
+				throw new PersistenceException("Could not delete OaiRunResults from database.", e);
 			}
 
 		}
-
-		return successfulDelete;
 	}
 
 	@Override
-	public boolean addOrUpdateHeaders(@NonNull List<OaiHeader> headers) {
+	public void addOrUpdateHeaders(@NonNull List<OaiHeader> headers) throws PersistenceException {
 
-		boolean noException = true;
-		String errorMsg = "Could not store all OaiHeaders in database. ";
+		String basicErrorMsg = "Could not store all OaiHeaders in database. ";
 		String stm = "INSERT INTO \"OAIHeader\" (\"recordIdentifier\", \"datestamp\" , \"statusIsDeleted\") VALUES (?, ?, ?) ON CONFLICT (\"recordIdentifier\") DO UPDATE SET \"datestamp\" = ?, \"statusIsDeleted\" = ?";
 		int[] results = {};
 
@@ -241,27 +228,29 @@ public class PostgrePersistenceService implements PersistenceService {
 			con.commit();
 
 		} catch (SQLException e) {
-			// TODO do exception handling here??
-			noException = false;
-			logger.error(errorMsg + "Exception details: ", e);
+			throw new PersistenceException(basicErrorMsg, e);
 		}
 
+		StringBuilder resultError = new StringBuilder();
 		boolean allUpdatesSuccess = true;
+
 		for (int index = 0; index < results.length; index++) {
 			int singleResult = results[index];
+
 			if ((singleResult < 0) && (singleResult != Statement.SUCCESS_NO_INFO)) {
+				resultError.append("Could not insert or update '").append(headers.get(index)).append("'. ");
 				allUpdatesSuccess = false;
-				logger.debug("Could not insert or update: " + headers.get(index));
+
 			} else if (singleResult > 1) {
-				logger.error("{} OaiHeaders have been added or modified when trying to add/modify one single "
-						+ "header {}. Database may be corrupted!", singleResult, headers.get(index));
+				resultError.append(singleResult)
+						.append(" OaiHeaders have been added or modified when trying to add/modify one single header '")
+						.append(headers.get(index)).append("'. Database may be corrupted! ");
+				allUpdatesSuccess = false;
 			}
 		}
 		if (!allUpdatesSuccess) {
-			logger.error(errorMsg);
+			throw new PersistenceException(basicErrorMsg + resultError);
 		}
-
-		return noException && allUpdatesSuccess;
 	}
 
 	/*
@@ -270,10 +259,8 @@ public class PostgrePersistenceService implements PersistenceService {
 	 * @see de.slub.persistence.PersistenceService#getOaiHeaders()
 	 */
 	@Override
-	public List<OaiHeader> getOaiHeaders() {
+	public List<OaiHeader> getOaiHeaders() throws PersistenceException {
 		List<OaiHeader> headers = new LinkedList<>();
-
-		String errorMsg = "Could not fetch OaiHeader from database. ";
 
 		String stm = "SELECT \"recordIdentifier\", \"datestamp\" , \"statusIsDeleted\" from \"OAIHeader\" LIMIT 1000";
 
@@ -304,19 +291,19 @@ public class PostgrePersistenceService implements PersistenceService {
 			}
 
 			if (rowCount == 0) {
-				logger.debug("There are no OaiHeaders in database.");
+				logger.debug("There are currently no OaiHeaders in database.");
 			}
 
 		} catch (SQLException e) {
-			// TODO do exception handling here??
-			logger.error(errorMsg + "Exception details:", e);
+			throw new PersistenceException("Could not fetch OaiHeaders from database.", e);
 		}
 
 		return headers;
 	}
 
 	@Override
-	public List<OaiHeader> removeOaiHeadersIfUnmodified(@NonNull List<OaiHeader> headersToRemove) {
+	public List<OaiHeader> removeOaiHeadersIfUnmodified(@NonNull List<OaiHeader> headersToRemove)
+			throws PersistenceException {
 
 		// delete statements only if they did not change since we read them from
 		// database
@@ -343,24 +330,39 @@ public class PostgrePersistenceService implements PersistenceService {
 			con.commit();
 
 		} catch (SQLException e) {
-			// TODO do exception handling here??
-			logger.error("Could not remove any OaiHeader. Exception details: ", e);
+			throw new PersistenceException("Could not remove any OaiHeader.", e);
 		}
 
+		StringBuilder exceptionMsg = new StringBuilder();
 		List<OaiHeader> headersNotRemoved = new LinkedList<>();
+
 		for (int index = 0; index < results.length; index++) {
 			int singleResult = results[index];
 			if (singleResult == 0) {
 
 				headersNotRemoved.add(headersToRemove.get(index));
 			} else if (singleResult > 1) {
-				logger.error("{} OaiHeaders have been deleted when trying to delete the single header {}. "
-						+ "Database may be corrupted!", singleResult, headersToRemove.get(index));
+
+				exceptionMsg.append(singleResult)
+						.append(" OaiHeaders have been deleted when trying to delete the single header '")
+						.append(headersToRemove.get(index)).append("'. Database may be corrupted!");
+
+				// logger.error("{} OaiHeaders have been deleted when trying to
+				// delete the single header {}. "
+				// + "Database may be corrupted!", singleResult,
+				// headersToRemove.get(index));
 			}
 		}
 		if (!headersNotRemoved.isEmpty()) {
 			logger.debug("Did not remove all OaiHeaders. Maybe they have been updated "
 					+ "since they had been loaded from database. Items not removed: " + headersNotRemoved);
+		}
+
+		if (exceptionMsg.length() > 0) {
+			// FIXME @Ralf: should we throw an exception here? It hides the
+			// return value. on the other hand, 
+			//
+			throw new PersistenceException(exceptionMsg.toString());
 		}
 
 		return headersNotRemoved;
@@ -393,7 +395,7 @@ public class PostgrePersistenceService implements PersistenceService {
 			int microsAndNanos = timestamp.getNanos() % 1000000;
 			if (microsAndNanos != 0) {
 				logger.warn("Loosing precision of " + microsAndNanos
-						+ " nanoseconds while creating a new java.util Date object from java.sql.Timestamp '"
+						+ " nanoseconds while creating a new java.util.Date object from java.sql.Timestamp '"
 						+ timestamp + "'");
 			}
 

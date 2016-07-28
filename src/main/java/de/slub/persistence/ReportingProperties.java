@@ -21,8 +21,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MarkerFactory;
 
 
 public class ReportingProperties {
@@ -41,7 +43,8 @@ public class ReportingProperties {
 	        props.load(reader);
 
 	    } catch (IOException ex) {
-	    	logger.error("Fatal error. Can not load configuration from properties file '{}'."
+	    	logger.error(MarkerFactory.getMarker("FATAL"),
+	    			"Fatal error. Can not load configuration from properties file '{}'."
 	    			+ " There is no default. Nothing can be daone without configuration parameter."
 	    			+ "Exiting. Exception details: {}", PROPERTIES_FILE_NAME, ex);
 	    	System.exit(1);
