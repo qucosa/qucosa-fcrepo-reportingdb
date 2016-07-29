@@ -17,6 +17,7 @@
 package de.slub.fedora.reporting;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -34,57 +35,57 @@ import de.slub.persistence.ReportingProperties;
 public class ReportingManager {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
-	
+
 	private static final String DEFAULT_PROPERTIES_FILE_NAME = "/reporting.properties";
-	
-	//FIXME: load from properties
+
+	// FIXME: load from properties
 	private static final String URL_OAI_SERVER_TEST = "http://sdvcmr-app01:8080/fedora/oai";
 	private static final String URL_OAI_SERVER_PRODUCTION = "http://sdvcmr-prod-core01:8080/fedora/oai";
-	
+
 	private void init() {
 
 		// FIXME add init logic here
 		logger.warn("Implementation of init logic not yet done");
-		
+
 		ReportingProperties prop = ReportingProperties.getInstance();
-		
+
 		PersistenceService persistenceService = new PostgrePersistenceService(prop.getPostgreSQLDatabaseURL(),
 				prop.getPostgreSQLUser(), prop.getPostgreSQLPasswd());
-		
+
 		try {
-			OaiHarvester oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL(URL_OAI_SERVER_TEST))
-					.setPollingInterval(Duration.standardSeconds(15)).setPersistenceService(persistenceService)
-					.setOaiHeaderFilter(new QucosaDocumentFilter()).build();
-			
+
+			OaiHarvester oaiHarvester = new OaiHarvesterBuilder(new URI(URL_OAI_SERVER_TEST), persistenceService)
+					.setPollingInterval(Duration.standardSeconds(15)).setOaiHeaderFilter(new QucosaDocumentFilter())
+					.build();
+
 			Thread thread = new Thread(oaiHarvester);
 			thread.start();
 
-		} catch (MalformedURLException | URISyntaxException e) {
+		} catch (URISyntaxException e) {
+			//TODO: if harvester is not started, lag fatal and system.exit(1)? 
 			logger.error("OAI harvester was not started. Exception: " + e);
 		}
-		
+
 	}
-	
-	
-	
+
 	public static void main(String[] args) {
 
-//		Parameters params = new Parameters();
-//		FileBasedConfigurationBuilder<FileBasedConfiguration> builder =
-//		    new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
-//		    .configure(params.properties()
-//		        .setFileName(DEFAULT_PROPERTIES_FILE_NAME));
-//		try
-//		{
-//		    Configuration config = builder.getConfiguration();
-//
-//		}
-//		catch(ConfigurationException cex)
-//		{
-//		    // loading of the configuration file failed
-//		}
-		
-		
+		// Parameters params = new Parameters();
+		// FileBasedConfigurationBuilder<FileBasedConfiguration> builder =
+		// new
+		// FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
+		// .configure(params.properties()
+		// .setFileName(DEFAULT_PROPERTIES_FILE_NAME));
+		// try
+		// {
+		// Configuration config = builder.getConfiguration();
+		//
+		// }
+		// catch(ConfigurationException cex)
+		// {
+		// // loading of the configuration file failed
+		// }
+
 		new ReportingManager().init();
 	}
 

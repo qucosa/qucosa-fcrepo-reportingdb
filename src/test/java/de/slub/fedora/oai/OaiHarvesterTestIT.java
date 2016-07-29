@@ -198,8 +198,8 @@ public class OaiHarvesterTestIT {
 				testPersistenceService.countOaiRunResults());
 
 		// new OaiHarvester that keeps a history of 1 day
-		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
-				.setPollingInterval(Duration.standardSeconds(1)).setPersistenceService(persistenceService)
+		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
+				.setPollingInterval(Duration.standardSeconds(1))
 				.setOaiRunResultHistory(Duration.standardDays(1))
 				.build();
 
@@ -247,8 +247,8 @@ public class OaiHarvesterTestIT {
 				testPersistenceService.countOaiRunResults());
 
 		// new OaiHarvester that keeps a history of 1 day
-		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
-				.setPollingInterval(Duration.standardSeconds(1)).setPersistenceService(persistenceService)
+		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
+				.setPollingInterval(Duration.standardSeconds(1))
 				.setOaiRunResultHistory(Duration.standardDays(1))
 				.build();
 
@@ -305,9 +305,11 @@ public class OaiHarvesterTestIT {
 	@Test
 	public void filterHarvestedOaiHeaders() throws Exception {
 
-		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
-				.setPollingInterval(Duration.standardSeconds(1)).setPersistenceService(persistenceService)
-				.setOaiHeaderFilter(new QucosaDocumentFilter()).build();
+		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
+				.setPollingInterval(Duration.standardSeconds(1))
+				.setOaiHeaderFilter(new QucosaDocumentFilter())
+				.build();
+
 
 		embeddedHttpHandler.resourcePath = OAI_IDENTIFIERS_TO_FILTER_XML;
 		runAndWait(oaiHarvester);
@@ -802,8 +804,8 @@ public class OaiHarvesterTestIT {
 	}
 
 	private void createOaiHarvester() throws Exception {
-		oaiHarvester = new OaiHarvesterBuilder().setUrl(new URL("http://localhost:8000/fedora/oai"))
-				.setPollingInterval(Duration.standardSeconds(1)).setPersistenceService(persistenceService)
+		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
+				.setPollingInterval(Duration.standardSeconds(1))
 				.build();
 	}
 

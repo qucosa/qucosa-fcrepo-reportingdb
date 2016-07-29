@@ -66,17 +66,14 @@ import de.slub.util.TerminateableRunnable;
 
 public class OaiHarvester extends TerminateableRunnable {
 
-	// FIXME: move to HarvesterBuilder
-	private static final boolean FCREPO3_COMPATIBILITY_MODE = true;
-
 	private static final String OAI_PMH_ERROR_NO_RECORDS_MATCH = "noRecordsMatch";
 	private static final String OAI_PMH_ERROR_BAD_RESUMPTION_TOKEN = "badResumptionToken";
 
 	// TODO add to properties file?
 	private static final long SERVER_TIME_DIFFERENCE_WARNING_MILLIS = TimeUnit.MINUTES.toMillis(2);
 
-	// BUG: format should be yyyy-MM-dd'T'HH:mm:ss'Z' with 'Z' in the end.
-	// unfortunately, Fedora Commons 3 has a bug in processing the from
+	// format should be yyyy-MM-dd'T'HH:mm:ss'Z' with 'Z' in the end.
+	// Fedora Commons 3 has a bug in processing the from
 	// parameter: if the 'Z' is present, the specified day is ignored and
 	// results start from the next day.
 	// In any case, the time part is always ignored as if a request contained a
@@ -88,7 +85,7 @@ public class OaiHarvester extends TerminateableRunnable {
 	private static final SimpleDateFormat FCREPO3_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 	private static final SimpleDateFormat DEFAULT_URI_TIMESTAMP_FORMAT = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
-	private final SimpleDateFormat URI_TIMESTAMP_FORMAT;
+	private final SimpleDateFormat uriTimestampFormat;
 
 	private static final OaiRunResult EMPTY_OAI_RUN_RESULT = new OaiRunResult();
 
@@ -96,7 +93,7 @@ public class OaiHarvester extends TerminateableRunnable {
 	private static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.standardSeconds(1);
 
 	/**
-	 * Time span to keep OaiRunResults in database.
+	 * Time span to keep OaiRunResults in persistence.
 	 */
 	private final Duration oaiRunResultHistoryLength;
 	private final PersistenceService persistenceService;
@@ -105,22 +102,22 @@ public class OaiHarvester extends TerminateableRunnable {
 	private final OaiHeaderFilter oaiHeaderFilter;
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	private final URI uri;
+	private final boolean useFC3CompatibilityMode;
 
-	protected OaiHarvester(URL harvestingUrl, Duration pollInterval, PersistenceService persistenceService,
-			Duration oaiRunResultHistoryInterval, OaiHeaderFilter oaiHeaderFilter) throws URISyntaxException {
+	// TODO constructor does no checks now, everything done by builder. don't really like this...
+	protected OaiHarvester(URI harvestingUri, Duration pollInterval, OaiHeaderFilter oaiHeaderFilter,
+			PersistenceService persistenceService, Duration oaiRunResultHistoryLength, boolean useFC3CompatibilityMode) {
 
-		this.uri = harvestingUrl.toURI();
-		this.pollInterval = pollInterval.isShorterThan(MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS)
-				? MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS : pollInterval;
-		
-		this.oaiRunResultHistoryLength = oaiRunResultHistoryInterval;
+		this.uri = harvestingUri;
+		this.pollInterval = pollInterval;
+		this.oaiRunResultHistoryLength = oaiRunResultHistoryLength;
 		this.persistenceService = persistenceService;
 		this.oaiHeaderFilter = oaiHeaderFilter;
 
 		this.logger.info("Harvesting URL: {} every {}", this.uri.toASCIIString(), this.pollInterval.toString());
 
-		this.URI_TIMESTAMP_FORMAT = (FCREPO3_COMPATIBILITY_MODE) ? FCREPO3_TIMESTAMP_FORMAT
-				: DEFAULT_URI_TIMESTAMP_FORMAT;
+		this.useFC3CompatibilityMode = useFC3CompatibilityMode;
+		this.uriTimestampFormat = (useFC3CompatibilityMode) ? FCREPO3_TIMESTAMP_FORMAT : DEFAULT_URI_TIMESTAMP_FORMAT;
 	}
 
 	@Override
@@ -134,9 +131,9 @@ public class OaiHarvester extends TerminateableRunnable {
 
 	private void harvestLoop() {
 		while (isRunning()) {
-			if (waitForNextRun(getLastrunParameters())) {
+			final OaiRunResult lastRun = getLastrunParameters();
+			if (waitForNextRun(lastRun)) {
 
-				final OaiRunResult lastRun = getLastrunParameters();
 				final OaiRunResult currentRun = harvest(lastRun);
 
 				if (currentRun.hasTimestampOfRun()) {
@@ -158,26 +155,7 @@ public class OaiHarvester extends TerminateableRunnable {
 						logger.error("Harvested headers could not be persisted. This run was not successful, "
 								+ "the previous OaiRunResult is still the most recent one. ", exception);
 					}
-
-					// <------------
-					// boolean headersWritten =
-					// persistenceService.addOrUpdateHeaders(harvestedHeaders);
-					// if (headersWritten) {
-					// harvestedHeaders.clear();
-					// boolean runResultWritten =
-					// persistenceService.storeOaiRunResult(currentRun);
-					// if (!runResultWritten) {
-					// logger.error("The status of the current run could not be
-					// persisted, "
-					// + "the previous OaiRunResult remains the most recent
-					// one.");
-					// }
-					// } else {
-					// }
-					// ------------>
-
 				}
-
 				cleanupOaiRunResultsInDB(currentRun);
 			}
 		}
@@ -210,7 +188,7 @@ public class OaiHarvester extends TerminateableRunnable {
 		if (timestampLastRun != null && lastrun.isInFutureOf(start)) {
 
 			logger.error("The timestamp of the last run seems to be in the future. "
-					+ "Either the database is corrupted or the local servers clock travels in time...");
+					+ "Either the persistence layer is corrupted or the local servers clock travels in time...");
 
 		} else if (lastrun.hasResumptionToken()) {
 
@@ -314,7 +292,7 @@ public class OaiHarvester extends TerminateableRunnable {
 			builder.queryParam("metadataPrefix", "oai_dc");
 
 			if (lastrun.hasNextFromTimestamp()) {
-				builder.queryParam("from", URI_TIMESTAMP_FORMAT.format(lastrun.getNextFromTimestamp()));
+				builder.queryParam("from", uriTimestampFormat.format(lastrun.getNextFromTimestamp()));
 			}
 		}
 
@@ -350,7 +328,7 @@ public class OaiHarvester extends TerminateableRunnable {
 
 				} else {
 					// This is against the specification.
-					if (FCREPO3_COMPATIBILITY_MODE) {
+					if (useFC3CompatibilityMode) {
 						// anyhow, it seems that Fedora Commons 3 has a bug
 						// not closing an paginated result with an empty
 						// resumption token... so in compatibility mode, this is
