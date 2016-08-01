@@ -58,7 +58,6 @@ import de.slub.util.TerminateableRunnable;
 
 public class OaiHarvesterTestIT {
 
-
 	private static final boolean FCREPO3_COMPATIBILITY_MODE = false;
 
 	private static final String OAI_LIST_IDENTIFIERS_XML = "/oai/listIdentifiers.xml";
@@ -77,7 +76,6 @@ public class OaiHarvesterTestIT {
 	private static final String DATABASE_URL = "jdbc:postgresql://localhost:5432/reportingUnitTest";
 	private static final String DATABASE_USER = "reportingDBUnitTest";
 	private static final String DATABASE_PASSWORD = "76Sp)qpH2D";
-
 
 	private EmbeddedHttpHandler embeddedHttpHandler;
 	private ReportingProperties reportingProperties = ReportingProperties.getInstance();
@@ -98,22 +96,18 @@ public class OaiHarvesterTestIT {
 		runAndWait(oaiHarvester);
 
 		List<OaiHeader> actualOaiHeaders = persistenceService.getOaiHeaders();
-		assertEquals("List of harvested headers should contain two elements", 2,
-				actualOaiHeaders.size());
+		assertEquals("List of harvested headers should contain two elements", 2, actualOaiHeaders.size());
 
 		Date datestamp1 = DatatypeConverter.parseDateTime("2014-05-06T17:33:25Z").getTime();
 
 		OaiHeader oaiHeader1 = new OaiHeader("oai:example.org:qucosa:1044", datestamp1, false);
 
 		Date datestamp2 = DatatypeConverter.parseDateTime("2016-07-12T17:33:25Z").getTime();
-		// List<String> setSpec = new LinkedList<>();
-		// setSpec.add("test:11");
-		// setSpec.add("test:22");
-		// @SuppressWarnings("null")
-		// OaiHeader oaiHeader2 = new OaiHeader("oai:example.org:qucosa:1234",
-		// datestamp2, setSpec, true);
-
-		OaiHeader oaiHeader2 = new OaiHeader("oai:example.org:qucosa:1234", datestamp2, true);
+		List<String> setSpec = new LinkedList<>();
+		setSpec.add("test:11");
+		setSpec.add("test:22");
+		@SuppressWarnings("null")
+		OaiHeader oaiHeader2 = new OaiHeader("oai:example.org:qucosa:1234", datestamp2, setSpec, true);
 
 		assertTrue(actualOaiHeaders.contains(oaiHeader1));
 		assertTrue(actualOaiHeaders.contains(oaiHeader2));
@@ -173,7 +167,6 @@ public class OaiHarvesterTestIT {
 		assertEquals(expected, actual);
 	}
 
-
 	/**
 	 * Test the cleanup of OaiRunResults in database. Assert that all
 	 * OaiRunResults are kept that are newer than the specified oldest
@@ -199,8 +192,7 @@ public class OaiHarvesterTestIT {
 
 		// new OaiHarvester that keeps a history of 1 day
 		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
-				.setPollingInterval(Duration.standardSeconds(1))
-				.setOaiRunResultHistory(Duration.standardDays(1))
+				.setPollingInterval(Duration.standardSeconds(1)).setOaiRunResultHistory(Duration.standardDays(1))
 				.build();
 
 		// just let the harvester do something to have one successful loop,
@@ -248,8 +240,7 @@ public class OaiHarvesterTestIT {
 
 		// new OaiHarvester that keeps a history of 1 day
 		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
-				.setPollingInterval(Duration.standardSeconds(1))
-				.setOaiRunResultHistory(Duration.standardDays(1))
+				.setPollingInterval(Duration.standardSeconds(1)).setOaiRunResultHistory(Duration.standardDays(1))
 				.build();
 
 		// let the harvester receive a http 404 to have one UNsuccessful loop,
@@ -306,10 +297,7 @@ public class OaiHarvesterTestIT {
 	public void filterHarvestedOaiHeaders() throws Exception {
 
 		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
-				.setPollingInterval(Duration.standardSeconds(1))
-				.setOaiHeaderFilter(new QucosaDocumentFilter())
-				.build();
-
+				.setPollingInterval(Duration.standardSeconds(1)).setOaiHeaderFilter(new QucosaDocumentFilter()).build();
 
 		embeddedHttpHandler.resourcePath = OAI_IDENTIFIERS_TO_FILTER_XML;
 		runAndWait(oaiHarvester);
@@ -805,8 +793,7 @@ public class OaiHarvesterTestIT {
 
 	private void createOaiHarvester() throws Exception {
 		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
-				.setPollingInterval(Duration.standardSeconds(1))
-				.build();
+				.setPollingInterval(Duration.standardSeconds(1)).build();
 	}
 
 	private void runAndWait(TerminateableRunnable runnable) throws InterruptedException {

@@ -509,19 +509,16 @@ public class OaiHarvester extends TerminateableRunnable {
 				String datestampString = headerElement.getElementsByTagName("datestamp").item(0).getChildNodes().item(0)
 						.getNodeValue();
 				Date datestampDate = DatatypeConverter.parseDateTime(datestampString).getTime();
-				// LinkedList<String> setSpecList = new LinkedList<>();
-				//
-				// NodeList setSpecNodes =
-				// headerElement.getElementsByTagName("setSpec");
-				// for (int j = 0; j < setSpecNodes.getLength(); j++) {
-				// String setSpec =
-				// setSpecNodes.item(j).getChildNodes().item(0).getNodeValue();
-				// setSpecList.add(setSpec);
-				// }
-				// OaiHeader receivedHeader = new OaiHeader(recordIdentifier,
-				// datestampDate, setSpecList, statusIsDeleted);
+				LinkedList<String> setSpecList = new LinkedList<>();
 
-				OaiHeader receivedHeader = new OaiHeader(recordIdentifier, datestampDate, statusIsDeleted);
+				NodeList setSpecNodes = headerElement.getElementsByTagName("setSpec");
+				for (int j = 0; j < setSpecNodes.getLength(); j++) {
+					String setSpec = setSpecNodes.item(j).getChildNodes().item(0).getNodeValue();
+					setSpecList.add(setSpec);
+				}
+				OaiHeader receivedHeader = new OaiHeader(recordIdentifier, datestampDate, setSpecList, statusIsDeleted);
+//				OaiHeader receivedHeader = new OaiHeader(recordIdentifier, datestampDate, statusIsDeleted);
+				
 				boolean added = harvestedHeaders.add(receivedHeader);
 				if (added)
 					logger.debug("Added OAI header to list: {}", receivedHeader);

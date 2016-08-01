@@ -16,4 +16,4 @@
 
 
 INSERT INTO "OAIHeader" ("recordIdentifier", "datestamp" , "statusIsDeleted") VALUES ('oai:example.org:qucosa:47', '2016-07-10 10:10:40+02', false);
-INSERT INTO "OAIHeader" ("recordIdentifier", "datestamp" , "statusIsDeleted") VALUES ('oai:example.org:qucosa:199', '2015-07-10 13:13:13+02', true);
+INSERT INTO "OAIHeader" ("recordIdentifier", "datestamp" , "setSpec", "statusIsDeleted") VALUES ('oai:example.org:qucosa:199', '2015-07-10 13:13:13+02', ARRAY['test', 'test," with separator and quotes'], true);

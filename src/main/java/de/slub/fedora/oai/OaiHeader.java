@@ -17,6 +17,8 @@
 package de.slub.fedora.oai;
 
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.annotation.NonNull;
@@ -31,8 +33,8 @@ public class OaiHeader {
 	private final String recordIdentifier;
 	@NonNull
 	private final Date datestamp;
-	// @NonNull
-	// private final List<String> setSpec;
+	@NonNull
+	private final List<String> setSpec;
 	private final boolean statusIsDeleted;
 
 	/**
@@ -49,41 +51,36 @@ public class OaiHeader {
 	 *             if recordIdentifier or datestamp are whitespace, empty ("")
 	 *             or null or if setSpec is null
 	 */
-	public OaiHeader(@NonNull String recordIdentifier, @NonNull Date datestamp, // @NonNull
-																				// List<String>
-																				// setSpec,
+	public OaiHeader(@NonNull String recordIdentifier, @NonNull Date datestamp, @NonNull List<String> setSpec,
 			boolean statusIsDeleted) throws IllegalArgumentException {
 
 		if (StringUtils.isBlank(recordIdentifier))
 			throw new IllegalArgumentException("parameter recordIdentifier must not be '" + recordIdentifier + "'");
 		if (datestamp == null)
 			throw new IllegalArgumentException("parameter datestamp must not be null");
-		// if (setSpec == null)
-		// throw new IllegalArgumentException("parameter setSpec must not be
-		// null");
+		if (setSpec == null)
+			throw new IllegalArgumentException("parameter setSpec must not be null");
 
 		this.recordIdentifier = recordIdentifier;
 		this.datestamp = datestamp;
-		// this.setSpec = setSpec;
+		this.setSpec = setSpec;
 		this.statusIsDeleted = statusIsDeleted;
 	}
 
-	// /**
-	// * @param recordIdentifier
-	// * the unique identifier of an item in a repository
-	// * @param datestamp
-	// * the date of creation, modification or deletion of the record
-	// * @param statusIsDeleted
-	// * true if the header contains the status deleted element
-	// * @throws IllegalArgumentException
-	// * if recordIdentifier or datestamp are whitespace, empty ("")
-	// * or null
-	// */
-	// public OaiHeader(@NonNull String recordIdentifier, @NonNull Date
-	// datestamp, boolean statusIsDeleted) {
-	// this(recordIdentifier, datestamp, new LinkedList<String>(),
-	// statusIsDeleted);
-	// }
+	/**
+	 * @param recordIdentifier
+	 *            the unique identifier of an item in a repository
+	 * @param datestamp
+	 *            the date of creation, modification or deletion of the record
+	 * @param statusIsDeleted
+	 *            true if the header contains the status deleted element
+	 * @throws IllegalArgumentException
+	 *             if recordIdentifier or datestamp are whitespace, empty ("")
+	 *             or null
+	 */
+	public OaiHeader(@NonNull String recordIdentifier, @NonNull Date datestamp, boolean statusIsDeleted) {
+		this(recordIdentifier, datestamp, new LinkedList<String>(), statusIsDeleted);
+	}
 
 	/**
 	 * @return the unique identifier of an item in a repository
@@ -101,15 +98,14 @@ public class OaiHeader {
 		return datestamp;
 	}
 
-	// /**
-	// * @return a list with zero or more elements, each representing the
-	// content
-	// * of a setSpec element
-	// */
-	// @NonNull
-	// public List<String> getSetSpec() {
-	// return setSpec;
-	// }
+	/**
+	 * @return a list with zero or more elements, each representing the content
+	 *         of a setSpec element
+	 */
+	@NonNull
+	public List<String> getSetSpec() {
+		return setSpec;
+	}
 
 	/**
 	 * @return true if the header contains the status deleted element
@@ -120,11 +116,7 @@ public class OaiHeader {
 
 	@Override
 	public String toString() {
-		return "OaiHeader [recordIdentifier=" + recordIdentifier + ", datestamp=" + datestamp // +
-																								// ",
-																								// setSpec="
-																								// +
-																								// setSpec
+		return "OaiHeader [recordIdentifier=" + recordIdentifier + ", datestamp=" + datestamp + ", setSpec=" + setSpec
 				+ ", statusIsDeleted=" + statusIsDeleted + "]";
 	}
 
@@ -134,6 +126,7 @@ public class OaiHeader {
 		int result = 1;
 		result = prime * result + ((datestamp == null) ? 0 : datestamp.hashCode());
 		result = prime * result + ((recordIdentifier == null) ? 0 : recordIdentifier.hashCode());
+		result = prime * result + ((setSpec == null) ? 0 : setSpec.hashCode());
 		result = prime * result + (statusIsDeleted ? 1231 : 1237);
 		return result;
 	}
@@ -157,53 +150,16 @@ public class OaiHeader {
 				return false;
 		} else if (!recordIdentifier.equals(other.recordIdentifier))
 			return false;
+		if (setSpec == null) {
+			if (other.setSpec != null)
+				return false;
+		} else if (!setSpec.equals(other.setSpec))
+			return false;
 		if (statusIsDeleted != other.statusIsDeleted)
 			return false;
 		return true;
 	}
-
-//	@Override
-//	public int hashCode() {
-//		final int prime = 31;
-//		int result = 1;
-//		result = prime * result + ((datestamp == null) ? 0 : datestamp.hashCode());
-//		result = prime * result + ((recordIdentifier == null) ? 0 : recordIdentifier.hashCode());
-//		// result = prime * result + ((setSpec == null) ? 0 :
-//		// setSpec.hashCode());
-//		result = prime * result + (statusIsDeleted ? 1231 : 1237);
-//		return result;
-//	}
-
-//	@Override
-//	public boolean equals(Object obj) {
-//		if (this == obj)
-//			return true;
-//		if (obj == null)
-//			return false;
-//		if (getClass() != obj.getClass())
-//			return false;
-//		OaiHeader other = (OaiHeader) obj;
-//		if (datestamp == null) {
-//			if (other.datestamp != null)
-//				return false;
-//		} else if (!datestamp.equals(other.datestamp))
-//			return false;
-//		if (recordIdentifier == null) {
-//			if (other.recordIdentifier != null)
-//				return false;
-//		} else if (!recordIdentifier.equals(other.recordIdentifier))
-//			return false;
-//		// if (setSpec == null) {
-//		// if (other.setSpec != null)
-//		// return false;
-//		// } else if (!setSpec.equals(other.setSpec))
-//		// return false;
-//		if (statusIsDeleted != other.statusIsDeleted)
-//			return false;
-//		return true;
-//	}
-
 	
 	
-	
+
 }

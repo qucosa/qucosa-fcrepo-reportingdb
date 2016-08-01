@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS public."OAIHeader"
 (
   "recordIdentifier" character varying(256) NOT NULL, -- the record identifier of a document
   datestamp timestamp with time zone NOT NULL, -- last modification of the document
+  "setSpec" character varying(256)[], -- the sets this record belongs to
   "statusIsDeleted" boolean, -- true if the header contains the status deleted element
   CONSTRAINT "recordIdentifier" PRIMARY KEY ("recordIdentifier")
 )
@@ -56,5 +57,5 @@ ALTER TABLE public."OAIHeader"
   OWNER TO "reportingDB";
 COMMENT ON COLUMN public."OAIHeader"."recordIdentifier" IS 'the record identifier of a document';
 COMMENT ON COLUMN public."OAIHeader".datestamp IS 'last modification of the document';
+COMMENT ON COLUMN public."OAIHeader"."setSpec" IS 'the sets this record belongs to';
 COMMENT ON COLUMN public."OAIHeader"."statusIsDeleted" IS 'true if the header contains the status deleted element';
-

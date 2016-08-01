@@ -106,7 +106,7 @@ public class PostgrePersistenceServiceTestIT {
 		Date expectedLastRun = DatatypeConverter.parseDateTime("2016-07-20T11:22:57Z").getTime();
 		Date expectedResponseDate = DatatypeConverter.parseDateTime("2016-07-20T11:22:58Z").getTime();
 		String expectedResumptionToken = "140225245500000";
-		Date expectedResumptionTokenExpiration = DatatypeConverter.parseDateTime("2016-07-20T11:32:58Z").getTime();		
+		Date expectedResumptionTokenExpiration = DatatypeConverter.parseDateTime("2016-07-20T11:32:58Z").getTime();
 		Date expectednextFromValue = DatatypeConverter.parseDateTime("2016-07-20T11:12:57Z").getTime();
 		OaiRunResult expectedOaiRunResult = new OaiRunResult(expectedLastRun, expectedResponseDate,
 				expectedResumptionToken, expectedResumptionTokenExpiration, expectednextFromValue);
@@ -130,10 +130,10 @@ public class PostgrePersistenceServiceTestIT {
 	 * 
 	 * @throws Exception
 	 */
-	@Test(expected=PersistenceException.class)
+	@Test(expected = PersistenceException.class)
 	public void doNotWriteEmptyLastRunResult() throws Exception {
 
-		persistenceService.storeOaiRunResult(new OaiRunResult());		
+		persistenceService.storeOaiRunResult(new OaiRunResult());
 	}
 
 	/**
@@ -230,11 +230,16 @@ public class PostgrePersistenceServiceTestIT {
 		Date dateStamp_1 = dateFormatDateStamp.parse("2016-07-10 10:10:40+02");
 
 		OaiHeader header_1 = new OaiHeader("oai:example.org:qucosa:47", dateStamp_1, false);
-		assertTrue("Missing OaiHeader with id 'oai:example.org:qucosa:47'", actualOaiHeaders.contains(header_1));
+		assertTrue("OaiHeader with id 'oai:example.org:qucosa:47' is missing or does not equal the expected header.",
+				actualOaiHeaders.contains(header_1));
 
 		Date dateStamp_2 = dateFormatDateStamp.parse("2015-07-10 13:13:13+02");
-		OaiHeader header_2 = new OaiHeader("oai:example.org:qucosa:199", dateStamp_2, true);
-		assertTrue("Missing OaiHeader with id 'oai:example.org:qucosa:199'", actualOaiHeaders.contains(header_2));
+		List<String> setSpec2 = new LinkedList<>();
+		setSpec2.add("test");
+		setSpec2.add("test,\" with separator and quotes");
+		OaiHeader header_2 = new OaiHeader("oai:example.org:qucosa:199", dateStamp_2, setSpec2, true);
+		assertTrue("OaiHeader with id 'oai:example.org:qucosa:199' is missing or does not equal the expected header.",
+				actualOaiHeaders.contains(header_2));
 	}
 
 	/**
@@ -252,7 +257,10 @@ public class PostgrePersistenceServiceTestIT {
 		expectedHeaders.add(header_1);
 
 		Date dateStamp_2 = DatatypeConverter.parseDateTime("2012-03-30T06:54:12Z").getTime();
-		OaiHeader header_2 = new OaiHeader("oai:example.org:qucosa:468", dateStamp_2, true);
+		List<String> setSpec2 = new LinkedList<>();
+		setSpec2.add("test");
+		setSpec2.add("test,\" with separator and quotes");
+		OaiHeader header_2 = new OaiHeader("oai:example.org:qucosa:199", dateStamp_2, setSpec2, true);
 		expectedHeaders.add(header_2);
 
 		persistenceService.addOrUpdateHeaders(expectedHeaders);
@@ -262,8 +270,9 @@ public class PostgrePersistenceServiceTestIT {
 	}
 
 	/**
-	 * Write a {@link OaiHeader} to database, modify its dateStamp and write it
-	 * to database a second time. The data set must have been updated.
+	 * Write a {@link OaiHeader} to database. Modify its {@code dateStamp},
+	 * {@code setSpec} and {@code statusIsDeleted} and write it to database a
+	 * second time. The data set must have been updated in database.
 	 * 
 	 * @throws Exception
 	 */
@@ -280,7 +289,11 @@ public class PostgrePersistenceServiceTestIT {
 
 		List<OaiHeader> expectedHeaders = new LinkedList<>();
 		Date dateStamp_2 = DatatypeConverter.parseDateTime("2016-07-20T11:22:57Z").getTime();
-		OaiHeader header_2 = new OaiHeader(recordIdentifier, dateStamp_2, true);
+
+		List<String> setSpec2 = new LinkedList<>();
+		setSpec2.add("test");
+		setSpec2.add("test,\" with separator and quotes");
+		OaiHeader header_2 = new OaiHeader(recordIdentifier, dateStamp_2, setSpec2, true);
 		expectedHeaders.add(header_2);
 		persistenceService.addOrUpdateHeaders(expectedHeaders);
 
@@ -310,15 +323,17 @@ public class PostgrePersistenceServiceTestIT {
 		// remove header_1 and header_2
 		List<OaiHeader> headersToRemove = new LinkedList<>();
 		headersToRemove.add(header_1);
-		headersToRemove.add(header_2);		
+		headersToRemove.add(header_2);
 		List<OaiHeader> headersNotRemoved = persistenceService.removeOaiHeadersIfUnmodified(headersToRemove);
-		
-		assertEquals("There are OaiHeaders that have not been removed.", new LinkedList<OaiHeader>(), headersNotRemoved);
+
+		assertEquals("There are OaiHeaders that have not been removed.", new LinkedList<OaiHeader>(),
+				headersNotRemoved);
 
 		List<OaiHeader> actualHeadersInDatabase = persistenceService.getOaiHeaders();
 		List<OaiHeader> expectedHeadersInDatabase = new LinkedList<>();
 		expectedHeadersInDatabase.add(header_3);
-		assertEquals("Only the expected OaiHeaders should be in database.", expectedHeadersInDatabase, actualHeadersInDatabase);
+		assertEquals("Only the expected OaiHeaders should be in database.", expectedHeadersInDatabase,
+				actualHeadersInDatabase);
 	}
 
 	/**

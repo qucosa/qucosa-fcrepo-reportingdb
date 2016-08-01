@@ -16,6 +16,7 @@
 
 package de.slub.persistence;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -23,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
@@ -204,7 +206,7 @@ public class PostgrePersistenceService implements PersistenceService {
 	public void addOrUpdateHeaders(@NonNull List<OaiHeader> headers) throws PersistenceException {
 
 		String basicErrorMsg = "Could not store all OaiHeaders in database. ";
-		String stm = "INSERT INTO \"OAIHeader\" (\"recordIdentifier\", \"datestamp\" , \"statusIsDeleted\") VALUES (?, ?, ?) ON CONFLICT (\"recordIdentifier\") DO UPDATE SET \"datestamp\" = ?, \"statusIsDeleted\" = ?";
+		String stm = "INSERT INTO \"OAIHeader\" (\"recordIdentifier\", \"datestamp\" , \"setSpec\", \"statusIsDeleted\") VALUES (?, ?, ?, ?) ON CONFLICT (\"recordIdentifier\") DO UPDATE SET \"datestamp\" = ?, \"setSpec\" = ?, \"statusIsDeleted\" = ?";
 		int[] results = {};
 
 		try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
@@ -217,9 +219,16 @@ public class PostgrePersistenceService implements PersistenceService {
 				pst.setString(1, header.getRecordIdentifier());
 				Timestamp datestamp = convertJAVADateToSQLTimestamp(header.getDatestamp());
 				pst.setTimestamp(2, datestamp);
-				pst.setBoolean(3, header.isStatusIsDeleted());
-				pst.setTimestamp(4, datestamp);
-				pst.setBoolean(5, header.isStatusIsDeleted());
+
+				Array setSpecArray = con.createArrayOf("varchar", header.getSetSpec().toArray());
+				pst.setArray(3, setSpecArray);
+
+				pst.setBoolean(4, header.isStatusIsDeleted());
+				pst.setTimestamp(5, datestamp);
+
+				pst.setArray(6, setSpecArray);
+
+				pst.setBoolean(7, header.isStatusIsDeleted());
 				pst.addBatch();
 
 			}
@@ -262,7 +271,7 @@ public class PostgrePersistenceService implements PersistenceService {
 	public List<OaiHeader> getOaiHeaders() throws PersistenceException {
 		List<OaiHeader> headers = new LinkedList<>();
 
-		String stm = "SELECT \"recordIdentifier\", \"datestamp\" , \"statusIsDeleted\" from \"OAIHeader\" LIMIT 1000";
+		String stm = "SELECT \"recordIdentifier\", \"datestamp\" , \"setSpec\", \"statusIsDeleted\" from \"OAIHeader\" LIMIT 1000";
 
 		try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
 				PreparedStatement pst = con.prepareStatement(stm);
@@ -284,8 +293,17 @@ public class PostgrePersistenceService implements PersistenceService {
 							recordIdentifier);
 					continue;
 				}
+				
+				Array z = rs.getArray("setSpec");				
+				List<String> setSpec = new LinkedList<>();
+				if (z != null) {
+					String[] setSpecArray = (String[]) z.getArray();
+					for (String element : setSpecArray){
+						setSpec.add(element);
+					}
+				}
 
-				OaiHeader actualHeader = new OaiHeader(recordIdentifier, datestamp, rs.getBoolean("statusIsDeleted"));
+				OaiHeader actualHeader = new OaiHeader(recordIdentifier, datestamp, setSpec, rs.getBoolean("statusIsDeleted"));
 				headers.add(actualHeader);
 
 			}
@@ -360,7 +378,7 @@ public class PostgrePersistenceService implements PersistenceService {
 
 		if (exceptionMsg.length() > 0) {
 			// FIXME @Ralf: should we throw an exception here? It hides the
-			// return value. on the other hand, 
+			// return value. on the other hand,
 			//
 			throw new PersistenceException(exceptionMsg.toString());
 		}
@@ -407,4 +425,12 @@ public class PostgrePersistenceService implements PersistenceService {
 		return date;
 	}
 
+	private ArrayList<String> convertListToArrayList(List<String> list) {
+		ArrayList<String> array = new ArrayList<>();
+
+		for (String element : list) {
+			array.add(element);
+		}
+		return array;
+	}
 }
