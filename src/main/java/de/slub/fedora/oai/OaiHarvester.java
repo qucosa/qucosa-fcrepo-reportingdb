@@ -21,8 +21,6 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -52,6 +50,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.eclipse.jdt.annotation.Nullable;
 import org.joda.time.Duration;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -104,24 +104,39 @@ public class OaiHarvester extends TerminateableRunnable {
 	private final URI uri;
 	private final boolean useFC3CompatibilityMode;
 
-	// TODO constructor does no checks now, everything done by builder. don't really like this...
+	// TODO constructor does no checks now, everything done by builder. don't
+	// really like this...
 	protected OaiHarvester(URI harvestingUri, Duration pollInterval, OaiHeaderFilter oaiHeaderFilter,
-			PersistenceService persistenceService, Duration oaiRunResultHistoryLength, boolean useFC3CompatibilityMode) {
+			PersistenceService persistenceService, Duration oaiRunResultHistoryLength,
+			boolean useFC3CompatibilityMode) {
 
 		this.uri = harvestingUri;
 		this.pollInterval = pollInterval;
 		this.oaiRunResultHistoryLength = oaiRunResultHistoryLength;
 		this.persistenceService = persistenceService;
 		this.oaiHeaderFilter = oaiHeaderFilter;
-
-		this.logger.info("Harvesting URL: {} every {}", this.uri.toASCIIString(), this.pollInterval.toString());
-
 		this.useFC3CompatibilityMode = useFC3CompatibilityMode;
 		this.uriTimestampFormat = (useFC3CompatibilityMode) ? FCREPO3_TIMESTAMP_FORMAT : DEFAULT_URI_TIMESTAMP_FORMAT;
 	}
 
 	@Override
 	public void run() {
+		PeriodFormatter formatter = new PeriodFormatterBuilder()
+				.printZeroIfSupported()
+				.appendHours()
+				.appendSuffix("hr", "hrs")
+				.appendSeparator(":")
+				.minimumPrintedDigits(2)
+				.appendMinutes()
+				.appendSuffix("min", "min")
+				.appendSeparator(":")
+				.appendSecondsWithOptionalMillis()
+				.appendSuffix("sec", "sec")
+				.toFormatter();
+		String interval = formatter.print(this.pollInterval.toPeriod());
+		this.logger.info("Harvesting URL: {} every {}", this.uri.toASCIIString(), interval);
+		
+		
 		try {
 			harvestLoop();
 		} catch (Exception e) {
@@ -517,8 +532,9 @@ public class OaiHarvester extends TerminateableRunnable {
 					setSpecList.add(setSpec);
 				}
 				OaiHeader receivedHeader = new OaiHeader(recordIdentifier, datestampDate, setSpecList, statusIsDeleted);
-//				OaiHeader receivedHeader = new OaiHeader(recordIdentifier, datestampDate, statusIsDeleted);
-				
+				// OaiHeader receivedHeader = new OaiHeader(recordIdentifier,
+				// datestampDate, statusIsDeleted);
+
 				boolean added = harvestedHeaders.add(receivedHeader);
 				if (added)
 					logger.debug("Added OAI header to list: {}", receivedHeader);

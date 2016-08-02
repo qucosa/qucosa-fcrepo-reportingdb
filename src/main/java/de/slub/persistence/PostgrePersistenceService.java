@@ -24,7 +24,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
@@ -424,13 +423,5 @@ public class PostgrePersistenceService implements PersistenceService {
 
 		return date;
 	}
-
-	private ArrayList<String> convertListToArrayList(List<String> list) {
-		ArrayList<String> array = new ArrayList<>();
-
-		for (String element : list) {
-			array.add(element);
-		}
-		return array;
-	}
+	
 }

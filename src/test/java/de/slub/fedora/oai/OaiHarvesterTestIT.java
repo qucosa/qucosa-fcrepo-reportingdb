@@ -21,8 +21,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -32,7 +34,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.xml.bind.DatatypeConverter;
@@ -42,9 +43,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.annotation.NonNull;
 import org.joda.time.Duration;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -56,9 +55,6 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import de.slub.persistence.PersistenceService;
-import de.slub.persistence.PostgrePersistenceService;
-import de.slub.persistence.PostgrePersistenceServiceTestHelper;
-import de.slub.persistence.ReportingProperties;
 import de.slub.util.TerminateableRunnable;
 
 public class OaiHarvesterTestIT {
@@ -73,20 +69,9 @@ public class OaiHarvesterTestIT {
 	private static final String OAI_EMPTY_RESUMPTION_TOKEN_XML = "/oai/emptyResumptionToken.xml";
 	private static final String OAI_IDENTIFIERS_TO_FILTER_XML = "/oai/ListIdentifiersToFilter.xml";
 
-	private static final String CREATE_SEQUENCES_AND_TABLES_SQL = "/persistence/createSequencesAndTables.sql";
-	private static final String TRUNCATE_TABLES_SQL = "/persistence/truncateTables.sql";
-	private static final String INSERT_OAI_RUN_RESULTS_SQL = "/persistence/insertOAIRunResults.sql";
-
-	// TODO read from Properties file??
-	private static final String DATABASE_URL = "jdbc:postgresql://localhost:5432/reportingUnitTest";
-	private static final String DATABASE_USER = "reportingDBUnitTest";
-	private static final String DATABASE_PASSWORD = "76Sp)qpH2D";
-
 	private EmbeddedHttpHandler embeddedHttpHandler;
-	private ReportingProperties reportingProperties = ReportingProperties.getInstance();
 	private HttpServer httpServer;
 	private PersistenceService mockedPersistenceService;
-	private static PostgrePersistenceServiceTestHelper testPersistenceService;
 	private OaiHarvester oaiHarvester;
 
 

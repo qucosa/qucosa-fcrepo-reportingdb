@@ -16,9 +16,7 @@
 
 package de.slub.fedora.oai;
 
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
 

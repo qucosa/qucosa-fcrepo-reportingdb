@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.slub.persistence;
+package de.slub.fedora.reporting;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Properties;
 
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -51,24 +52,38 @@ public class ReportingProperties {
 	    }
 	}
 	
-	public static ReportingProperties getInstance(){
+	protected static ReportingProperties getInstance(){
 		if (ReportingProperties.instance == null){
 			instance = new ReportingProperties();
 		}
 		return instance;
 	}
 	
-	public String getPostgreSQLDatabaseURL(){
+	protected String getPostgreSQLDatabaseURL(){
 		return props.getProperty("db.url");
 	}
 	
-	public String getPostgreSQLUser(){
+	protected String getPostgreSQLUser(){
 		return props.getProperty("db.user");
 	}
 	
-	public String getPostgreSQLPasswd(){
+	protected String getPostgreSQLPasswd(){
 		return props.getProperty("db.passwd");
 	}
+		
+	protected String getOaiDataProviderURL(){
+		return props.getProperty("oai.url");
+	}
 	
-	
+	protected int getOaiDataProviderPollingInterval() {
+		return Integer.parseInt(props.getProperty("oai.pollseconds"));
+	}
+
+	public boolean getFC3CompatibilityMode() {
+		return Boolean.parseBoolean(props.getProperty("oai.fc3compatibility"));
+	}
+
+	public Duration getOaiRunResultHistoryLength() {
+		return Duration.standardHours(Long.parseLong(props.getProperty("oai.runresulthistorylengthhours")));
+	}
 }
