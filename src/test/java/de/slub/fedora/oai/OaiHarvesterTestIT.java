@@ -22,10 +22,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import static org.mockito.Mockito.*;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -84,46 +85,18 @@ public class OaiHarvesterTestIT {
 	private static PostgrePersistenceServiceTestHelper testPersistenceService;
 	private OaiHarvester oaiHarvester;
 
-	/**
-	 * Harvest two OAI headers from ListIdentifiers and put them in
-	 * {@link #harvestedHeaders}.
-	 * 
-	 * @throws Exception
-	 */
-	@Test
-	public void createOaiHeadersForListedIdentifier() throws Exception {
-		embeddedHttpHandler.resourcePath = OAI_LIST_IDENTIFIERS_XML;
-		runAndWait(oaiHarvester);
-
-		List<OaiHeader> actualOaiHeaders = persistenceService.getOaiHeaders();
-		assertEquals("List of harvested headers should contain two elements", 2, actualOaiHeaders.size());
-
-		Date datestamp1 = DatatypeConverter.parseDateTime("2014-05-06T17:33:25Z").getTime();
-
-		OaiHeader oaiHeader1 = new OaiHeader("oai:example.org:qucosa:1044", datestamp1, false);
-
-		Date datestamp2 = DatatypeConverter.parseDateTime("2016-07-12T17:33:25Z").getTime();
-		List<String> setSpec = new LinkedList<>();
-		setSpec.add("test:11");
-		setSpec.add("test:22");
-		@SuppressWarnings("null")
-		OaiHeader oaiHeader2 = new OaiHeader("oai:example.org:qucosa:1234", datestamp2, setSpec, true);
-
-		assertTrue(actualOaiHeaders.contains(oaiHeader1));
-		assertTrue(actualOaiHeaders.contains(oaiHeader2));
-	}
 
 	/**
-	 * Test the cleanup of OaiRunResults in database. Assert that the last
-	 * inserted statement is always kept, even if it is older than the specified
-	 * last result to keep.
+	 * Test the cleanup of OaiRunResults in persistence layer. Assert that the
+	 * last inserted statement is always kept, even if it is older than the
+	 * specified last result to keep.
 	 * 
 	 * @throws Exception
 	 */
 	@Test
 	public void cleanupOaiRunResultHistoryAlwaysKeepLastResult() throws Exception {
 
-		// write 3 OaiRunResults to database that are older than one day
+		// write 3 OaiRunResults to persistence that are older than one day
 		testPersistenceService.executeQueriesFromFile(INSERT_OAI_RUN_RESULTS_SQL);
 		assertEquals("Wrong number of OaiRunResults in database, precondition of test failed!", 3,
 				testPersistenceService.countOaiRunResults());
@@ -134,8 +107,9 @@ public class OaiHarvesterTestIT {
 		Date lastRunToKeep = dateFormatLastRunToKeep.parse("2016-07-22 13:22:57.137+02");
 		persistenceService.cleanupOaiRunResults(lastRunToKeep);
 
-		// check that only one result is remaining in database
-		assertEquals("Wrong number of OaiRunResults in database.", 1, testPersistenceService.countOaiRunResults());
+		// check that only one result is remaining in persistence layer
+		assertEquals("Wrong number of OaiRunResults in persistence layer.", 1,
+				testPersistenceService.countOaiRunResults());
 
 		// make sure the OaiRunResult inserted last has not been deleted.
 		// look for '2016-07-20 13:22:57.137+02', '2011-01-03
@@ -167,8 +141,9 @@ public class OaiHarvesterTestIT {
 		assertEquals(expected, actual);
 	}
 
+
 	/**
-	 * Test the cleanup of OaiRunResults in database. Assert that all
+	 * Test the cleanup of OaiRunResults in persistence layer. Assert that all
 	 * OaiRunResults are kept that are newer than the specified oldest
 	 * OaiRunResult to keep. The test simulates three old results to delete and
 	 * two new results to keep.<br />
@@ -180,14 +155,14 @@ public class OaiHarvesterTestIT {
 	@Test
 	public void cleanupOaiRunResultHistoryTimestampFilter() throws Exception {
 
-		// write 3 OaiRunResults to database that are older than one day
+		// write 3 OaiRunResults to persistence that are older than one day
 		testPersistenceService.executeQueriesFromFile(INSERT_OAI_RUN_RESULTS_SQL);
 
-		// write a 4th result to database that must not be deleted
+		// write a 4th result to persistence that must not be deleted
 		OaiRunResult fourthResult = new OaiRunResult(now(), now(), "", null, null);
 		persistenceService.storeOaiRunResult(fourthResult);
 
-		assertEquals("Wrong number of OaiRunResults in database, precondition of test failed!", 4,
+		assertEquals("Wrong number of OaiRunResults in persistence layer, precondition of test failed!", 4,
 				testPersistenceService.countOaiRunResults());
 
 		// new OaiHarvester that keeps a history of 1 day
@@ -196,18 +171,17 @@ public class OaiHarvesterTestIT {
 				.build();
 
 		// just let the harvester do something to have one successful loop,
-		// writing a 5th OaiRunResult to database and invoke the cleanup
+		// writing a 5th OaiRunResult to persistence and invoke the cleanup
 		// the 5th OaiRunResult's details are read from OAI_RESUMPTION_TOKEN_XML
 		embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
 		runAndWait(oaiHarvester);
 
-		// check that only two results are remaining in database
+		// check that only two results are remaining in persistence
 		assertEquals("Wrong number of OaiRunResults in database.", 2, testPersistenceService.countOaiRunResults());
 
 		// Make sure the 5th OaiRunResult is returned as the most recently
 		// inserted. It's timestampOfRun can not be checked since it was set by
-		// the harvester
-		// itself.
+		// the harvester itself.
 		Date responseDate = DatatypeConverter.parseDateTime("2014-06-08T11:43:00Z").getTime();
 		String token = "111111111111111";
 		Date expirationDate = DatatypeConverter.parseDateTime("2014-06-09T18:34:15Z").getTime();
@@ -224,97 +198,9 @@ public class OaiHarvesterTestIT {
 		// had been inserted as number four
 	}
 
-	/**
-	 * Test that there is no cleanup of OaiRunResults if the last run was not
-	 * successful.
-	 *
-	 * @throws Exception
-	 */
-	@Test
-	public void noCleanupOfOaiRunResultHistoryAfterUnsuccessfulRun() throws Exception {
+	
 
-		// write 3 OaiRunResults to database that are older than one day
-		testPersistenceService.executeQueriesFromFile(INSERT_OAI_RUN_RESULTS_SQL);
-		assertEquals("Wrong number of OaiRunResults in database, precondition of test failed!", 3,
-				testPersistenceService.countOaiRunResults());
-
-		// new OaiHarvester that keeps a history of 1 day
-		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
-				.setPollingInterval(Duration.standardSeconds(1)).setOaiRunResultHistory(Duration.standardDays(1))
-				.build();
-
-		// let the harvester receive a http 404 to have one UNsuccessful loop,
-		// NOT writing a 4th OaiRunResult to database and invoke the cleanup
-		embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
-		embeddedHttpHandler.httpStatusCode = 404;
-		runAndWait(oaiHarvester);
-
-		// check that there are still three results remaining in database
-		assertEquals("Wrong number of OaiRunResults in database.", 3, testPersistenceService.countOaiRunResults());
-
-		// make sure the 3rd OaiRunResult is returned as the most recently
-		// inserted. look for '2016-07-20 13:22:57.137+02', '2011-01-03
-		// 11:00:23-03',
-		// '140225245500000', '2014-06-09 20:34:15+04', '2016-07-20
-		// 13:18:40.038+02'and be aware of time
-		// zones
-		OaiRunResult actual = persistenceService.getLastOaiRunResult();
-		assertNotNull("Could not load any OaiRunResult from database", actual);
-
-		SimpleDateFormat dateFormatLastRun = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		dateFormatLastRun.setTimeZone(TimeZone.getTimeZone("GMT+2:00"));
-		Date lastRun = dateFormatLastRun.parse("2016-07-20 13:22:57.137+02");
-
-		SimpleDateFormat dateFormatResponseDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		dateFormatResponseDate.setTimeZone(TimeZone.getTimeZone("GMT-3:00"));
-		Date responseDate = dateFormatResponseDate.parse("2011-01-03 12:00:23-03");
-
-		String token = "140225245500000";
-
-		SimpleDateFormat dateFormatTokenExpiration = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		dateFormatTokenExpiration.setTimeZone(TimeZone.getTimeZone("GMT+4:00"));
-		Date tokenExpiration = dateFormatTokenExpiration.parse("2014-06-09 20:34:15+04");
-
-		SimpleDateFormat dateFormatNextFromTimestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		dateFormatNextFromTimestamp.setTimeZone(TimeZone.getTimeZone("GMT+2:00"));
-		Date nextFromTimestamp = dateFormatNextFromTimestamp.parse("2016-07-20 13:18:40.038+02");
-
-		OaiRunResult expected = new OaiRunResult(lastRun, responseDate, token, tokenExpiration, nextFromTimestamp);
-
-		assertEquals(expected, actual);
-
-	}
-
-	/*----  test filtering of harvested OAI headers  ----*/
-
-	/**
-	 * Process a OAI response with 13 header elements, use filter to keep only 6
-	 * header elements that contain "real" Qucosa documents.
-	 * 
-	 * @throws Exception
-	 */
-	@Test
-	public void filterHarvestedOaiHeaders() throws Exception {
-
-		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
-				.setPollingInterval(Duration.standardSeconds(1)).setOaiHeaderFilter(new QucosaDocumentFilter()).build();
-
-		embeddedHttpHandler.resourcePath = OAI_IDENTIFIERS_TO_FILTER_XML;
-		runAndWait(oaiHarvester);
-		assertEquals("Wrong number of headers, filter does not work.", 6, persistenceService.getOaiHeaders().size());
-
-		List<String> actualIDs = new LinkedList<>();
-		for (OaiHeader header : persistenceService.getOaiHeaders()) {
-			actualIDs.add(header.getRecordIdentifier());
-		}
-
-		String[] expectedIDs = { "oai:example.org:qucosa:1", "oai:example.org:qucosa:22", "oai:example.org:qucosa:333",
-				"oai:example.org:qucosa:4444", "oai:example.org:qucosa:55555", "oai:example.org:qucosa:666666" };
-
-		for (String expectedID : expectedIDs) {
-			assertTrue("Missing expected recordIdentifier " + expectedID, actualIDs.contains(expectedID));
-		}
-	}
+	
 
 	/*---- Begin test logic for processing of resumption tokens and nextFromValues  ----*/
 
@@ -328,7 +214,7 @@ public class OaiHarvesterTestIT {
 	 * @throws Exception
 	 */
 	@Test
-	public void createGETfromLastOaiRunResultNoResumptionTokenNoNextFromTimestamp() throws Exception {
+	public void createGETfromNullLastOaiRunResult() throws Exception {
 
 		// just let the harvester do something to have one successful loop
 		// (OAI data provider's response is ignored)

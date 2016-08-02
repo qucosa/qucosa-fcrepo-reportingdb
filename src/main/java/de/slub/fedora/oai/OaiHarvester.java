@@ -141,8 +141,8 @@ public class OaiHarvester extends TerminateableRunnable {
 					harvestedHeaders = oaiHeaderFilter.filterOaiHeaders(harvestedHeaders);
 
 					try {
-						persistenceService.addOrUpdateHeaders(harvestedHeaders);
-						harvestedHeaders.clear();
+						persistenceService.addOrUpdateHeaders(new LinkedList<OaiHeader>(harvestedHeaders));
+						harvestedHeaders = new LinkedList<OaiHeader>();
 
 						try {
 							persistenceService.storeOaiRunResult(currentRun);

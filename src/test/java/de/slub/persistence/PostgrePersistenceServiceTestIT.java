@@ -17,7 +17,6 @@
 package de.slub.persistence;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -37,6 +36,10 @@ import org.junit.Test;
 import de.slub.fedora.oai.OaiHeader;
 import de.slub.fedora.oai.OaiRunResult;
 
+/**
+ * Integration tests of the {@link PostgrePersistenceService}'s API.
+ *
+ */
 public class PostgrePersistenceServiceTestIT {
 
 	// TODO read from Properties file??
