@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.TimeZone;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.joda.time.Duration;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -49,10 +51,15 @@ public class PostgrePersistenceServiceTestIT {
 
 	private static final String CREATE_SEQUENCES_AND_TABLES_SQL = "/persistence/createSequencesAndTables.sql";
 	private static final String TRUNCATE_TABLES_SQL = "/persistence/truncateTables.sql";
+	private static final String INSERT_OAI_RUN_RESULTS_SQL = "/persistence/insertOAIRunResults.sql";
+	private static final String INSERT_OAI_HEADERS_SQL = "/persistence/insertOaiHeaders.sql";
 
 	private static PostgrePersistenceServiceTestHelper testPersistenceService;
 	private PersistenceService persistenceService;
 
+	
+	/* ----  Begin OaiRunResult tests  ---- */
+	
 	/**
 	 * Write several {@link OaiRunResult}s to database and assert that the last
 	 * written object is returned by
@@ -64,7 +71,7 @@ public class PostgrePersistenceServiceTestIT {
 	 */
 	@Test
 	public void readLastRunResult() throws Exception {
-		testPersistenceService.executeQueriesFromFile("/persistence/insertOAIRunResults.sql");
+		testPersistenceService.executeQueriesFromFile(INSERT_OAI_RUN_RESULTS_SQL);
 		assertEquals("Wrong number of OaiRunResults in database, precondition of test failed!", 3,
 				testPersistenceService.countOaiRunResults());
 
@@ -212,7 +219,108 @@ public class PostgrePersistenceServiceTestIT {
 
 		assertEquals(oaiRunResult_2, actualOaiRunResult);
 	}
+	
+	/**
+	 * Test the cleanup of OaiRunResults in persistence layer. Assert that the
+	 * last inserted statement is always kept, even if it is older than the
+	 * specified last result to keep.
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void cleanupOaiRunResultHistoryAlwaysKeepLastResult() throws Exception {
 
+		// write 3 OaiRunResults to persistence that are older than one day
+		testPersistenceService.executeQueriesFromFile(INSERT_OAI_RUN_RESULTS_SQL);
+		assertEquals("Wrong number of OaiRunResults in database, precondition of test failed!", 3,
+				testPersistenceService.countOaiRunResults());
+
+		// do cleanup
+		SimpleDateFormat dateFormatLastRunToKeep = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		dateFormatLastRunToKeep.setTimeZone(TimeZone.getTimeZone("GMT+2:00"));
+		Date lastRunToKeep = dateFormatLastRunToKeep.parse("2016-07-22 13:22:57.137+02");
+		persistenceService.cleanupOaiRunResults(lastRunToKeep);
+
+		// check that only one result is remaining in persistence layer
+		assertEquals("Wrong number of OaiRunResults in persistence layer.", 1,
+				testPersistenceService.countOaiRunResults());
+
+		// make sure the OaiRunResult inserted last has not been deleted.
+		// look for '2016-07-20 13:22:57.137+02', '2011-01-03
+		// 11:00:23-03', '140225245500000', '2014-06-09 20:34:15+04',
+		// '2016-07-20 13:18:40.038+02' and be
+		// aware of time zones
+		OaiRunResult actual = persistenceService.getLastOaiRunResult();
+
+		SimpleDateFormat dateFormatLastRun = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+		dateFormatLastRun.setTimeZone(TimeZone.getTimeZone("GMT+2:00"));
+		Date lastRun = dateFormatLastRun.parse("2016-07-20 13:22:57.137+02");
+
+		SimpleDateFormat dateFormatResponseDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		dateFormatResponseDate.setTimeZone(TimeZone.getTimeZone("GMT-3:00"));
+		Date responseDate = dateFormatResponseDate.parse("2011-01-03 12:00:23-03");
+
+		String token = "140225245500000";
+
+		SimpleDateFormat dateFormatTokenExpiration = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		dateFormatTokenExpiration.setTimeZone(TimeZone.getTimeZone("GMT+4:00"));
+		Date tokenExpiration = dateFormatTokenExpiration.parse("2014-06-09 20:34:15+04");
+
+		SimpleDateFormat dateFormatNextFromTimestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+		dateFormatNextFromTimestamp.setTimeZone(TimeZone.getTimeZone("GMT+2:00"));
+		Date nextFromTimestamp = dateFormatNextFromTimestamp.parse("2016-07-20 13:18:40.038+02");
+
+		OaiRunResult expected = new OaiRunResult(lastRun, responseDate, token, tokenExpiration, nextFromTimestamp);
+
+		assertEquals(expected, actual);
+	}
+	
+	/**
+	 * Test the cleanup of OaiRunResults in persistence layer. Assert that all
+	 * OaiRunResults are kept that are newer than the specified oldest
+	 * OaiRunResult to keep. The test simulates three old results to delete and
+	 * two new results to keep.<br />
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void cleanupOaiRunResultHistoryTimestampFilterORIGINAL() throws Exception {
+
+		// write 3 OaiRunResults to persistence that are older than one day
+		testPersistenceService.executeQueriesFromFile(INSERT_OAI_RUN_RESULTS_SQL);
+
+		// write a 4th result to persistence that must not be deleted
+		OaiRunResult fourthOaiRunResult = new OaiRunResult(now(), now(), "", null, null);
+		persistenceService.storeOaiRunResult(fourthOaiRunResult);
+
+		// write a 5th result to persistence that must not be deleted
+		Date timestampOfRun = now();
+		Date responseDate = DatatypeConverter.parseDateTime("2014-06-08T11:43:00Z").getTime();
+		String token = "111111111111111";
+		Date expirationDate = DatatypeConverter.parseDateTime("2014-06-09T18:34:15Z").getTime();
+		OaiRunResult fifthOaiRunResult = new OaiRunResult(timestampOfRun, responseDate, token, expirationDate, timestampOfRun);
+		persistenceService.storeOaiRunResult(fifthOaiRunResult);
+		
+		assertEquals("Wrong number of OaiRunResults in persistence layer, precondition of test failed!", 5,
+				testPersistenceService.countOaiRunResults());
+
+		persistenceService.cleanupOaiRunResults(new Date(timestampOfRun.getTime() - Duration.standardDays(1).getMillis()));
+
+		// check that only two results are remaining in persistence
+		assertEquals("Wrong number of OaiRunResults in database.", 2, testPersistenceService.countOaiRunResults());
+
+		// Make sure the 5th OaiRunResult is returned as the most recently
+		// inserted.		
+		OaiRunResult actualOaiRunResult = persistenceService.getLastOaiRunResult();
+		assertEquals(fifthOaiRunResult, actualOaiRunResult);
+
+		// TODO assert, that the other OaiRunResult in database is the one that
+		// had been inserted as number four
+	}
+
+	/* ----  End OaiRunResult tests  ---- */
+	/* ----  Begin OaiHeader tests  ---- */
+	
 	/**
 	 * Write several {@link OaiHeader}s to database and assert that they can be
 	 * read by {@link PersistenceService#getOaiHeaders()}. The insertion is not
@@ -223,7 +331,7 @@ public class PostgrePersistenceServiceTestIT {
 	 */
 	@Test
 	public void readOaiHeaders() throws Exception {
-		testPersistenceService.executeQueriesFromFile("/persistence/insertOaiHeaders.sql");
+		testPersistenceService.executeQueriesFromFile(INSERT_OAI_HEADERS_SQL);
 
 		List<OaiHeader> actualOaiHeaders = persistenceService.getOaiHeaders();
 		assertEquals("Wrong number of OaiHeaders returned.", 2, actualOaiHeaders.size());
@@ -383,6 +491,8 @@ public class PostgrePersistenceServiceTestIT {
 		assertEquals("The updated OaiHeader should be the only header in database.", updatedHeaders, actualHeaders);
 	}
 
+	/* ----  End OaiHeader tests  ---- */
+	
 	/**
 	 * Initialize test database: create tables and sequences if they do not
 	 * exist. <br />
@@ -413,4 +523,8 @@ public class PostgrePersistenceServiceTestIT {
 		testPersistenceService.executeQueriesFromFile(TRUNCATE_TABLES_SQL);
 	}
 
+	private Date now() {
+		return Calendar.getInstance().getTime();
+	}
+	
 }

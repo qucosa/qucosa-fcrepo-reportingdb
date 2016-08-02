@@ -156,12 +156,12 @@ public class OaiHarvester extends TerminateableRunnable {
 								+ "the previous OaiRunResult is still the most recent one. ", exception);
 					}
 				}
-				cleanupOaiRunResultsInDB(currentRun);
+				cleanupOaiRunResultsInPersistence(currentRun);
 			}
 		}
 	}
 
-	private void cleanupOaiRunResultsInDB(OaiRunResult currentOaiRunResult) {
+	private void cleanupOaiRunResultsInPersistence(OaiRunResult currentOaiRunResult) {
 
 		Date currentRun = currentOaiRunResult.getTimestampOfRun();
 		if (currentRun != null) {

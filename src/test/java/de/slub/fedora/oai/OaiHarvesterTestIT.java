@@ -46,6 +46,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -81,126 +85,74 @@ public class OaiHarvesterTestIT {
 	private EmbeddedHttpHandler embeddedHttpHandler;
 	private ReportingProperties reportingProperties = ReportingProperties.getInstance();
 	private HttpServer httpServer;
-	private PersistenceService persistenceService;
+	private PersistenceService mockedPersistenceService;
 	private static PostgrePersistenceServiceTestHelper testPersistenceService;
 	private OaiHarvester oaiHarvester;
 
 
+	@Captor
+	private ArgumentCaptor<List<OaiHeader>> oaiHeaderCaptor;
+
 	/**
-	 * Test the cleanup of OaiRunResults in persistence layer. Assert that the
-	 * last inserted statement is always kept, even if it is older than the
-	 * specified last result to keep.
+	 * Harvest two OAI headers from ListIdentifiers and store them in
+	 * persistence layer.
 	 * 
 	 * @throws Exception
 	 */
 	@Test
-	public void cleanupOaiRunResultHistoryAlwaysKeepLastResult() throws Exception {
-
-		// write 3 OaiRunResults to persistence that are older than one day
-		testPersistenceService.executeQueriesFromFile(INSERT_OAI_RUN_RESULTS_SQL);
-		assertEquals("Wrong number of OaiRunResults in database, precondition of test failed!", 3,
-				testPersistenceService.countOaiRunResults());
-
-		// do cleanup
-		SimpleDateFormat dateFormatLastRunToKeep = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		dateFormatLastRunToKeep.setTimeZone(TimeZone.getTimeZone("GMT+2:00"));
-		Date lastRunToKeep = dateFormatLastRunToKeep.parse("2016-07-22 13:22:57.137+02");
-		persistenceService.cleanupOaiRunResults(lastRunToKeep);
-
-		// check that only one result is remaining in persistence layer
-		assertEquals("Wrong number of OaiRunResults in persistence layer.", 1,
-				testPersistenceService.countOaiRunResults());
-
-		// make sure the OaiRunResult inserted last has not been deleted.
-		// look for '2016-07-20 13:22:57.137+02', '2011-01-03
-		// 11:00:23-03', '140225245500000', '2014-06-09 20:34:15+04',
-		// '2016-07-20 13:18:40.038+02' and be
-		// aware of time zones
-		OaiRunResult actual = persistenceService.getLastOaiRunResult();
-
-		SimpleDateFormat dateFormatLastRun = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		dateFormatLastRun.setTimeZone(TimeZone.getTimeZone("GMT+2:00"));
-		Date lastRun = dateFormatLastRun.parse("2016-07-20 13:22:57.137+02");
-
-		SimpleDateFormat dateFormatResponseDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		dateFormatResponseDate.setTimeZone(TimeZone.getTimeZone("GMT-3:00"));
-		Date responseDate = dateFormatResponseDate.parse("2011-01-03 12:00:23-03");
-
-		String token = "140225245500000";
-
-		SimpleDateFormat dateFormatTokenExpiration = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		dateFormatTokenExpiration.setTimeZone(TimeZone.getTimeZone("GMT+4:00"));
-		Date tokenExpiration = dateFormatTokenExpiration.parse("2014-06-09 20:34:15+04");
-
-		SimpleDateFormat dateFormatNextFromTimestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		dateFormatNextFromTimestamp.setTimeZone(TimeZone.getTimeZone("GMT+2:00"));
-		Date nextFromTimestamp = dateFormatNextFromTimestamp.parse("2016-07-20 13:18:40.038+02");
-
-		OaiRunResult expected = new OaiRunResult(lastRun, responseDate, token, tokenExpiration, nextFromTimestamp);
-
-		assertEquals(expected, actual);
-	}
-
-
-	/**
-	 * Test the cleanup of OaiRunResults in persistence layer. Assert that all
-	 * OaiRunResults are kept that are newer than the specified oldest
-	 * OaiRunResult to keep. The test simulates three old results to delete and
-	 * two new results to keep.<br />
-	 * The test also involves the OaiHarvester, asserting that the cleanup is
-	 * triggered after a successful run.
-	 * 
-	 * @throws Exception
-	 */
-	@Test
-	public void cleanupOaiRunResultHistoryTimestampFilter() throws Exception {
-
-		// write 3 OaiRunResults to persistence that are older than one day
-		testPersistenceService.executeQueriesFromFile(INSERT_OAI_RUN_RESULTS_SQL);
-
-		// write a 4th result to persistence that must not be deleted
-		OaiRunResult fourthResult = new OaiRunResult(now(), now(), "", null, null);
-		persistenceService.storeOaiRunResult(fourthResult);
-
-		assertEquals("Wrong number of OaiRunResults in persistence layer, precondition of test failed!", 4,
-				testPersistenceService.countOaiRunResults());
-
-		// new OaiHarvester that keeps a history of 1 day
-		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
-				.setPollingInterval(Duration.standardSeconds(1)).setOaiRunResultHistory(Duration.standardDays(1))
-				.build();
-
-		// just let the harvester do something to have one successful loop,
-		// writing a 5th OaiRunResult to persistence and invoke the cleanup
-		// the 5th OaiRunResult's details are read from OAI_RESUMPTION_TOKEN_XML
-		embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
+	public void createOaiHeadersForListedIdentifier() throws Exception {
+		embeddedHttpHandler.resourcePath = OAI_LIST_IDENTIFIERS_XML;
 		runAndWait(oaiHarvester);
 
-		// check that only two results are remaining in persistence
-		assertEquals("Wrong number of OaiRunResults in database.", 2, testPersistenceService.countOaiRunResults());
+		List<OaiHeader> expectedHeaders = new LinkedList<>();
+		Date datestamp1 = DatatypeConverter.parseDateTime("2014-05-06T17:33:25Z").getTime();
+		OaiHeader oaiHeader1 = new OaiHeader("oai:example.org:qucosa:1044", datestamp1, false);
+		expectedHeaders.add(oaiHeader1);
 
-		// Make sure the 5th OaiRunResult is returned as the most recently
-		// inserted. It's timestampOfRun can not be checked since it was set by
-		// the harvester itself.
-		Date responseDate = DatatypeConverter.parseDateTime("2014-06-08T11:43:00Z").getTime();
-		String token = "111111111111111";
-		Date expirationDate = DatatypeConverter.parseDateTime("2014-06-09T18:34:15Z").getTime();
-		OaiRunResult lastRun = persistenceService.getLastOaiRunResult();
-		assertNotNull(lastRun);
-		assertEquals("Response dates are not equal, the OaiRunResult inserted last was deleted.", responseDate,
-				lastRun.getResponseDate());
-		assertEquals("Resumption tokens are not equal, the OaiRunResult inserted last was deleted.", token,
-				lastRun.getResumptionToken());
-		assertEquals("Resumption token expiration dates are not equal, the OaiRunResult inserted last was deleted.",
-				expirationDate, lastRun.getResumptionTokenExpirationDate());
+		Date datestamp2 = DatatypeConverter.parseDateTime("2016-07-12T17:33:25Z").getTime();
+		List<String> setSpec = new LinkedList<>();
+		setSpec.add("test:11");
+		setSpec.add("test:22");
+		OaiHeader oaiHeader2 = new OaiHeader("oai:example.org:qucosa:1234", datestamp2, setSpec, true);
+		expectedHeaders.add(oaiHeader2);
 
-		// TODO assert, that the other OaiRunResult in database is the one that
-		// had been inserted as number four
+		verify(mockedPersistenceService).addOrUpdateHeaders(expectedHeaders);
 	}
-
 	
 
-	
+	/*----  test filtering of harvested OAI headers  ----*/
+
+	/**
+	 * Process a OAI response with 13 header elements, use filter to keep only 6
+	 * header elements that contain "real" Qucosa documents.
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void filterHarvestedOaiHeaders() throws Exception {
+
+		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedPersistenceService)
+				.setPollingInterval(Duration.standardSeconds(1)).setOaiHeaderFilter(new QucosaDocumentFilter()).build();
+
+		embeddedHttpHandler.resourcePath = OAI_IDENTIFIERS_TO_FILTER_XML;
+		runAndWait(oaiHarvester);
+
+		verify(mockedPersistenceService).addOrUpdateHeaders(oaiHeaderCaptor.capture());
+		List<OaiHeader> actualOaiHeaders = (List<OaiHeader>) oaiHeaderCaptor.getValue();
+		assertEquals("Wrong number of headers, filter does not work.", 6, actualOaiHeaders.size());
+
+		List<String> actualIDs = new LinkedList<>();
+		for (OaiHeader header : actualOaiHeaders) {
+			actualIDs.add(header.getRecordIdentifier());
+		}
+
+		String[] expectedIDs = { "oai:example.org:qucosa:1", "oai:example.org:qucosa:22", "oai:example.org:qucosa:333",
+				"oai:example.org:qucosa:4444", "oai:example.org:qucosa:55555", "oai:example.org:qucosa:666666" };
+
+		for (String expectedID : expectedIDs) {
+			assertTrue("Missing expected recordIdentifier " + expectedID, actualIDs.contains(expectedID));
+		}
+	}
 
 	/*---- Begin test logic for processing of resumption tokens and nextFromValues  ----*/
 
@@ -215,6 +167,8 @@ public class OaiHarvesterTestIT {
 	 */
 	@Test
 	public void createGETfromNullLastOaiRunResult() throws Exception {
+
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(null);
 
 		// just let the harvester do something to have one successful loop
 		// (OAI data provider's response is ignored)
@@ -247,7 +201,7 @@ public class OaiHarvesterTestIT {
 
 		OaiRunResult lastRun = new OaiRunResult(timestampLastRun, responseDate, resumptionToken,
 				resumptionTokenExpirationDate, nextFromTimestamp);
-		persistenceService.storeOaiRunResult(lastRun);
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastRun);
 
 		// just let the harvester do something to have one successful loop
 		// (OAI data provider's response is ignored)
@@ -282,7 +236,7 @@ public class OaiHarvesterTestIT {
 
 		OaiRunResult lastRun = new OaiRunResult(timestampLastRun, responseDate, resumptionToken,
 				resumptionTokenExpirationDate, nextFromTimestamp);
-		persistenceService.storeOaiRunResult(lastRun);
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastRun);
 
 		// just let the harvester do something to have one successful loop
 		// (OAI data provider's response is ignored)
@@ -315,7 +269,7 @@ public class OaiHarvesterTestIT {
 
 		OaiRunResult lastRun = new OaiRunResult(timestampLastRun, responseDate, resumptionToken,
 				resumptionTokenExpirationDate, nextFromTimestamp);
-		persistenceService.storeOaiRunResult(lastRun);
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastRun);
 
 		// just let the harvester do something to have one successful loop
 		// (OAI data provider's response is ignored)
@@ -339,22 +293,24 @@ public class OaiHarvesterTestIT {
 	 * is present, the OAI data provider returns a resumption token.<br />
 	 * Parse OAI responseDate, resumptionToken, expiration date and from OAI
 	 * data provider's response and store it as new {@link OaiRunResult} in
-	 * database. Assert, that this {@link OaiRunResult}'s nextFromTimestamp is
-	 * {@code null}
+	 * persistence layer. Assert, that this {@link OaiRunResult}'s
+	 * nextFromTimestamp is {@code null}
 	 * 
 	 * @throws Exception
 	 */
 	@Test
 	public void createOaiRunResultFromResumptionToken() throws Exception {
 
-		assertNull("Precondition faild, there must not be any last OaiRunResult",
-				persistenceService.getLastOaiRunResult());
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(null);
 
 		embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
 		runAndWait(oaiHarvester);
 
-		OaiRunResult lastResult = persistenceService.getLastOaiRunResult();
-		assertNotNull("No OaiRunResult was returned by persistence layer", lastResult);
+		ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
+		verify(mockedPersistenceService).storeOaiRunResult(captor.capture());
+		OaiRunResult actualOaiRunResult = captor.getValue();
+
+		assertNotNull("No OaiRunResult was returned by persistence layer", actualOaiRunResult);
 
 		Date expectedResponseDate = parseDateTime("2014-06-08T11:43:00Z");
 		String expectedResumptionToken = "111111111111111";
@@ -362,11 +318,11 @@ public class OaiHarvesterTestIT {
 
 		// compare all of OaiRunResults values except timestampOfRun which is
 		// generated by the harvester at runtime
-		assertEquals(expectedResponseDate, lastResult.getResponseDate());
-		assertEquals(expectedResumptionToken, lastResult.getResumptionToken());
-		assertEquals(expectedExpirationDate, lastResult.getResumptionTokenExpirationDate());
+		assertEquals(expectedResponseDate, actualOaiRunResult.getResponseDate());
+		assertEquals(expectedResumptionToken, actualOaiRunResult.getResumptionToken());
+		assertEquals(expectedExpirationDate, actualOaiRunResult.getResumptionTokenExpirationDate());
 		assertEquals("There must not be any nextFromTimestamp. On error, we need to request all data, "
-				+ "not excluding anything by from-parameter.", null, lastResult.getNextFromTimestamp());
+				+ "not excluding anything by from-parameter.", null, actualOaiRunResult.getNextFromTimestamp());
 	}
 
 	/**
@@ -390,15 +346,19 @@ public class OaiHarvesterTestIT {
 		Date resumptionTokenExpirationDate = null;
 		Date nextFromTimestamp = dateFormat.parse("2014-02-02T02:02:02");
 
-		OaiRunResult lastRun = new OaiRunResult(timestampLastRun, responseDate, resumptionToken,
+		OaiRunResult lastOaiRunResult = new OaiRunResult(timestampLastRun, responseDate, resumptionToken,
 				resumptionTokenExpirationDate, nextFromTimestamp);
-		persistenceService.storeOaiRunResult(lastRun);
+
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastOaiRunResult);
 
 		embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
 		runAndWait(oaiHarvester);
 
-		OaiRunResult lastResult = persistenceService.getLastOaiRunResult();
-		assertNotNull("No OaiRunResult was returned by persistence layer", lastResult);
+		ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
+		verify(mockedPersistenceService).storeOaiRunResult(captor.capture());
+		OaiRunResult actualOaiRunResult = captor.getValue();
+
+		assertNotNull("No OaiRunResult was returned by persistence layer", actualOaiRunResult);
 
 		Date expectedResponseDate = parseDateTime("2014-06-08T11:43:00Z");
 		String expectedResumptionToken = "111111111111111";
@@ -406,11 +366,11 @@ public class OaiHarvesterTestIT {
 
 		// compare all of OaiRunResults values except timestampOfRun which is
 		// generated by the harvester at runtime
-		assertEquals(expectedResponseDate, lastResult.getResponseDate());
-		assertEquals(expectedResumptionToken, lastResult.getResumptionToken());
-		assertEquals(expectedExpirationDate, lastResult.getResumptionTokenExpirationDate());
+		assertEquals(expectedResponseDate, actualOaiRunResult.getResponseDate());
+		assertEquals(expectedResumptionToken, actualOaiRunResult.getResumptionToken());
+		assertEquals(expectedExpirationDate, actualOaiRunResult.getResumptionTokenExpirationDate());
 		assertEquals("The nextFromTimestamp should have been copied from the last OaiRunResult.", nextFromTimestamp,
-				lastResult.getNextFromTimestamp());
+				actualOaiRunResult.getNextFromTimestamp());
 	}
 
 	/**
@@ -432,13 +392,16 @@ public class OaiHarvesterTestIT {
 
 		OaiRunResult lastRun = new OaiRunResult(timestampLastRun, responseDate, resumptionToken,
 				resumptionTokenExpirationDate, nextFromTimestamp);
-		persistenceService.storeOaiRunResult(lastRun);
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastRun);
 
 		// use any "normal" response without resumptionToken
 		embeddedHttpHandler.resourcePath = OAI_EMPTY_RESUMPTION_TOKEN_XML;
 		runAndWait(oaiHarvester);
 
-		OaiRunResult actualOaiRunResult = persistenceService.getLastOaiRunResult();
+		ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
+		verify(mockedPersistenceService).storeOaiRunResult(captor.capture());
+		OaiRunResult actualOaiRunResult = captor.getValue();
+
 		assertNotNull("No OaiRunResult was returned by persistence layer", actualOaiRunResult);
 
 		assertEquals(actualOaiRunResult.getTimestampOfRun(), actualOaiRunResult.getNextFromTimestamp());
@@ -455,11 +418,16 @@ public class OaiHarvesterTestIT {
 	@Test
 	public void createOaiRunResultNoResumptionTokenNewNextFromTimestamp() throws Exception {
 
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(null);
+
 		// use any "normal" response without resumptionToken
 		embeddedHttpHandler.resourcePath = OAI_LIST_IDENTIFIERS_XML;
 		runAndWait(oaiHarvester);
 
-		OaiRunResult actualOaiRunResult = persistenceService.getLastOaiRunResult();
+		ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
+		verify(mockedPersistenceService).storeOaiRunResult(captor.capture());
+		OaiRunResult actualOaiRunResult = captor.getValue();
+
 		assertNotNull("No OaiRunResult was returned by persistence layer", actualOaiRunResult);
 
 		assertEquals(actualOaiRunResult.getTimestampOfRun(), actualOaiRunResult.getNextFromTimestamp());
@@ -489,15 +457,18 @@ public class OaiHarvesterTestIT {
 		Date resumptionTokenExpirationDate = null;
 		Date nextFromTimestamp = dateFormat.parse("2014-02-02T02:02:02");
 
-		OaiRunResult lastRun = new OaiRunResult(timestampLastRun, responseDate, resumptionToken,
+		OaiRunResult lastOaiRunResult = new OaiRunResult(timestampLastRun, responseDate, resumptionToken,
 				resumptionTokenExpirationDate, nextFromTimestamp);
-		persistenceService.storeOaiRunResult(lastRun);
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastOaiRunResult);
 
 		// use any "normal" response without resumptionToken
 		embeddedHttpHandler.resourcePath = OAI_LIST_IDENTIFIERS_XML;
 		runAndWait(oaiHarvester);
 
-		OaiRunResult actualOaiRunResult = persistenceService.getLastOaiRunResult();
+		ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
+		verify(mockedPersistenceService).storeOaiRunResult(captor.capture());
+		OaiRunResult actualOaiRunResult = captor.getValue();
+
 		assertNotNull("No OaiRunResult was returned by persistence layer", actualOaiRunResult);
 
 		if (FCREPO3_COMPATIBILITY_MODE) {
@@ -525,14 +496,17 @@ public class OaiHarvesterTestIT {
 		Date resumptionTokenExpirationDate = null;
 		Date nextFromTimestamp = dateFormat.parse("2014-02-02T02:02:02");
 
-		OaiRunResult lastRun = new OaiRunResult(timestampLastRun, responseDate, resumptionToken,
+		OaiRunResult lastOaiRunResult = new OaiRunResult(timestampLastRun, responseDate, resumptionToken,
 				resumptionTokenExpirationDate, nextFromTimestamp);
-		persistenceService.storeOaiRunResult(lastRun);
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastOaiRunResult);
 
 		embeddedHttpHandler.resourcePath = OAI_EMPTY_RESUMPTION_TOKEN_XML;
 		runAndWait(oaiHarvester);
 
-		OaiRunResult actualOaiRunResult = persistenceService.getLastOaiRunResult();
+		ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
+		verify(mockedPersistenceService).storeOaiRunResult(captor.capture());
+		OaiRunResult actualOaiRunResult = captor.getValue();
+
 		assertNotNull("No OaiRunResult was returned by persistence layer", actualOaiRunResult);
 
 		assertEquals("nextFromTimestamp must have the value from the previous run.", nextFromTimestamp,
@@ -558,7 +532,10 @@ public class OaiHarvesterTestIT {
 		embeddedHttpHandler.resourcePath = OAI_ERROR_NO_RECORDS_MATCH_XML;
 		runAndWait(oaiHarvester);
 
-		OaiRunResult actualOaiRunResult = persistenceService.getLastOaiRunResult();
+		ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
+		verify(mockedPersistenceService).storeOaiRunResult(captor.capture());
+		OaiRunResult actualOaiRunResult = captor.getValue();
+
 		assertNotNull(actualOaiRunResult);
 		assertNull("Resumption token must not exist.", actualOaiRunResult.getResumptionToken());
 		assertEquals(actualOaiRunResult.getTimestampOfRun(), actualOaiRunResult.getNextFromTimestamp());
@@ -581,12 +558,14 @@ public class OaiHarvesterTestIT {
 
 		OaiRunResult initialOaiRunResult = new OaiRunResult(initialLastRun, initialResponseDate, initialResumptionToken,
 				null, initialNextRunTimestamp);
-		persistenceService.storeOaiRunResult(initialOaiRunResult);
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(initialOaiRunResult);
 
 		embeddedHttpHandler.resourcePath = OAI_ERROR_BAD_RESUMPTION_TOKEN_XML;
 		runAndWait(oaiHarvester);
 
-		OaiRunResult actualOaiRunResult = persistenceService.getLastOaiRunResult();
+		ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
+		verify(mockedPersistenceService).storeOaiRunResult(captor.capture());
+		OaiRunResult actualOaiRunResult = captor.getValue();
 		assertNotNull(actualOaiRunResult);
 
 		// compare all of OaiRunResults values except timestampOfRun which is
@@ -618,12 +597,14 @@ public class OaiHarvesterTestIT {
 
 		OaiRunResult initialOaiRunResult = new OaiRunResult(initialLastRun, initialResponseDate, initialResumptionToken,
 				null, initialNextRunTimestamp);
-		persistenceService.storeOaiRunResult(initialOaiRunResult);
+		when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(initialOaiRunResult);
 
 		embeddedHttpHandler.resourcePath = OAI_ERROR_MULTIPLE_ERRORS_XML;
 		runAndWait(oaiHarvester);
 
-		OaiRunResult actualOaiRunResult = persistenceService.getLastOaiRunResult();
+		ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
+		verify(mockedPersistenceService).storeOaiRunResult(captor.capture());
+		OaiRunResult actualOaiRunResult = captor.getValue();
 		assertNotNull(actualOaiRunResult);
 
 		// do not compare timestampOfRun which is generated by the harvester at
@@ -639,30 +620,73 @@ public class OaiHarvesterTestIT {
 
 	/*---- End create new OaiRunResult based on last OaiRunResult and OAI-PMH errors in data provider's response ----*/
 	/*---- End test logic for processing of resumption tokens and nextFromValues  ----*/
-
+	/*---- Begin test logic for cleanup of OaiRunResult history ----*/
+	
 	/**
-	 * Initialize test database: create tables and sequences if they do not
-	 * exist. <br />
-	 * In case of an error, make sure the PostgreSQL server is running, the
-	 * database {@link #DATABASE_URL} has been created externally and
-	 * {@link DATABASE_USER} with {@link #DATABASE_PASSWORD} does exist with
-	 * required privileges. Execute /persistence/createRoleAndDatabase.sql by an
-	 * database admin if this has never been done before.
+	 * Test that the cleanup of {@link OaiRunResult}s in persistence layer is
+	 * triggered after a successful run.
 	 * 
 	 * @throws Exception
 	 */
-	@BeforeClass
-	public static void initPostgreDB() throws Exception {
-		testPersistenceService = new PostgrePersistenceServiceTestHelper(DATABASE_URL, DATABASE_USER,
-				DATABASE_PASSWORD);
-		testPersistenceService.executeQueriesFromFile(CREATE_SEQUENCES_AND_TABLES_SQL);
+	@Test
+	public void cleanupOaiRunResultHistoryAfterSuccessfulRun() throws Exception {
+
+		// new OaiHarvester that keeps a history of 1 day
+		Duration historyLength = Duration.standardDays(1);
+		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedPersistenceService)
+				.setPollingInterval(Duration.standardSeconds(1)).setOaiRunResultHistory(historyLength).build();
+
+		// just let the harvester do something to have one successful loop
+		// and invoke the cleanup (the Oai data provider's response is ignored)
+		embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
+		Date beforeHarvesterRuns = now();
+		runAndWait(oaiHarvester);
+		Date afterHarvesterRuns = now();
+
+		ArgumentCaptor<Date> captor = ArgumentCaptor.forClass(Date.class);
+		verify(mockedPersistenceService).cleanupOaiRunResults(captor.capture());
+		Date cleanupDate = captor.getValue();
+
+		// testing the cleanupDate is tricky since it is calculated at the time
+		// of testing. we want to keep a history of 1 day: cleanupDate=now-1day
+		assertTrue(cleanupDate.after(new Date(beforeHarvesterRuns.getTime() - historyLength.getMillis())));
+		assertTrue(cleanupDate.before(new Date(afterHarvesterRuns.getTime() - historyLength.getMillis())));
 	}
+	
+	/**
+	 * If the run was not successful, 1) no {@link OaiRunResult} is persisted
+	 * and 2) no cleanup of previous {@link OaiRunResult}s is done.
+	 *
+	 * @throws Exception
+	 */
+	@Test
+	public void noCleanupOfOaiRunResultHistoryAfterUnsuccessfulRun() throws Exception {
+
+		// new OaiHarvester that keeps a history of 1 day
+		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedPersistenceService)
+				.setPollingInterval(Duration.standardSeconds(1)).setOaiRunResultHistory(Duration.standardDays(1))
+				.build();
+
+		// let the harvester receive a http 404 to have one UNsuccessful loop,
+		// NOT writing a 4th OaiRunResult to database and invoke the cleanup
+		embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
+		embeddedHttpHandler.httpStatusCode = 404;
+		runAndWait(oaiHarvester);
+
+		verify(mockedPersistenceService, never()).cleanupOaiRunResults(Mockito.any(Date.class));
+		verify(mockedPersistenceService, never()).storeOaiRunResult(Mockito.any(OaiRunResult.class));
+	}
+
+	/*---- End test logic for cleanup of OaiRunResult history ----*/
+
+
+
 
 	@Before
 	public void setUp() throws Exception {
 
-		testPersistenceService.executeQueriesFromFile(TRUNCATE_TABLES_SQL);
-		persistenceService = new PostgrePersistenceService(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+		MockitoAnnotations.initMocks(this);
+		mockedPersistenceService = mock(PersistenceService.class);
 		createOaiHarvester();
 		setupHttpServer();
 	}
@@ -672,13 +696,8 @@ public class OaiHarvesterTestIT {
 		httpServer.stop(1);
 	}
 
-	@AfterClass
-	public static void tearDown() throws Exception {
-		testPersistenceService.executeQueriesFromFile(TRUNCATE_TABLES_SQL);
-	}
-
 	private void createOaiHarvester() throws Exception {
-		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), persistenceService)
+		oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedPersistenceService)
 				.setPollingInterval(Duration.standardSeconds(1)).build();
 	}
 
