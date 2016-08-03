@@ -27,8 +27,8 @@
         <header status="deleted">
             <identifier>oai:example.org:qucosa:1234</identifier>
             <datestamp>2016-07-12T17:33:25Z</datestamp>            
-    		<setSpec>test:11</setSpec>
-    		<setSpec>test:22</setSpec>
+            <setSpec>test:11</setSpec>
+       		<setSpec>test:22</setSpec>
         </header>
     </ListIdentifiers>
 </OAI-PMH>

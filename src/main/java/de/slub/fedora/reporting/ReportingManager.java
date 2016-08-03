@@ -32,39 +32,37 @@ import de.slub.persistence.PostgrePersistenceService;
 
 public class ReportingManager {
 
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private void init() {
 
-	private void init() {
+        ReportingProperties prop = ReportingProperties.getInstance();
 
-		ReportingProperties prop = ReportingProperties.getInstance();
+        PersistenceService persistenceService = new PostgrePersistenceService(prop.getPostgreSQLDatabaseURL(),
+                prop.getPostgreSQLUser(), prop.getPostgreSQLPasswd());
 
-		PersistenceService persistenceService = new PostgrePersistenceService(prop.getPostgreSQLDatabaseURL(),
-				prop.getPostgreSQLUser(), prop.getPostgreSQLPasswd());
+        try {
 
-		try {
+            OaiHarvester oaiHarvester = new OaiHarvesterBuilder(new URI(prop.getOaiDataProviderURL()),
+                    persistenceService)
+                            .setPollingInterval(Duration.standardSeconds(prop.getOaiDataProviderPollingInterval()))
+                            .setOaiHeaderFilter(new QucosaDocumentFilter())
+                            .setFC3CompatibilityMode(prop.getFC3CompatibilityMode())
+                            .setOaiRunResultHistory(prop.getOaiRunResultHistoryLength()).build();
 
-			OaiHarvester oaiHarvester = new OaiHarvesterBuilder(
-					new URI(prop.getOaiDataProviderURL()), persistenceService)
-					.setPollingInterval(Duration.standardSeconds(prop.getOaiDataProviderPollingInterval()))
-					.setOaiHeaderFilter(new QucosaDocumentFilter())
-					.setFC3CompatibilityMode(prop.getFC3CompatibilityMode())
-					.setOaiRunResultHistory(prop.getOaiRunResultHistoryLength())
-					.build();
+            Thread thread = new Thread(oaiHarvester);
+            thread.start();
 
-			Thread thread = new Thread(oaiHarvester);
-			thread.start();
+        } catch (URISyntaxException e) {
+            logger.error(MarkerFactory.getMarker("FATAL"), "OAI harvester was not started. Exception: " + e);
+            System.exit(1);
+        }
 
-		} catch (URISyntaxException e) {
-			logger.error(MarkerFactory.getMarker("FATAL"), "OAI harvester was not started. Exception: " + e);
-			System.exit(1);
-		}
+    }
 
-	}
+    public static void main(String[] args) {
 
-	public static void main(String[] args) {
-
-		new ReportingManager().init();
-	}
+        new ReportingManager().init();
+    }
 
 }

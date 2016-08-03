@@ -17,9 +17,9 @@
 
 
 <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" 
-		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-		xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-	<responseDate>2016-07-26T18:05:24Z</responseDate>
-	<request verb="ListIdentifiers">http://localhost:8080/fedora/oai</request>
-	<error code="noRecordsMatch">No records match the given criteria.</error>
+	    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    	xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+    <responseDate>2016-07-26T18:05:24Z</responseDate>
+    <request verb="ListIdentifiers">http://localhost:8080/fedora/oai</request>
+    <error code="noRecordsMatch">No records match the given criteria.</error>
 </OAI-PMH>

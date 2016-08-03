@@ -27,63 +27,65 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
 
-
 public class ReportingProperties {
-	
-	private static final String PROPERTIES_FILE_NAME = "/reporting.properties";
-	
-	private final Logger logger = LoggerFactory.getLogger(getClass());
-	
-	private static ReportingProperties instance;
-	private final Properties props = new Properties(); 
-	
-	private ReportingProperties(){	    
-	    try (InputStream in = this.getClass().getResourceAsStream(PROPERTIES_FILE_NAME);
-	    		Reader reader = new InputStreamReader(in, "UTF-8")) {
-	    	
-	        props.load(reader);
 
-	    } catch (IOException ex) {
-	    	logger.error(MarkerFactory.getMarker("FATAL"),
-	    			"Fatal error. Can not load configuration from properties file '{}'."
-	    			+ " There is no default. Nothing can be daone without configuration parameter."
-	    			+ "Exiting. Exception details: {}", PROPERTIES_FILE_NAME, ex);
-	    	System.exit(1);
-	    }
-	}
-	
-	protected static ReportingProperties getInstance(){
-		if (ReportingProperties.instance == null){
-			instance = new ReportingProperties();
-		}
-		return instance;
-	}
-	
-	protected String getPostgreSQLDatabaseURL(){
-		return props.getProperty("db.url");
-	}
-	
-	protected String getPostgreSQLUser(){
-		return props.getProperty("db.user");
-	}
-	
-	protected String getPostgreSQLPasswd(){
-		return props.getProperty("db.passwd");
-	}
-		
-	protected String getOaiDataProviderURL(){
-		return props.getProperty("oai.url");
-	}
-	
-	protected int getOaiDataProviderPollingInterval() {
-		return Integer.parseInt(props.getProperty("oai.pollseconds"));
-	}
+    private static final String PROPERTIES_FILE_NAME = "/reporting.properties";
 
-	public boolean getFC3CompatibilityMode() {
-		return Boolean.parseBoolean(props.getProperty("oai.fc3compatibility"));
-	}
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	public Duration getOaiRunResultHistoryLength() {
-		return Duration.standardHours(Long.parseLong(props.getProperty("oai.runresulthistorylengthhours")));
-	}
+    private static ReportingProperties instance;
+    private final Properties props = new Properties();
+
+    private ReportingProperties() {
+        try (InputStream in = this.getClass().getResourceAsStream(PROPERTIES_FILE_NAME);
+                Reader reader = new InputStreamReader(in, "UTF-8")) {
+
+            props.load(reader);
+            // FIXME: how to make sure all properties can also be converted to
+            // types that are required? Shouldn't thins be checked right now?
+
+        } catch (IOException ex) {
+            logger.error(MarkerFactory.getMarker("FATAL"),
+                    "Fatal error. Can not load configuration from properties file '{}'."
+                            + " There is no default. Nothing can be daone without configuration parameter."
+                            + "Exiting. Exception details: {}",
+                    PROPERTIES_FILE_NAME, ex);
+            System.exit(1);
+        }
+    }
+
+    protected static ReportingProperties getInstance() {
+        if (ReportingProperties.instance == null) {
+            instance = new ReportingProperties();
+        }
+        return instance;
+    }
+
+    protected String getPostgreSQLDatabaseURL() {
+        return props.getProperty("db.url");
+    }
+
+    protected String getPostgreSQLUser() {
+        return props.getProperty("db.user");
+    }
+
+    protected String getPostgreSQLPasswd() {
+        return props.getProperty("db.passwd");
+    }
+
+    protected String getOaiDataProviderURL() {
+        return props.getProperty("oai.url");
+    }
+
+    protected int getOaiDataProviderPollingInterval() {
+        return Integer.parseInt(props.getProperty("oai.pollseconds"));
+    }
+
+    protected boolean getFC3CompatibilityMode() {
+        return Boolean.parseBoolean(props.getProperty("oai.fc3compatibility"));
+    }
+
+    protected Duration getOaiRunResultHistoryLength() {
+        return Duration.standardHours(Long.parseLong(props.getProperty("oai.runresulthistorylengthhours")));
+    }
 }

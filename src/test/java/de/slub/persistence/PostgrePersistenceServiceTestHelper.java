@@ -27,69 +27,65 @@ import org.apache.commons.io.IOUtils;
 import de.slub.fedora.oai.OaiHarvesterTestIT;
 
 /**
- * Helper class for JUnit tests 
+ * Helper class for integration tests
  */
 public class PostgrePersistenceServiceTestHelper {
 
-	private final String DATABASE_URL;
-	private final String DATABASE_USER;
-	private final String DATABASE_PASSWORD;
-		
-	/**
-	 * Use {@link #getConnection()} to access this {@link Connection}! 
-	 */
-	private Connection connection = null;
-	
-	public PostgrePersistenceServiceTestHelper(String url, String databaseUser, String databasePassword) {
-		this.DATABASE_URL = url;
-		this.DATABASE_USER = databaseUser;
-		this.DATABASE_PASSWORD = databasePassword;
-	}
-	
-	
-	public void executeQueriesFromFile(String filePath) throws Exception{
-		String sqlQuery = "";
-		try (InputStream resourceAsStream = OaiHarvesterTestIT.class.getResourceAsStream(filePath);) {
-			sqlQuery = IOUtils.toString(resourceAsStream, "UTF-8");
-		}
-		
-		try (PreparedStatement pst = getConnection().prepareStatement(sqlQuery)) {
-			pst.execute();
-		}
-	}
-	
-	
-	public int countOaiRunResults() throws Exception {
+    private final String DATABASE_URL;
+    private final String DATABASE_USER;
+    private final String DATABASE_PASSWORD;
 
-		int count = 0;
-		String stm = "SELECT COUNT(*) FROM \"OAIRunResult\"";
+    /**
+     * Use {@link #getConnection()} to access this {@link Connection}!
+     */
+    private Connection connection = null;
 
-		try (PreparedStatement pst = getConnection().prepareStatement(stm);
-				ResultSet rs = pst.executeQuery();) {
+    public PostgrePersistenceServiceTestHelper(String url, String databaseUser, String databasePassword) {
+        this.DATABASE_URL = url;
+        this.DATABASE_USER = databaseUser;
+        this.DATABASE_PASSWORD = databasePassword;
+    }
 
-			while (rs.next()) {
-				count = rs.getInt(1);
-			}
-		}
-		return count;
-	}
-	
-	
-	
-	
-	/**
-	 * Establishes the connection to the test database if there is no valid connection yet and return it.
-	 * 
-	 * @return connection to test database, never {@code null}
-	 * @throws Exception
-	 */
-	private Connection getConnection() throws Exception{
-		if (connection == null || !connection.isValid(2)){ //2 seconds timeout
-			//TODO do we need to close the Connection in unit test code?  
-			// -> yes, should be closed in a tearDown() after all tests are done. 
-			connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
-		}
-		return connection;
-	}
-	
+    public void executeQueriesFromFile(String filePath) throws Exception {
+        String sqlQuery = "";
+        try (InputStream resourceAsStream = OaiHarvesterTestIT.class.getResourceAsStream(filePath);) {
+            sqlQuery = IOUtils.toString(resourceAsStream, "UTF-8");
+        }
+
+        try (PreparedStatement pst = getConnection().prepareStatement(sqlQuery)) {
+            pst.execute();
+        }
+    }
+
+    public int countOaiRunResults() throws Exception {
+
+        int count = 0;
+        String stm = "SELECT COUNT(*) FROM \"OAIRunResult\"";
+
+        try (PreparedStatement pst = getConnection().prepareStatement(stm); ResultSet rs = pst.executeQuery();) {
+
+            while (rs.next()) {
+                count = rs.getInt(1);
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Establishes the connection to the test database if there is no valid
+     * connection yet and return it.
+     * 
+     * @return connection to test database, never {@code null}
+     * @throws Exception
+     */
+    private Connection getConnection() throws Exception {
+        if (connection == null || !connection.isValid(2)) { // 2 seconds timeout
+            // TODO do we need to close the Connection in unit test code?
+            // -> yes, should be closed in a tearDown() after all tests are
+            // done.
+            connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+        }
+        return connection;
+    }
+
 }

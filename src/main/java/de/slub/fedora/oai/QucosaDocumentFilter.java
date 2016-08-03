@@ -24,30 +24,30 @@ import org.slf4j.LoggerFactory;
 
 public class QucosaDocumentFilter extends OaiHeaderFilter {
 
-	private static final String ACCEPTED_QUCOSA_ID_REG_EX = ".+qucosa:\\d+";
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final String ACCEPTED_QUCOSA_ID_REG_EX = ".+qucosa:\\d+";
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	@Override
-	public List<OaiHeader> filterOaiHeaders(List<OaiHeader> oaiHeaders) {
+    @Override
+    public List<OaiHeader> filterOaiHeaders(List<OaiHeader> oaiHeaders) {
 
-		List<OaiHeader> acceptedHeaders = new LinkedList<>();
+        List<OaiHeader> acceptedHeaders = new LinkedList<>();
 
-		for (OaiHeader header : oaiHeaders) {
-			String id = header.getRecordIdentifier();
+        for (OaiHeader header : oaiHeaders) {
+            String id = header.getRecordIdentifier();
 
-			if (id.matches(ACCEPTED_QUCOSA_ID_REG_EX)) {
-				acceptedHeaders.add(header);
-			} else {
-				logger.debug("Removing header with id '{}'", id);
-			}
-		}
+            if (id.matches(ACCEPTED_QUCOSA_ID_REG_EX)) {
+                acceptedHeaders.add(header);
+            } else {
+                logger.debug("Removing header with id '{}'", id);
+            }
+        }
 
-		return acceptedHeaders;
+        return acceptedHeaders;
 
-	}
+    }
 
-	private String getLocalIdentifier(String oaiId) {
-		return oaiId.substring(oaiId.indexOf(':', "oai:".length()) + 1);
-	}
+    private String getLocalIdentifier(String oaiId) {
+        return oaiId.substring(oaiId.indexOf(':', "oai:".length()) + 1);
+    }
 
 }

@@ -27,74 +27,74 @@ import de.slub.fedora.oai.OaiRunResult;
 
 public interface PersistenceService {
 
-	/**
-	 * @return The details of the last run or {@coce null} if there isnt any
-	 *         last run.
-	 */
-	@Nullable
-	public OaiRunResult getLastOaiRunResult();
+    /**
+     * @return The details of the last run or {@coce null} if there isnt any
+     *         last run.
+     */
+    @Nullable
+    public OaiRunResult getLastOaiRunResult();
 
-	/**
-	 * @param oaiRunResult
-	 *            the data to be persisted
-	 * @throws PersistenceException
-	 *             if any error occurred.
-	 */
-	public void storeOaiRunResult(@NonNull OaiRunResult oaiRunResult) throws PersistenceException;
+    /**
+     * @param oaiRunResult
+     *            the data to be persisted
+     * @throws PersistenceException
+     *             if any error occurred.
+     */
+    public void storeOaiRunResult(@NonNull OaiRunResult oaiRunResult) throws PersistenceException;
 
-	/**
-	 * Delete all {@link OaiRunResult}s whose
-	 * {@link OaiRunResult#getTimestampOfRun()} is older than
-	 * oldestResultToKeep. <br />
-	 * The most recently inserted {@link OaiRunResult} is never removed, even if
-	 * older than the oldestResultToKeep.
-	 * 
-	 * @param oldestResultToKeep
-	 *            the timestamp of run of the oldest OaiRunResult to keep.
-	 * @throws PersistenceException
-	 *             if any error occurred.
-	 */
-	public void cleanupOaiRunResults(@NonNull Date oldestResultToKeep) throws PersistenceException;
+    /**
+     * Delete all {@link OaiRunResult}s whose
+     * {@link OaiRunResult#getTimestampOfRun()} is older than
+     * oldestResultToKeep. <br />
+     * The most recently inserted {@link OaiRunResult} is never removed, even if
+     * older than the oldestResultToKeep.
+     * 
+     * @param oldestResultToKeep
+     *            the timestamp of run of the oldest OaiRunResult to keep.
+     * @throws PersistenceException
+     *             if any error occurred.
+     */
+    public void cleanupOaiRunResults(@NonNull Date oldestResultToKeep) throws PersistenceException;
 
-	/**
-	 * Persist all {@link OaiHeader}s. If the persistence layer already contains
-	 * a {@link OaiHeader} object that matches
-	 * {@link OaiHeader#getRecordIdentifier()}, this object updated.
-	 * 
-	 * @param headers
-	 *            {@link OaiHeader}s to add or update.
-	 * @throws PersistenceException
-	 *             if any error occurred.
-	 */
-	public void addOrUpdateHeaders(@NonNull List<OaiHeader> headers) throws PersistenceException;
+    /**
+     * Persist all {@link OaiHeader}s. If the persistence layer already contains
+     * a {@link OaiHeader} object that matches
+     * {@link OaiHeader#getRecordIdentifier()}, this object updated.
+     * 
+     * @param headers
+     *            {@link OaiHeader}s to add or update.
+     * @throws PersistenceException
+     *             if any error occurred.
+     */
+    public void addOrUpdateHeaders(@NonNull List<OaiHeader> headers) throws PersistenceException;
 
-	/**
-	 * Get {@link OaiHeader}s from persistence. At most 1000 headers are
-	 * returned.
-	 * 
-	 * @return
-	 * @throws PersistenceException
-	 *             if any error occurred.
-	 */
-	@NonNull
-	public List<OaiHeader> getOaiHeaders() throws PersistenceException;
+    /**
+     * Get {@link OaiHeader}s from persistence. At most 1000 headers are
+     * returned.
+     * 
+     * @return
+     * @throws PersistenceException
+     *             if any error occurred.
+     */
+    @NonNull
+    public List<OaiHeader> getOaiHeaders() throws PersistenceException;
 
-	/**
-	 * Deletes the {@link OaiHeader}s. An {@link OaiHeader} is removed from
-	 * persistence iff it equals an object in the {@code headersToRemove}. All
-	 * objects from {@code headersToRemove} that are not found in persistence
-	 * are returned to the caller.
-	 * 
-	 * @param headersToRemove
-	 *            {@link OaiHeader}s to be removed if unmodified.
-	 * @return the headers that were requested to be deleted but have not been
-	 *         removed from persistence. This {@link List} is always a subset of
-	 *         {@code headersToRemove}.
-	 * @throws PersistenceException
-	 *             if any error occurred.
-	 */
-	@NonNull
-	public List<OaiHeader> removeOaiHeadersIfUnmodified(@NonNull List<OaiHeader> headersToRemove)
-			throws PersistenceException;
+    /**
+     * Deletes the {@link OaiHeader}s. An {@link OaiHeader} is removed from
+     * persistence iff it equals an object in the {@code headersToRemove}. All
+     * objects from {@code headersToRemove} that are not found in persistence
+     * are returned to the caller.
+     * 
+     * @param headersToRemove
+     *            {@link OaiHeader}s to be removed if unmodified.
+     * @return the headers that were requested to be deleted but have not been
+     *         removed from persistence. This {@link List} is always a subset of
+     *         {@code headersToRemove}.
+     * @throws PersistenceException
+     *             if any error occurred.
+     */
+    @NonNull
+    public List<OaiHeader> removeOaiHeadersIfUnmodified(@NonNull List<OaiHeader> headersToRemove)
+            throws PersistenceException;
 
 }
