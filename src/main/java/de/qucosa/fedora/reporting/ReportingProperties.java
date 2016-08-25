@@ -17,15 +17,12 @@
 package de.qucosa.fedora.reporting;
 
 import org.joda.time.Duration;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Properties;
-
-import static org.slf4j.MarkerFactory.getMarker;
 
 public class ReportingProperties {
 
@@ -35,21 +32,15 @@ public class ReportingProperties {
 
     private final Properties props = new Properties();
 
-    private ReportingProperties() {
-        try (InputStream in = this.getClass().getResourceAsStream(DEFAULT_PROPERTIES_FILE);
+    private ReportingProperties() throws IOException {
+        try (InputStream in = getClass().getResourceAsStream(DEFAULT_PROPERTIES_FILE);
              Reader reader = new InputStreamReader(in, "UTF-8")) {
-
             props.load(reader);
             overwriteWithSystemProperties();
-
-        } catch (IOException ex) {
-            LoggerFactory.getLogger(getClass())
-                    .error(getMarker("FATAL"), "Can not load default properties");
-            System.exit(1);
         }
     }
 
-    public static ReportingProperties getInstance() {
+    public static ReportingProperties getInstance() throws IOException {
         if (ReportingProperties.instance == null) {
             instance = new ReportingProperties();
         }

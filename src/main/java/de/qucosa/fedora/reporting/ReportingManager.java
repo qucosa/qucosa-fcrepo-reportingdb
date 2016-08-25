@@ -24,44 +24,46 @@ import de.qucosa.persistence.PostgrePersistenceService;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MarkerFactory;
+import org.slf4j.Marker;
 
 import java.net.URI;
-import java.net.URISyntaxException;
+
+import static org.slf4j.MarkerFactory.getMarker;
 
 public class ReportingManager {
 
+    public static final Marker FATAL = getMarker("FATAL");
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public static void main(String[] args) {
-
         new ReportingManager().init();
     }
 
     private void init() {
-
-        ReportingProperties prop = ReportingProperties.getInstance();
-
-        PersistenceService persistenceService = new PostgrePersistenceService(prop.getPostgreSQLDatabaseURL(),
-                prop.getPostgreSQLUser(), prop.getPostgreSQLPasswd());
-
         try {
+            ReportingProperties prop = ReportingProperties.getInstance();
 
-            OaiHarvester oaiHarvester = new OaiHarvesterBuilder(new URI(prop.getOaiDataProviderURL()),
-                    persistenceService)
+            PersistenceService persistenceService = new PostgrePersistenceService(
+                    prop.getPostgreSQLDatabaseURL(),
+                    prop.getPostgreSQLUser(),
+                    prop.getPostgreSQLPasswd());
+
+            URI uriToHarvest = new URI(prop.getOaiDataProviderURL());
+
+            OaiHarvester oaiHarvester = new OaiHarvesterBuilder(uriToHarvest, persistenceService)
                     .setPollingInterval(Duration.standardSeconds(prop.getOaiDataProviderPollingInterval()))
                     .setOaiHeaderFilter(new QucosaDocumentFilter())
                     .setFC3CompatibilityMode(prop.getFC3CompatibilityMode())
-                    .setOaiRunResultHistory(prop.getOaiRunResultHistoryLength()).build();
+                    .setOaiRunResultHistory(prop.getOaiRunResultHistoryLength())
+                    .build();
 
             Thread thread = new Thread(oaiHarvester);
             thread.start();
 
-        } catch (URISyntaxException e) {
-            logger.error(MarkerFactory.getMarker("FATAL"), "OAI harvester was not started. Exception: " + e);
+        } catch (Exception e) {
+            logger.error(FATAL, "OAI harvester was not started: {}", e);
             System.exit(1);
         }
-
     }
 
 }
