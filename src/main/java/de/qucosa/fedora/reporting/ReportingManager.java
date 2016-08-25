@@ -27,6 +27,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
 import java.net.URI;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.slf4j.MarkerFactory.getMarker;
 
@@ -34,13 +37,15 @@ public class ReportingManager {
 
     public static final Marker FATAL = getMarker("FATAL");
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private ExecutorService executorService;
 
     public static void main(String[] args) {
-        new ReportingManager().init();
+        new ReportingManager().run();
     }
 
-    private void init() {
+    private void run() {
         try {
+            logger.info("Starting up...");
             ReportingProperties prop = ReportingProperties.getInstance();
 
             PersistenceService persistenceService = new PostgrePersistenceService(
@@ -57,11 +62,29 @@ public class ReportingManager {
                     .setOaiRunResultHistory(prop.getOaiRunResultHistoryLength())
                     .build();
 
-            Thread thread = new Thread(oaiHarvester);
-            thread.start();
+            executorService = Executors.newSingleThreadExecutor();
+            executorService.execute(oaiHarvester);
+
+            logger.info("Started");
+
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    logger.info("Shutting down...");
+                    executorService.shutdown();
+                    if (!executorService.isShutdown()) {
+                        logger.info("Still processing. Waiting for orderly shut down...");
+                        try {
+                            executorService.awaitTermination(1, TimeUnit.MINUTES);
+                        } catch (InterruptedException e) {
+                            logger.warn("Orderly shut down was interrupted!");
+                        }
+                    }
+                    logger.info("Shut down completed");
+                }
+            });
 
         } catch (Exception e) {
-            logger.error(FATAL, "OAI harvester was not started: {}", e);
+            logger.error(FATAL, "OAI harvester was not started!", e);
             System.exit(1);
         }
     }
