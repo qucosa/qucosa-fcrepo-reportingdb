@@ -54,7 +54,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class OaiHarvesterTestIT {
+public class OaiHarvesterTest {
 
     private static final boolean FCREPO3_COMPATIBILITY_MODE = false;
 

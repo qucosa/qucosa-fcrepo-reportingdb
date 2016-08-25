@@ -16,7 +16,7 @@
 
 package de.qucosa.persistence;
 
-import de.qucosa.fedora.oai.OaiHarvesterTestIT;
+import de.qucosa.fedora.oai.OaiHarvesterTest;
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
@@ -45,8 +45,8 @@ public class PostgrePersistenceServiceTestHelper {
     }
 
     public void executeQueriesFromFile(String filePath) throws Exception {
-        String sqlQuery = "";
-        try (InputStream resourceAsStream = OaiHarvesterTestIT.class.getResourceAsStream(filePath);) {
+        String sqlQuery;
+        try (InputStream resourceAsStream = OaiHarvesterTest.class.getResourceAsStream(filePath)) {
             sqlQuery = IOUtils.toString(resourceAsStream, "UTF-8");
         }
 
@@ -60,7 +60,7 @@ public class PostgrePersistenceServiceTestHelper {
         int count = 0;
         String stm = "SELECT COUNT(*) FROM \"OAIRunResult\"";
 
-        try (PreparedStatement pst = getConnection().prepareStatement(stm); ResultSet rs = pst.executeQuery();) {
+        try (PreparedStatement pst = getConnection().prepareStatement(stm); ResultSet rs = pst.executeQuery()) {
 
             while (rs.next()) {
                 count = rs.getInt(1);
