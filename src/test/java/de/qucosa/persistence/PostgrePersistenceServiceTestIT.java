@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package de.slub.persistence;
+package de.qucosa.persistence;
 
-import de.slub.fedora.oai.OaiHeader;
-import de.slub.fedora.oai.OaiRunResult;
+import de.qucosa.fedora.oai.OaiHeader;
+import de.qucosa.fedora.oai.OaiRunResult;
 import org.joda.time.Duration;
 import org.junit.AfterClass;
 import org.junit.Before;

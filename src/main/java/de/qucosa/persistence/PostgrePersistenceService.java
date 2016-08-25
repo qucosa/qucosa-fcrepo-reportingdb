@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package de.slub.persistence;
+package de.qucosa.persistence;
 
-import de.slub.fedora.oai.OaiHeader;
-import de.slub.fedora.oai.OaiRunResult;
+import de.qucosa.fedora.oai.OaiHeader;
+import de.qucosa.fedora.oai.OaiRunResult;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.slf4j.Logger;
@@ -72,7 +72,7 @@ public class PostgrePersistenceService implements PersistenceService {
     /*
      * (non-Javadoc)
      * 
-     * @see de.slub.persistence.PersistenceService#getLastOaiRunResult()
+     * @see de.qucosa.persistence.PersistenceService#getLastOaiRunResult()
      */
     @Override
     @Nullable
@@ -127,7 +127,7 @@ public class PostgrePersistenceService implements PersistenceService {
      * (non-Javadoc)
      * 
      * @see
-     * de.slub.persistence.PersistenceService#storeOaiRunResult(de.slub.fedora.
+     * de.qucosa.persistence.PersistenceService#storeOaiRunResult(de.qucosa.fedora.
      * oai.OaiRunResult)
      */
     @Override
@@ -259,7 +259,7 @@ public class PostgrePersistenceService implements PersistenceService {
     /*
      * (non-Javadoc)
      * 
-     * @see de.slub.persistence.PersistenceService#getOaiHeaders()
+     * @see de.qucosa.persistence.PersistenceService#getOaiHeaders()
      */
     @Override
     public List<OaiHeader> getOaiHeaders() throws PersistenceException {

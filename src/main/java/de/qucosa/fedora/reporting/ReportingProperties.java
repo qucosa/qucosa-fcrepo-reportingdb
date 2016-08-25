@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.slub.fedora.reporting;
+package de.qucosa.fedora.reporting;
 
 import org.joda.time.Duration;
 import org.slf4j.Logger;

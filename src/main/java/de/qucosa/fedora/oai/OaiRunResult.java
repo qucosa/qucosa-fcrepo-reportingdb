@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.slub.fedora.oai;
+package de.qucosa.fedora.oai;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.annotation.NonNull;

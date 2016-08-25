@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.slub.fedora.oai;
+package de.qucosa.fedora.oai;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

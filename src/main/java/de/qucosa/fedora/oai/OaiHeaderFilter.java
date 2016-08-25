@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-package de.slub.util;
+package de.qucosa.fedora.oai;
 
-public abstract class TerminateableRunnable implements Runnable {
+import java.util.List;
 
-    private boolean terminated = false;
+public abstract class OaiHeaderFilter {
 
-    public void terminate() {
-        terminated = true;
-    }
-
-    public boolean isRunning() {
-        return !terminated;
-    }
+    public abstract List<OaiHeader> filterOaiHeaders(List<OaiHeader> identifiers);
 }

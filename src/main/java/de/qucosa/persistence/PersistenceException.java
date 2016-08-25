@@ -14,11 +14,32 @@
  * limitations under the License.
  */
 
-package de.slub.fedora.oai;
+package de.qucosa.persistence;
 
-import java.util.List;
+/**
+ *
+ *
+ */
+public class PersistenceException extends Exception {
 
-public abstract class OaiHeaderFilter {
+    public PersistenceException() {
+    }
 
-    public abstract List<OaiHeader> filterOaiHeaders(List<OaiHeader> identifiers);
+    public PersistenceException(String message) {
+        super(message);
+    }
+
+    public PersistenceException(Throwable cause) {
+        super(cause);
+    }
+
+    public PersistenceException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public PersistenceException(String message, Throwable cause, boolean enableSuppression,
+                                boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
 }

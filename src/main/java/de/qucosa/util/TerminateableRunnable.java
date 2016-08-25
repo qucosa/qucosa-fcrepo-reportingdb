@@ -14,32 +14,17 @@
  * limitations under the License.
  */
 
-package de.slub.persistence;
+package de.qucosa.util;
 
-/**
- *
- *
- */
-public class PersistenceException extends Exception {
+public abstract class TerminateableRunnable implements Runnable {
 
-    public PersistenceException() {
+    private boolean terminated = false;
+
+    public void terminate() {
+        terminated = true;
     }
 
-    public PersistenceException(String message) {
-        super(message);
+    public boolean isRunning() {
+        return !terminated;
     }
-
-    public PersistenceException(Throwable cause) {
-        super(cause);
-    }
-
-    public PersistenceException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public PersistenceException(String message, Throwable cause, boolean enableSuppression,
-                                boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
-
 }

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package de.slub.fedora.oai;
+package de.qucosa.fedora.oai;
 
-import de.slub.persistence.PersistenceService;
+import de.qucosa.persistence.PersistenceService;
 import org.eclipse.jdt.annotation.NonNull;
 import org.joda.time.Duration;
 

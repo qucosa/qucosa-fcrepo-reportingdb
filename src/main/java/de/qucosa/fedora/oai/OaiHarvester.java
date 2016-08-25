@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package de.slub.fedora.oai;
+package de.qucosa.fedora.oai;
 
-import de.slub.persistence.PersistenceException;
-import de.slub.persistence.PersistenceService;
-import de.slub.util.TerminateableRunnable;
+import de.qucosa.persistence.PersistenceException;
+import de.qucosa.persistence.PersistenceService;
+import de.qucosa.util.TerminateableRunnable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.http.HttpEntity;

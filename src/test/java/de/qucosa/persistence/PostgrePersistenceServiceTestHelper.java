@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package de.slub.persistence;
+package de.qucosa.persistence;
 
-import de.slub.fedora.oai.OaiHarvesterTestIT;
+import de.qucosa.fedora.oai.OaiHarvesterTestIT;
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;

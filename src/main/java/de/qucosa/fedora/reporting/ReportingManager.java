@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package de.slub.fedora.reporting;
+package de.qucosa.fedora.reporting;
 
-import de.slub.fedora.oai.OaiHarvester;
-import de.slub.fedora.oai.OaiHarvesterBuilder;
-import de.slub.fedora.oai.QucosaDocumentFilter;
-import de.slub.persistence.PersistenceService;
-import de.slub.persistence.PostgrePersistenceService;
+import de.qucosa.fedora.oai.OaiHarvester;
+import de.qucosa.fedora.oai.OaiHarvesterBuilder;
+import de.qucosa.fedora.oai.QucosaDocumentFilter;
+import de.qucosa.persistence.PersistenceService;
+import de.qucosa.persistence.PostgrePersistenceService;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
