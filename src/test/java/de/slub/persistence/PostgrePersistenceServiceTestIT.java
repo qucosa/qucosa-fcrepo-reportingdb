@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 SLUB Dresden
+ * Copyright 2016 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,10 +16,15 @@
 
 package de.slub.persistence;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import de.slub.fedora.oai.OaiHeader;
+import de.slub.fedora.oai.OaiRunResult;
+import org.joda.time.Duration;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
+import javax.xml.bind.DatatypeConverter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -27,20 +32,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
 
-import javax.xml.bind.DatatypeConverter;
-
-import org.joda.time.Duration;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import de.slub.fedora.oai.OaiHeader;
-import de.slub.fedora.oai.OaiRunResult;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Integration tests of the {@link PostgrePersistenceService}'s API.
- *
  */
 public class PostgrePersistenceServiceTestIT {
 
@@ -65,7 +62,7 @@ public class PostgrePersistenceServiceTestIT {
      * {@link PersistenceService#getLastOaiRunResult()}. The insertion is not
      * done by {@link PersistenceService} to test reading from database
      * independently.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -106,7 +103,7 @@ public class PostgrePersistenceServiceTestIT {
     /**
      * Assert that a {@link OaiRunResult} can be written to and read from
      * database using {@link PostgrePersistenceService}.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -136,7 +133,7 @@ public class PostgrePersistenceServiceTestIT {
      * {@link OaiRunResult#getTimestampOfRun()} {@code == null} must not be
      * written to database.<br />
      * (It is also expected to get a message on the error log.)
-     * 
+     *
      * @throws Exception
      */
     @Test(expected = PersistenceException.class)
@@ -151,7 +148,7 @@ public class PostgrePersistenceServiceTestIT {
      * {@link OaiRunResult#getTimestampOfRun()}. Assert that the last inserted
      * {@link OaiRunResult} is returned by
      * {@link PersistenceService#getLastOaiRunResult()}.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -187,7 +184,7 @@ public class PostgrePersistenceServiceTestIT {
      * {@link OaiRunResult#getTimestampOfRun()} is in the past of the object
      * inserted first. Assert that the last inserted {@link OaiRunResult} is
      * returned by {@link PersistenceService#getLastOaiRunResult()}.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -223,7 +220,7 @@ public class PostgrePersistenceServiceTestIT {
      * Test the cleanup of OaiRunResults in persistence layer. Assert that the
      * last inserted statement is always kept, even if it is older than the
      * specified last result to keep.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -279,7 +276,7 @@ public class PostgrePersistenceServiceTestIT {
      * OaiRunResults are kept that are newer than the specified oldest
      * OaiRunResult to keep. The test simulates three old results to delete and
      * two new results to keep.<br />
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -327,7 +324,7 @@ public class PostgrePersistenceServiceTestIT {
      * read by {@link PersistenceService#getOaiHeaders()}. The insertion is not
      * done by {@link PersistenceService} to test reading from database
      * independently.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -356,7 +353,7 @@ public class PostgrePersistenceServiceTestIT {
 
     /**
      * Write two {@link OaiHeader}s to database and read them.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -385,7 +382,7 @@ public class PostgrePersistenceServiceTestIT {
      * Write a {@link OaiHeader} to database. Modify its {@code dateStamp},
      * {@code setSpec} and {@code statusIsDeleted} and write it to database a
      * second time. The data set must have been updated in database.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -465,7 +462,7 @@ public class PostgrePersistenceServiceTestIT {
      * contained details to version X1 or X2. An additional request for X2 is
      * necessary.</li>
      * </ol>
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -494,6 +491,13 @@ public class PostgrePersistenceServiceTestIT {
 
     /* ---- End OaiHeader tests ---- */
 
+    @Before
+    public void setUp() throws Exception {
+
+        testPersistenceService.executeQueriesFromFile(TRUNCATE_TABLES_SQL);
+        persistenceService = new PostgrePersistenceService(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+    }
+
     /**
      * Initialize test database: create tables and sequences if they do not
      * exist. <br />
@@ -502,7 +506,7 @@ public class PostgrePersistenceServiceTestIT {
      * {@link DATABASE_USER} with {@link #DATABASE_PASSWORD} does exist with
      * required privileges. Execute /persistence/createRoleAndDatabase.sql by an
      * database admin if this has never been done before.
-     * 
+     *
      * @throws Exception
      */
     @BeforeClass
@@ -510,13 +514,6 @@ public class PostgrePersistenceServiceTestIT {
         testPersistenceService = new PostgrePersistenceServiceTestHelper(DATABASE_URL, DATABASE_USER,
                 DATABASE_PASSWORD);
         testPersistenceService.executeQueriesFromFile(CREATE_SEQUENCES_AND_TABLES_SQL);
-    }
-
-    @Before
-    public void setUp() throws Exception {
-
-        testPersistenceService.executeQueriesFromFile(TRUNCATE_TABLES_SQL);
-        persistenceService = new PostgrePersistenceService(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
     }
 
     @AfterClass

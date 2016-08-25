@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2014 SLUB Dresden
+  ~ Copyright 2016 Saxon State and University Library Dresden (SLUB)
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
   ~ You may obtain a copy of the License at
   ~
-  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~     http://www.apache.org/licenses/LICENSE-2.0
   ~
   ~ Unless required by applicable law or agreed to in writing, software
   ~ distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,64 +15,65 @@
   ~ limitations under the License.
   -->
 
-<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<OAI-PMH xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://www.openarchives.org/OAI/2.0/"
          xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-  <responseDate>2016-07-25T13:45:01Z</responseDate>
-  <request verb="ListIdentifiers" metadataPrefix="oai_dc">http://localhost:8080/fedora/oai</request>
-  <ListIdentifiers>
-    <header>
-      <identifier>oai:example.org:fedora-system:ContentModel-3.0</identifier>
-      <datestamp>2008-07-02T07:09:44Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:fedora-system:FedoraObject-3.0</identifier>
-      <datestamp>2008-07-02T07:09:44Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:fedora-system:ServiceDefinition-3.0</identifier>
-      <datestamp>2008-07-02T07:09:44Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:fedora-system:ServiceDeployment-3.0</identifier>
-      <datestamp>2008-07-02T07:09:44Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:qucosa:CModel</identifier>
-      <datestamp>2014-05-27T09:01:08Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:qucosa:SDef</identifier>
-      <datestamp>2014-05-27T09:23:22Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:qucosa:SDep</identifier>
-      <datestamp>2014-05-27T10:25:31Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:qucosa:1</identifier>
-      <datestamp>2015-12-17T16:03:21Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:qucosa:22</identifier>
-      <datestamp>2015-12-17T16:03:19Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:qucosa:333</identifier>
-      <datestamp>2015-12-17T16:03:51Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:qucosa:4444</identifier>
-      <datestamp>2015-12-17T16:03:46Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:qucosa:55555</identifier>
-      <datestamp>2015-12-17T16:03:48Z</datestamp>
-    </header>
-    <header>
-      <identifier>oai:example.org:qucosa:666666</identifier>
-      <datestamp>2015-12-17T16:03:45Z</datestamp>
-    </header>
-    <resumptionToken expirationDate="2016-07-25T11:53:21Z" cursor="0">6774a5c32bd9d847b49e3426857226db</resumptionToken>
-  </ListIdentifiers>
+    <responseDate>2016-07-25T13:45:01Z</responseDate>
+    <request verb="ListIdentifiers" metadataPrefix="oai_dc">http://localhost:8080/fedora/oai</request>
+    <ListIdentifiers>
+        <header>
+            <identifier>oai:example.org:fedora-system:ContentModel-3.0</identifier>
+            <datestamp>2008-07-02T07:09:44Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:fedora-system:FedoraObject-3.0</identifier>
+            <datestamp>2008-07-02T07:09:44Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:fedora-system:ServiceDefinition-3.0</identifier>
+            <datestamp>2008-07-02T07:09:44Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:fedora-system:ServiceDeployment-3.0</identifier>
+            <datestamp>2008-07-02T07:09:44Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:qucosa:CModel</identifier>
+            <datestamp>2014-05-27T09:01:08Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:qucosa:SDef</identifier>
+            <datestamp>2014-05-27T09:23:22Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:qucosa:SDep</identifier>
+            <datestamp>2014-05-27T10:25:31Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:qucosa:1</identifier>
+            <datestamp>2015-12-17T16:03:21Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:qucosa:22</identifier>
+            <datestamp>2015-12-17T16:03:19Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:qucosa:333</identifier>
+            <datestamp>2015-12-17T16:03:51Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:qucosa:4444</identifier>
+            <datestamp>2015-12-17T16:03:46Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:qucosa:55555</identifier>
+            <datestamp>2015-12-17T16:03:48Z</datestamp>
+        </header>
+        <header>
+            <identifier>oai:example.org:qucosa:666666</identifier>
+            <datestamp>2015-12-17T16:03:45Z</datestamp>
+        </header>
+        <resumptionToken expirationDate="2016-07-25T11:53:21Z" cursor="0">6774a5c32bd9d847b49e3426857226db
+        </resumptionToken>
+    </ListIdentifiers>
 </OAI-PMH>

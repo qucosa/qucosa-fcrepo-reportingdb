@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 SLUB Dresden
+ * Copyright 2016 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,6 +15,13 @@
  */
 
 package de.slub.persistence;
+
+import de.slub.fedora.oai.OaiHeader;
+import de.slub.fedora.oai.OaiRunResult;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Array;
 import java.sql.Connection;
@@ -29,36 +36,24 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import de.slub.fedora.oai.OaiHeader;
-import de.slub.fedora.oai.OaiRunResult;
-
 public class PostgrePersistenceService implements PersistenceService {
 
-    private final String url;
-    private final String databaseUser;
     private final String databasePassword;
+    private final String databaseUser;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final String url;
 
     /**
-     * @param url
-     *            as required by
-     *            {@link DriverManager#getConnection(String, String, String)}
-     * @param databaseUser
-     *            as required by
-     *            {@link DriverManager#getConnection(String, String, String)}
-     * @param databasePassword
-     *            as required by
-     *            {@link DriverManager#getConnection(String, String, String)}
-     * @throws IllegalArgumentException
-     *             if any parameter is {@code null}
+     * @param url              as required by
+     *                         {@link DriverManager#getConnection(String, String, String)}
+     * @param databaseUser     as required by
+     *                         {@link DriverManager#getConnection(String, String, String)}
+     * @param databasePassword as required by
+     *                         {@link DriverManager#getConnection(String, String, String)}
+     * @throws IllegalArgumentException if any parameter is {@code null}
      */
     public PostgrePersistenceService(@NonNull String url, @NonNull String databaseUser,
-            @NonNull String databasePassword) throws IllegalArgumentException {
+                                     @NonNull String databasePassword) throws IllegalArgumentException {
         if (url == null) {
             throw new IllegalArgumentException("parameter url must not be null");
         }
@@ -91,8 +86,8 @@ public class PostgrePersistenceService implements PersistenceService {
         String stm = "SELECT \"timestampOfRun\", \"responseDate\", \"resumptionToken\", \"resumptionTokenExpirationDate\", \"nextFromTimestamp\" FROM \"OAIRunResult\" order by \"ID\" desc limit 1";
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
-                PreparedStatement pst = con.prepareStatement(stm);
-                ResultSet rs = pst.executeQuery();) {
+             PreparedStatement pst = con.prepareStatement(stm);
+             ResultSet rs = pst.executeQuery();) {
 
             int rowCount = 0;
             while (rs.next()) {
@@ -141,7 +136,7 @@ public class PostgrePersistenceService implements PersistenceService {
         String insertStm = "INSERT INTO \"OAIRunResult\"(\"timestampOfRun\", \"responseDate\", \"resumptionToken\", \"resumptionTokenExpirationDate\", \"nextFromTimestamp\") VALUES(?, ?, ?, ?, ?)";
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
-                PreparedStatement pst = con.prepareStatement(insertStm)) {
+             PreparedStatement pst = con.prepareStatement(insertStm)) {
 
             pst.setTimestamp(1, convertJAVADateToSQLTimestamp(oaiRunResult.getTimestampOfRun()));
             pst.setTimestamp(2, convertJAVADateToSQLTimestamp(oaiRunResult.getResponseDate()));
@@ -163,8 +158,8 @@ public class PostgrePersistenceService implements PersistenceService {
         String getID = "SELECT \"ID\" FROM \"OAIRunResult\" order by \"ID\" desc limit 1";
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
-                PreparedStatement pst = con.prepareStatement(getID);
-                ResultSet rs = pst.executeQuery();) {
+             PreparedStatement pst = con.prepareStatement(getID);
+             ResultSet rs = pst.executeQuery();) {
 
             int rowCount = 0;
             while (rs.next()) {
@@ -186,7 +181,7 @@ public class PostgrePersistenceService implements PersistenceService {
             String deleteHistory = "DELETE FROM \"OAIRunResult\" WHERE \"timestampOfRun\" <= ? AND \"ID\" != ?";
 
             try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
-                    PreparedStatement pst = con.prepareStatement(deleteHistory)) {
+                 PreparedStatement pst = con.prepareStatement(deleteHistory)) {
 
                 pst.setTimestamp(1, convertJAVADateToSQLTimestamp(oldestResultToKeep));
                 pst.setInt(2, lastOaiRunResultIDtoKeep);
@@ -209,7 +204,7 @@ public class PostgrePersistenceService implements PersistenceService {
         int[] results = {};
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
-                PreparedStatement pst = con.prepareStatement(stm)) {
+             PreparedStatement pst = con.prepareStatement(stm)) {
 
             con.setAutoCommit(false);
 
@@ -273,8 +268,8 @@ public class PostgrePersistenceService implements PersistenceService {
         String stm = "SELECT \"recordIdentifier\", \"datestamp\" , \"setSpec\", \"statusIsDeleted\" from \"OAIHeader\" LIMIT 1000";
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
-                PreparedStatement pst = con.prepareStatement(stm);
-                ResultSet rs = pst.executeQuery();) {
+             PreparedStatement pst = con.prepareStatement(stm);
+             ResultSet rs = pst.executeQuery();) {
 
             int rowCount = 0;
             while (rs.next()) {
@@ -330,7 +325,7 @@ public class PostgrePersistenceService implements PersistenceService {
         int[] results = {};
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
-                PreparedStatement pst = con.prepareStatement(stm)) {
+             PreparedStatement pst = con.prepareStatement(stm)) {
 
             con.setAutoCommit(false);
 
@@ -387,10 +382,9 @@ public class PostgrePersistenceService implements PersistenceService {
     }
 
     /**
-     * @param date
-     *            the {@link java.util.Date} to convert or null
+     * @param date the {@link java.util.Date} to convert or null
      * @return {@link java.sql.Timestamp} the converted value or null if
-     *         argument date was null
+     * argument date was null
      */
     @Nullable
     private Timestamp convertJAVADateToSQLTimestamp(@Nullable Date date) {

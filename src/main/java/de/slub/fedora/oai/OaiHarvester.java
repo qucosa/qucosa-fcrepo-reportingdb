@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 SLUB Dresden
+ * Copyright 2016 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,30 +16,9 @@
 
 package de.slub.fedora.oai;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.URI;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.ws.rs.core.UriBuilder;
-import javax.xml.bind.DatatypeConverter;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
+import de.slub.persistence.PersistenceException;
+import de.slub.persistence.PersistenceService;
+import de.slub.util.TerminateableRunnable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.http.HttpEntity;
@@ -60,9 +39,28 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import de.slub.persistence.PersistenceException;
-import de.slub.persistence.PersistenceService;
-import de.slub.util.TerminateableRunnable;
+import javax.ws.rs.core.UriBuilder;
+import javax.xml.bind.DatatypeConverter;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class OaiHarvester extends TerminateableRunnable {
 
@@ -85,30 +83,26 @@ public class OaiHarvester extends TerminateableRunnable {
     private static final SimpleDateFormat FCREPO3_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     private static final SimpleDateFormat DEFAULT_URI_TIMESTAMP_FORMAT = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ss'Z'");
-    private final SimpleDateFormat uriTimestampFormat;
-
     private static final OaiRunResult EMPTY_OAI_RUN_RESULT = new OaiRunResult();
-
-    private final Duration pollInterval;
     private static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.standardSeconds(1);
-
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final OaiHeaderFilter oaiHeaderFilter;
     /**
      * Time span to keep OaiRunResults in persistence.
      */
     private final Duration oaiRunResultHistoryLength;
     private final PersistenceService persistenceService;
-
-    private List<OaiHeader> harvestedHeaders = new LinkedList<>();
-    private final OaiHeaderFilter oaiHeaderFilter;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Duration pollInterval;
     private final URI uri;
+    private final SimpleDateFormat uriTimestampFormat;
     private final boolean useFC3CompatibilityMode;
+    private List<OaiHeader> harvestedHeaders = new LinkedList<>();
 
     // TODO constructor does no checks now, everything done by builder. don't
     // really like this...
     protected OaiHarvester(URI harvestingUri, Duration pollInterval, OaiHeaderFilter oaiHeaderFilter,
-            PersistenceService persistenceService, Duration oaiRunResultHistoryLength,
-            boolean useFC3CompatibilityMode) {
+                           PersistenceService persistenceService, Duration oaiRunResultHistoryLength,
+                           boolean useFC3CompatibilityMode) {
 
         this.uri = harvestingUri;
         this.pollInterval = pollInterval;
@@ -452,11 +446,11 @@ public class OaiHarvester extends TerminateableRunnable {
     /**
      * OAI-PMH flow control resumptionTokens may have a value, be empty or are
      * not existent. Each case has a different meaning.
-     * 
+     *
      * @param document
      * @return either {@code null} if there is no resumptionToken, or empty
-     *         String "" if the document contains an empty resumptionToken or a
-     *         String with length() > 0 containing the resumptionTokens's value.
+     * String "" if the document contains an empty resumptionToken or a
+     * String with length() > 0 containing the resumptionTokens's value.
      * @throws XPathExpressionException
      */
     @Nullable
@@ -491,7 +485,7 @@ public class OaiHarvester extends TerminateableRunnable {
     /**
      * Use XPath to generate {@link OaiHeader} objects from the document and add
      * them to {@link #harvestedHeaders}.
-     * 
+     *
      * @param document
      * @throws XPathExpressionException
      */

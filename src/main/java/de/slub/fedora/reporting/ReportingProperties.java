@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 SLUB Dresden
+ * Copyright 2016 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,29 +16,27 @@
 
 package de.slub.fedora.reporting;
 
+import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MarkerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Properties;
 
-import org.joda.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MarkerFactory;
-
 public class ReportingProperties {
 
     private static final String PROPERTIES_FILE_NAME = "/reporting.properties";
-
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
     private static ReportingProperties instance;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Properties props = new Properties();
 
     private ReportingProperties() {
         try (InputStream in = this.getClass().getResourceAsStream(PROPERTIES_FILE_NAME);
-                Reader reader = new InputStreamReader(in, "UTF-8")) {
+             Reader reader = new InputStreamReader(in, "UTF-8")) {
 
             props.load(reader);
             // FIXME: how to make sure all properties can also be converted to

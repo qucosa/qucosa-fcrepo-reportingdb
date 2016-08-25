@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 SLUB Dresden
+ * Copyright 2016 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,12 +16,12 @@
 
 package de.slub.fedora.oai;
 
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jdt.annotation.NonNull;
+
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jdt.annotation.NonNull;
 
 /**
  * The class represents the header of an OAI Record except for the setSpec
@@ -30,29 +30,24 @@ import org.eclipse.jdt.annotation.NonNull;
 public class OaiHeader {
 
     @NonNull
-    private final String recordIdentifier;
-    @NonNull
     private final Date datestamp;
+    @NonNull
+    private final String recordIdentifier;
     @NonNull
     private final List<String> setSpec;
     private final boolean statusIsDeleted;
 
     /**
-     * @param recordIdentifier
-     *            the unique identifier of an item in a repository
-     * @param datestamp
-     *            the date of creation, modification or deletion of the record
-     * @param a
-     *            list with zero or more elements, each representing the content
-     *            of a setSpec element
-     * @param statusIsDeleted
-     *            true if the header contains the status deleted element
-     * @throws IllegalArgumentException
-     *             if recordIdentifier or datestamp are whitespace, empty ("")
-     *             or null or if setSpec is null
+     * @param recordIdentifier the unique identifier of an item in a repository
+     * @param datestamp        the date of creation, modification or deletion of the record
+     * @param a                list with zero or more elements, each representing the content
+     *                         of a setSpec element
+     * @param statusIsDeleted  true if the header contains the status deleted element
+     * @throws IllegalArgumentException if recordIdentifier or datestamp are whitespace, empty ("")
+     *                                  or null or if setSpec is null
      */
     public OaiHeader(@NonNull String recordIdentifier, @NonNull Date datestamp, @NonNull List<String> setSpec,
-            boolean statusIsDeleted) throws IllegalArgumentException {
+                     boolean statusIsDeleted) throws IllegalArgumentException {
 
         if (StringUtils.isBlank(recordIdentifier))
             throw new IllegalArgumentException("parameter recordIdentifier must not be '" + recordIdentifier + "'");
@@ -68,15 +63,11 @@ public class OaiHeader {
     }
 
     /**
-     * @param recordIdentifier
-     *            the unique identifier of an item in a repository
-     * @param datestamp
-     *            the date of creation, modification or deletion of the record
-     * @param statusIsDeleted
-     *            true if the header contains the status deleted element
-     * @throws IllegalArgumentException
-     *             if recordIdentifier or datestamp are whitespace, empty ("")
-     *             or null
+     * @param recordIdentifier the unique identifier of an item in a repository
+     * @param datestamp        the date of creation, modification or deletion of the record
+     * @param statusIsDeleted  true if the header contains the status deleted element
+     * @throws IllegalArgumentException if recordIdentifier or datestamp are whitespace, empty ("")
+     *                                  or null
      */
     public OaiHeader(@NonNull String recordIdentifier, @NonNull Date datestamp, boolean statusIsDeleted) {
         this(recordIdentifier, datestamp, new LinkedList<String>(), statusIsDeleted);
@@ -100,7 +91,7 @@ public class OaiHeader {
 
     /**
      * @return a list with zero or more elements, each representing the content
-     *         of a setSpec element
+     * of a setSpec element
      */
     @NonNull
     public List<String> getSetSpec() {

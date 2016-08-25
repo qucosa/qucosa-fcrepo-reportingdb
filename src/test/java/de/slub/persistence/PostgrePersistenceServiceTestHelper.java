@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 SLUB Dresden
+ * Copyright 2016 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,25 +16,23 @@
 
 package de.slub.persistence;
 
+import de.slub.fedora.oai.OaiHarvesterTestIT;
+import org.apache.commons.io.IOUtils;
+
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import org.apache.commons.io.IOUtils;
-
-import de.slub.fedora.oai.OaiHarvesterTestIT;
-
 /**
  * Helper class for integration tests
  */
 public class PostgrePersistenceServiceTestHelper {
 
+    private final String DATABASE_PASSWORD;
     private final String DATABASE_URL;
     private final String DATABASE_USER;
-    private final String DATABASE_PASSWORD;
-
     /**
      * Use {@link #getConnection()} to access this {@link Connection}!
      */
@@ -74,7 +72,7 @@ public class PostgrePersistenceServiceTestHelper {
     /**
      * Establishes the connection to the test database if there is no valid
      * connection yet and return it.
-     * 
+     *
      * @return connection to test database, never {@code null}
      * @throws Exception
      */

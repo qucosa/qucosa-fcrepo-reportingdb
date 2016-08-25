@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 SLUB Dresden
+ * Copyright 2016 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,14 +16,13 @@
 
 package de.slub.fedora.oai;
 
-import java.net.URI;
-import java.util.LinkedList;
-import java.util.List;
-
+import de.slub.persistence.PersistenceService;
 import org.eclipse.jdt.annotation.NonNull;
 import org.joda.time.Duration;
 
-import de.slub.persistence.PersistenceService;
+import java.net.URI;
+import java.util.LinkedList;
+import java.util.List;
 
 public class OaiHarvesterBuilder {
 
@@ -38,12 +37,11 @@ public class OaiHarvesterBuilder {
             return new LinkedList<>(identifiers);
         }
     };
-
-    private final URI uriToHarvest;
     private final PersistenceService persistenceService;
-    private Duration pollingInterval = DEFAULT_POLLING_INTERVAL;
-    private Duration oaiRunResultHistory = DEFAULT_OAI_RUN_RESULT_HISTORY_LENGTH;
+    private final URI uriToHarvest;
     private OaiHeaderFilter oaiHeaderFilter = DEFAULT_OAI_HEADER_FILTER;
+    private Duration oaiRunResultHistory = DEFAULT_OAI_RUN_RESULT_HISTORY_LENGTH;
+    private Duration pollingInterval = DEFAULT_POLLING_INTERVAL;
     private boolean useFC3CompatibilityMode = DEFAULT_FCREPO3_COMPATIBILITY_MODE;
 
     public OaiHarvesterBuilder(URI uriToHarvest, PersistenceService persistenceService) {
@@ -60,7 +58,7 @@ public class OaiHarvesterBuilder {
      * Sets the specified polling interval. If {@code pollInterval} is shorter
      * than {@link #MINIMUM_POLLING_INTERVAL}, {@link #MINIMUM_POLLING_INTERVAL}
      * is set.
-     * 
+     *
      * @param pollInterval
      * @return
      */

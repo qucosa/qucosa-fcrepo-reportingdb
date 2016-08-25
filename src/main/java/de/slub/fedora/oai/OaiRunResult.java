@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 SLUB Dresden
+ * Copyright 2016 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,27 +16,27 @@
 
 package de.slub.fedora.oai;
 
-import java.util.Date;
-
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import java.util.Date;
+
 /**
  * The harvester's status of a successful request.
- * 
+ * <p>
  * An immutable OaiRunResult always has a time stamp when this run was executed
  * and the servers responseDate. Optional parameters are OAI resumption token
  * and the resumption token's expiration date.
- *
  */
 public final class OaiRunResult {
 
     /**
-     * local time stamp when this run was started
+     * The value of the 'from' parameter to be used in the next GET request not
+     * containing a resumptionToken. To be used in case a paginated response
+     * with resumption token expires to start from the first page.
      */
-    private final Date timestampOfRun;
-
+    private final Date nextFromTimestamp;
     /**
      * time stamp received from OAI data provider that was requested
      */
@@ -51,42 +51,33 @@ public final class OaiRunResult {
      * the OAI resumption token's expiration date
      */
     private final Date resumptionTokenExpirationDate;
-
     /**
-     * The value of the 'from' parameter to be used in the next GET request not
-     * containing a resumptionToken. To be used in case a paginated response
-     * with resumption token expires to start from the first page.
+     * local time stamp when this run was started
      */
-    private final Date nextFromTimestamp;
+    private final Date timestampOfRun;
 
     /**
-     * @param timestampOfRun
-     *            time stamp when this run was executed
-     * @param responseDate
-     *            time stamp received from OAI data provider that was requested.
-     * @param resumptionToken
-     *            the OAI resumption token received. either {@code null} if
-     *            there is no resumptionToken, or empty String "" if the there
-     *            is an empty resumptionToken or a String with length() > 0
-     *            containing the resumptionTokens's value.<br />
-     *            may be {@code null} iff resumptionTokenExpirationDate is
-     *            {@code null}.
-     * @param resumptionTokenExpirationDate
-     *            the OAI resumption token's expiration date, may be
-     *            {@code null}.
-     * @param nextFromTimestamp
-     *            The timestamp of the 'from' parameter to be used in the next
-     *            GET request not containing a resumptionToken. To be used in
-     *            case a paginated response with resumption token expires to
-     *            start from the first page.
-     * @throws IllegalArgumentException
-     *             1) if timestampOfRun is {@code null} or <br />
-     *             2) if responseDate is {@code null} or <br />
-     *             3) if resumptionTokenExpirationDate is not {@code null} but
-     *             resumptionToken is whitespace, empty ("") or null.
+     * @param timestampOfRun                time stamp when this run was executed
+     * @param responseDate                  time stamp received from OAI data provider that was requested.
+     * @param resumptionToken               the OAI resumption token received. either {@code null} if
+     *                                      there is no resumptionToken, or empty String "" if the there
+     *                                      is an empty resumptionToken or a String with length() > 0
+     *                                      containing the resumptionTokens's value.<br />
+     *                                      may be {@code null} iff resumptionTokenExpirationDate is
+     *                                      {@code null}.
+     * @param resumptionTokenExpirationDate the OAI resumption token's expiration date, may be
+     *                                      {@code null}.
+     * @param nextFromTimestamp             The timestamp of the 'from' parameter to be used in the next
+     *                                      GET request not containing a resumptionToken. To be used in
+     *                                      case a paginated response with resumption token expires to
+     *                                      start from the first page.
+     * @throws IllegalArgumentException 1) if timestampOfRun is {@code null} or <br />
+     *                                  2) if responseDate is {@code null} or <br />
+     *                                  3) if resumptionTokenExpirationDate is not {@code null} but
+     *                                  resumptionToken is whitespace, empty ("") or null.
      */
     public OaiRunResult(@NonNull Date timestampOfRun, @NonNull Date responseDate, @Nullable String resumptionToken,
-            @Nullable Date resumptionTokenExpirationDate, @Nullable Date nextFromTimestamp)
+                        @Nullable Date resumptionTokenExpirationDate, @Nullable Date nextFromTimestamp)
             throws IllegalArgumentException {
 
         if (timestampOfRun == null)
@@ -129,8 +120,8 @@ public final class OaiRunResult {
 
     /**
      * @return either {@code null} if there is no resumptionToken, or empty
-     *         String "" tr represent an empty resumptionToken or a String with
-     *         length() > 0 containing the resumptionTokens's value.
+     * String "" tr represent an empty resumptionToken or a String with
+     * length() > 0 containing the resumptionTokens's value.
      */
     @Nullable
     public String getResumptionToken() {

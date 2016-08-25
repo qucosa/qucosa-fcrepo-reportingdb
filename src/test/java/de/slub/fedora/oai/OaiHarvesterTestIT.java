@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 SLUB Dresden
+ * Copyright 2016 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,28 +16,11 @@
 
 package de.slub.fedora.oai;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import javax.xml.bind.DatatypeConverter;
-
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import de.slub.persistence.PersistenceService;
+import de.slub.util.TerminateableRunnable;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.annotation.NonNull;
@@ -50,12 +33,26 @@ import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
+import javax.xml.bind.DatatypeConverter;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import de.slub.persistence.PersistenceService;
-import de.slub.util.TerminateableRunnable;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class OaiHarvesterTestIT {
 
@@ -80,7 +77,7 @@ public class OaiHarvesterTestIT {
     /**
      * Harvest two OAI headers from ListIdentifiers and store them in
      * persistence layer.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -108,7 +105,7 @@ public class OaiHarvesterTestIT {
     /**
      * Process a OAI response with 13 header elements, use filter to keep only 6
      * header elements that contain "real" Qucosa documents.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -129,8 +126,8 @@ public class OaiHarvesterTestIT {
             actualIDs.add(header.getRecordIdentifier());
         }
 
-        String[] expectedIDs = { "oai:example.org:qucosa:1", "oai:example.org:qucosa:22", "oai:example.org:qucosa:333",
-                "oai:example.org:qucosa:4444", "oai:example.org:qucosa:55555", "oai:example.org:qucosa:666666" };
+        String[] expectedIDs = {"oai:example.org:qucosa:1", "oai:example.org:qucosa:22", "oai:example.org:qucosa:333",
+                "oai:example.org:qucosa:4444", "oai:example.org:qucosa:55555", "oai:example.org:qucosa:666666"};
 
         for (String expectedID : expectedIDs) {
             assertTrue("Missing expected recordIdentifier " + expectedID, actualIDs.contains(expectedID));
@@ -145,7 +142,7 @@ public class OaiHarvesterTestIT {
      * Simulate initial run. No {@link OaiRunResult} is present, so no
      * resumptionToken and no nextFromtimestamp are present. Harvester must
      * request all data.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -169,7 +166,7 @@ public class OaiHarvesterTestIT {
     /**
      * Last {@link OaiRunResult} contains resumptionToken and no
      * nextFromtimestamp. Harvester must use resumptionToken in GET request.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -204,7 +201,7 @@ public class OaiHarvesterTestIT {
      * nextFromtimestamp. Harvester must use resumptionToken in GET request,
      * nextFromtimestamp must be ignored in request. (nextFromtimestamp is
      * backed up for next {@link OaiRunResult} but this is tested separately.)
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -237,7 +234,7 @@ public class OaiHarvesterTestIT {
     /**
      * Last {@link OaiRunResult} contains no resumptionToken but a
      * nextFromtimestamp. Harvester must use nextFromtimestamp in GET request.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -278,7 +275,7 @@ public class OaiHarvesterTestIT {
      * data provider's response and store it as new {@link OaiRunResult} in
      * persistence layer. Assert, that this {@link OaiRunResult}'s
      * nextFromTimestamp is {@code null}
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -316,7 +313,7 @@ public class OaiHarvesterTestIT {
      * data provider's response and store it as new {@link OaiRunResult} in
      * database. Assert, that this {@link OaiRunResult}'s nextFromTimestamp is
      * the same as the last {@link OaiRunResult}'s nextFromTimestamp.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -360,7 +357,7 @@ public class OaiHarvesterTestIT {
      * The OAI data provides's response contains an empty resumptionToken, the
      * new {@link OaiRunResult} to store must have a nextFromTimestamp equal to
      * its timestampOfRun.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -395,7 +392,7 @@ public class OaiHarvesterTestIT {
      * new {@link OaiRunResult} to store must have a nextFromTimestamp equal to
      * its timestampOfRun. This is independent from any last
      * {@link OaiRunResult}.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -427,7 +424,7 @@ public class OaiHarvesterTestIT {
      * anyhow, it seems that Fedora Commons 3 has a bug not closing an paginated
      * result with an empty resumption token... if tets are tun in
      * {@link #FCREPO3_COMPATIBILITY_MODE},
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -506,7 +503,7 @@ public class OaiHarvesterTestIT {
      * current run. Therefore, this run's {@link OaiRunResult}'s resumption
      * token must be empty and the nextFromTimestamp has the same value as this
      * run's timestampOfRun.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -528,7 +525,7 @@ public class OaiHarvesterTestIT {
      * If an OAI data providers response contains the error badResumptionToken,
      * the harvester must use {@link OaiRunResult#getNextFromTimestamp()} of the
      * last successful run in the next request.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -567,7 +564,7 @@ public class OaiHarvesterTestIT {
      * badResumptionToken and noRecordsMatch, this run's {@link OaiRunResult}'s
      * resumption token must be empty and the nextFromTimestamp is backed up
      * from the previous run.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -608,7 +605,7 @@ public class OaiHarvesterTestIT {
     /**
      * Test that the cleanup of {@link OaiRunResult}s in persistence layer is
      * triggered after a successful run.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -711,9 +708,9 @@ public class OaiHarvesterTestIT {
 
     class EmbeddedHttpHandler implements HttpHandler {
 
+        public int httpStatusCode = 200;
         public URI lastRequestUri;
         public String resourcePath;
-        public int httpStatusCode = 200;
 
         @Override
         public void handle(HttpExchange exchange) throws IOException {
