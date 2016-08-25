@@ -141,8 +141,8 @@ public class OaiHarvester extends TerminateableRunnable {
                     harvestedHeaders = oaiHeaderFilter.filterOaiHeaders(harvestedHeaders);
 
                     try {
-                        persistenceService.addOrUpdateHeaders(new LinkedList<OaiHeader>(harvestedHeaders));
-                        harvestedHeaders = new LinkedList<OaiHeader>();
+                        persistenceService.addOrUpdateHeaders(new LinkedList<>(harvestedHeaders));
+                        harvestedHeaders = new LinkedList<>();
 
                         try {
                             persistenceService.storeOaiRunResult(currentRun);
@@ -455,7 +455,6 @@ public class OaiHarvester extends TerminateableRunnable {
      */
     @Nullable
     private String extractResumptionToken(Document document) throws XPathExpressionException {
-
         String resumptionToken = null;
         XPath xPath = XPathFactory.newInstance().newXPath();
 
@@ -463,6 +462,9 @@ public class OaiHarvester extends TerminateableRunnable {
         if (node != null) {
             XPathExpression xSelectResumptionToken = xPath.compile("//resumptionToken");
             resumptionToken = (String) xSelectResumptionToken.evaluate(document, XPathConstants.STRING);
+            if (resumptionToken != null) {
+                resumptionToken = resumptionToken.trim();
+            }
         }
 
         return resumptionToken;
@@ -502,8 +504,7 @@ public class OaiHarvester extends TerminateableRunnable {
             if (singleHeaderNode.getNodeType() == Node.ELEMENT_NODE) {
                 Element headerElement = (Element) singleHeaderNode;
 
-                boolean statusIsDeleted = (headerElement.getAttribute("status").equalsIgnoreCase("deleted")) ? true
-                        : false;
+                boolean statusIsDeleted = headerElement.getAttribute("status").equalsIgnoreCase("deleted");
                 String recordIdentifier = headerElement.getElementsByTagName("identifier").item(0).getChildNodes()
                         .item(0).getNodeValue();
                 String datestampString = headerElement.getElementsByTagName("datestamp").item(0).getChildNodes().item(0)
