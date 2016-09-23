@@ -16,14 +16,16 @@
 
 package de.qucosa.persistence;
 
-import de.qucosa.fedora.oai.OaiHarvesterTest;
-import org.apache.commons.io.IOUtils;
-
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.apache.commons.io.IOUtils;
+
+import de.qucosa.fedora.oai.OaiHarvesterTest;
 
 /**
  * Helper class for integration tests
@@ -78,12 +80,22 @@ public class PostgrePersistenceServiceTestHelper {
      */
     private Connection getConnection() throws Exception {
         if (connection == null || !connection.isValid(2)) { // 2 seconds timeout
-            // TODO do we need to close the Connection in unit test code?
-            // -> yes, should be closed in a tearDown() after all tests are
-            // done.
             connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
         }
         return connection;
+    }
+
+    public void tearDown() throws Exception {
+        if (connection==null)
+            return;
+        
+        Connection connectionToTearDown = getConnection();
+        
+        if (! connectionToTearDown.getAutoCommit())
+            connectionToTearDown.commit(); //TODO do this just in case there is something to commit?        
+        
+        if (! connectionToTearDown.isClosed())
+            connectionToTearDown.close();
     }
 
 }

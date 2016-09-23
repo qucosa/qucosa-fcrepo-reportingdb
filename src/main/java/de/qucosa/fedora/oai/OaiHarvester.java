@@ -216,6 +216,7 @@ public class OaiHarvester extends TerminateableRunnable {
 
         HttpGet httpGet = new HttpGet(uri);
 
+        //FIXME why is httpClient never closed? Move code to try-with-resources?
         CloseableHttpClient httpClient = HttpClients.createMinimal();
         OaiRunResult result = EMPTY_OAI_RUN_RESULT;
 

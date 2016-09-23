@@ -519,6 +519,7 @@ public class PostgrePersistenceServiceTestIT {
     @AfterClass
     public static void tearDown() throws Exception {
         testPersistenceService.executeQueriesFromFile(TRUNCATE_TABLES_SQL);
+        testPersistenceService.tearDown();
     }
 
     private Date now() {
