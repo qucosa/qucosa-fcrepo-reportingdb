@@ -23,7 +23,6 @@ import de.qucosa.persistence.PersistenceService;
 import de.qucosa.util.TerminateableRunnable;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jdt.annotation.NonNull;
 import org.joda.time.Duration;
 import org.junit.After;
 import org.junit.Before;
@@ -698,8 +697,8 @@ public class OaiHarvesterTest {
         return Calendar.getInstance().getTime();
     }
 
-    @NonNull
-    private Date parseDateTime(@NonNull String timestamp) throws IllegalArgumentException {
+//    @NonNull
+    private Date parseDateTime(String timestamp) throws IllegalArgumentException {
         if (StringUtils.isBlank(timestamp)) {
             throw new IllegalArgumentException("timestamp must not be null or empty");
         }

@@ -27,7 +27,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.eclipse.jdt.annotation.Nullable;
 import org.joda.time.Duration;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
@@ -315,6 +314,7 @@ public class OaiHarvester extends TerminateableRunnable {
         // handle OAI-PMH errors and resumptionToken flow control
         // (see also
         // https://www.openarchives.org/OAI/openarchivesprotocol.html#FlowControl)
+        // and doc/HarvesterResumptionLogic.xlsx for examples
         Date nextFromTimestamp;
         if (oaiErrorsFound.isEmpty()) {
 
@@ -453,7 +453,7 @@ public class OaiHarvester extends TerminateableRunnable {
      * String with length() > 0 containing the resumptionTokens's value.
      * @throws XPathExpressionException
      */
-    @Nullable
+//    @Nullable
     private String extractResumptionToken(Document document) throws XPathExpressionException {
         String resumptionToken = null;
         XPath xPath = XPathFactory.newInstance().newXPath();
@@ -529,8 +529,13 @@ public class OaiHarvester extends TerminateableRunnable {
         }
     }
 
-    @Nullable
-    private Date parseNullableDateTime(@Nullable String timestamp) throws IllegalArgumentException {
+//    @Nullable
+    /**
+     * @param timestamp the timestamp to parse, {@code null} allowed
+     * @return the date parsed from the timestamp or {@code null} if timestamp was {@code null} or empty string
+     * @throws IllegalArgumentException if string parameter does not conform to lexical value space defined in XML Schema Part 2: Datatypes for xsd:dateTime.
+     */
+    private Date parseNullableDateTime(String timestamp) throws IllegalArgumentException {
         Date date;
         if (StringUtils.isBlank(timestamp)) {
             date = null;

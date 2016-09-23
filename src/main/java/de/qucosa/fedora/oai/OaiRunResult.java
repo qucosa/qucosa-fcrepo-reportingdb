@@ -17,8 +17,6 @@
 package de.qucosa.fedora.oai;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.annotation.Nullable;
 
 import java.util.Date;
 
@@ -33,8 +31,8 @@ public final class OaiRunResult {
 
     /**
      * The value of the 'from' parameter to be used in the next GET request not
-     * containing a resumptionToken. To be used in case a paginated response
-     * with resumption token expires to start from the first page.
+     * containing a resumptionToken. To be used to start from the first page in 
+     * case a paginated response with resumption token expired.
      */
     private final Date nextFromTimestamp;
     /**
@@ -60,7 +58,7 @@ public final class OaiRunResult {
      * @param timestampOfRun                time stamp when this run was executed
      * @param responseDate                  time stamp received from OAI data provider that was requested.
      * @param resumptionToken               the OAI resumption token received. either {@code null} if
-     *                                      there is no resumptionToken, or empty String "" if the there
+     *                                      there is no resumptionToken, or empty String "" if there
      *                                      is an empty resumptionToken or a String with length() > 0
      *                                      containing the resumptionTokens's value.<br />
      *                                      may be {@code null} iff resumptionTokenExpirationDate is
@@ -70,14 +68,14 @@ public final class OaiRunResult {
      * @param nextFromTimestamp             The timestamp of the 'from' parameter to be used in the next
      *                                      GET request not containing a resumptionToken. To be used in
      *                                      case a paginated response with resumption token expires to
-     *                                      start from the first page.
+     *                                      start from the first page. May be {@code null}.
      * @throws IllegalArgumentException 1) if timestampOfRun is {@code null} or <br />
      *                                  2) if responseDate is {@code null} or <br />
      *                                  3) if resumptionTokenExpirationDate is not {@code null} but
      *                                  resumptionToken is whitespace, empty ("") or null.
      */
-    public OaiRunResult(@NonNull Date timestampOfRun, @NonNull Date responseDate, @Nullable String resumptionToken,
-                        @Nullable Date resumptionTokenExpirationDate, @Nullable Date nextFromTimestamp)
+    public OaiRunResult(Date timestampOfRun, Date responseDate, String resumptionToken,
+                        Date resumptionTokenExpirationDate, Date nextFromTimestamp)
             throws IllegalArgumentException {
 
         if (timestampOfRun == null)
@@ -100,6 +98,8 @@ public final class OaiRunResult {
         this.nextFromTimestamp = nextFromTimestamp;
     }
 
+    //TODO do we really need this empty OaiRunResult? It forces all getters to possibly return null 
+    // hence every caller has to do null checks :/ 
     public OaiRunResult() {
         this.timestampOfRun = null;
         this.responseDate = null;
@@ -108,12 +108,18 @@ public final class OaiRunResult {
         this.nextFromTimestamp = null;
     }
 
-    @Nullable
+    /**
+     * @return local time stamp when this run was started. May be {@code null}.
+     */
+//    @Nullable
     public Date getTimestampOfRun() {
         return timestampOfRun;
     }
 
-    @Nullable
+    /** 
+     * @return  time stamp received from OAI data provider that was requested. May be {@code null}.
+     */
+//    @Nullable
     public Date getResponseDate() {
         return responseDate;
     }
@@ -123,17 +129,29 @@ public final class OaiRunResult {
      * String "" tr represent an empty resumptionToken or a String with
      * length() > 0 containing the resumptionTokens's value.
      */
-    @Nullable
+//    @Nullable
     public String getResumptionToken() {
         return resumptionToken;
     }
 
-    @Nullable
+    
+    
+    /**
+     * @return the OAI resumption token's expiration date. May be {@code null}.
+     */
+//    @Nullable
     public Date getResumptionTokenExpirationDate() {
         return resumptionTokenExpirationDate;
     }
 
-    @Nullable
+    /**
+     * The value of the 'from' parameter to be used in the next GET request not
+     * containing a resumptionToken. To be used to start from the first page in 
+     * case a paginated response with resumption token expired.
+     * 
+     * @return May be {@code null}.
+     */
+//    @Nullable 
     public Date getNextFromTimestamp() {
         return nextFromTimestamp;
     }

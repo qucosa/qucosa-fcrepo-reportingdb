@@ -17,7 +17,6 @@
 package de.qucosa.fedora.oai;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jdt.annotation.NonNull;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -29,11 +28,11 @@ import java.util.List;
  */
 public class OaiHeader {
 
-    @NonNull
+//    @NonNull
     private final Date datestamp;
-    @NonNull
+//    @NonNull
     private final String recordIdentifier;
-    @NonNull
+//    @NonNull
     private final List<String> setSpec;
     private final boolean statusIsDeleted;
 
@@ -44,9 +43,9 @@ public class OaiHeader {
      *                         of a setSpec element
      * @param statusIsDeleted  true if the header contains the status deleted element
      * @throws IllegalArgumentException if recordIdentifier or datestamp are whitespace, empty ("")
-     *                                  or null or if setSpec is null
+     *                                  or {code null} or if setSpec is {code null}
      */
-    public OaiHeader(@NonNull String recordIdentifier, @NonNull Date datestamp, @NonNull List<String> setSpec,
+    public OaiHeader(String recordIdentifier, Date datestamp, List<String> setSpec,
                      boolean statusIsDeleted) throws IllegalArgumentException {
 
         if (StringUtils.isBlank(recordIdentifier))
@@ -67,33 +66,33 @@ public class OaiHeader {
      * @param datestamp        the date of creation, modification or deletion of the record
      * @param statusIsDeleted  true if the header contains the status deleted element
      * @throws IllegalArgumentException if recordIdentifier or datestamp are whitespace, empty ("")
-     *                                  or null
+     *                                  or {code null}
      */
-    public OaiHeader(@NonNull String recordIdentifier, @NonNull Date datestamp, boolean statusIsDeleted) {
+    public OaiHeader(String recordIdentifier, Date datestamp, boolean statusIsDeleted) {
         this(recordIdentifier, datestamp, new LinkedList<String>(), statusIsDeleted);
     }
 
     /**
-     * @return the unique identifier of an item in a repository
+     * @return the unique identifier of an item in a repository, never {@code null}.
      */
-    @NonNull
+//    @NonNull
     public String getRecordIdentifier() {
         return recordIdentifier;
     }
 
     /**
-     * @return the date of creation, modification or deletion of the record
+     * @return the date of creation, modification or deletion of the record, never {@code null}.
      */
-    @NonNull
+//    @NonNull
     public Date getDatestamp() {
         return datestamp;
     }
 
     /**
      * @return a list with zero or more elements, each representing the content
-     * of a setSpec element
+     * of a setSpec element, never {@code null}.
      */
-    @NonNull
+//    @NonNull
     public List<String> getSetSpec() {
         return setSpec;
     }

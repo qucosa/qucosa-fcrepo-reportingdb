@@ -18,8 +18,6 @@ package de.qucosa.persistence;
 
 import de.qucosa.fedora.oai.OaiHeader;
 import de.qucosa.fedora.oai.OaiRunResult;
-import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.annotation.Nullable;
 
 import java.util.Date;
 import java.util.List;
@@ -27,17 +25,17 @@ import java.util.List;
 public interface PersistenceService {
 
     /**
-     * @return The details of the last run or {@coce null} if there isnt any
+     * @return The details of the last run or {@code null} if there isn't any
      * last run.
      */
-    @Nullable
+//    @Nullable
     public OaiRunResult getLastOaiRunResult();
 
     /**
-     * @param oaiRunResult the data to be persisted
+     * @param oaiRunResult the data to be persisted. 
      * @throws PersistenceException if any error occurred.
      */
-    public void storeOaiRunResult(@NonNull OaiRunResult oaiRunResult) throws PersistenceException;
+    public void storeOaiRunResult(OaiRunResult oaiRunResult) throws PersistenceException;
 
     /**
      * Delete all {@link OaiRunResult}s whose
@@ -49,7 +47,7 @@ public interface PersistenceService {
      * @param oldestResultToKeep the timestamp of run of the oldest OaiRunResult to keep.
      * @throws PersistenceException if any error occurred.
      */
-    public void cleanupOaiRunResults(@NonNull Date oldestResultToKeep) throws PersistenceException;
+    public void cleanupOaiRunResults(Date oldestResultToKeep) throws PersistenceException;
 
     /**
      * Persist all {@link OaiHeader}s. If the persistence layer already contains
@@ -59,16 +57,16 @@ public interface PersistenceService {
      * @param headers {@link OaiHeader}s to add or update.
      * @throws PersistenceException if any error occurred.
      */
-    public void addOrUpdateHeaders(@NonNull List<OaiHeader> headers) throws PersistenceException;
+    public void addOrUpdateHeaders(List<OaiHeader> headers) throws PersistenceException;
 
     /**
      * Get {@link OaiHeader}s from persistence. At most 1000 headers are
      * returned.
      *
-     * @return
+     * @return {@link OaiHeader}s from persistence, list my be empty but never {@code null}.
      * @throws PersistenceException if any error occurred.
      */
-    @NonNull
+//    @NonNull
     public List<OaiHeader> getOaiHeaders() throws PersistenceException;
 
     /**
@@ -79,12 +77,12 @@ public interface PersistenceService {
      *
      * @param headersToRemove {@link OaiHeader}s to be removed if unmodified.
      * @return the headers that were requested to be deleted but have not been
-     * removed from persistence. This {@link List} is always a subset of
-     * {@code headersToRemove}.
+     * removed from persistence. This {@link List}'s elements are always a subset of
+     * the elements {@code headersToRemove} contains. List may be empty but never {@code null}.  
      * @throws PersistenceException if any error occurred.
      */
-    @NonNull
-    public List<OaiHeader> removeOaiHeadersIfUnmodified(@NonNull List<OaiHeader> headersToRemove)
+//    @NonNull
+    public List<OaiHeader> removeOaiHeadersIfUnmodified(List<OaiHeader> headersToRemove)
             throws PersistenceException;
 
 }

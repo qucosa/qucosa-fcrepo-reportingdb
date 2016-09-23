@@ -18,8 +18,6 @@ package de.qucosa.persistence;
 
 import de.qucosa.fedora.oai.OaiHeader;
 import de.qucosa.fedora.oai.OaiRunResult;
-import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,8 +50,8 @@ public class PostgrePersistenceService implements PersistenceService {
      *                         {@link DriverManager#getConnection(String, String, String)}
      * @throws IllegalArgumentException if any parameter is {@code null}
      */
-    public PostgrePersistenceService(@NonNull String url, @NonNull String databaseUser,
-                                     @NonNull String databasePassword) throws IllegalArgumentException {
+    public PostgrePersistenceService(String url, String databaseUser,
+                                     String databasePassword) throws IllegalArgumentException {
         if (url == null) {
             throw new IllegalArgumentException("parameter url must not be null");
         }
@@ -75,7 +73,7 @@ public class PostgrePersistenceService implements PersistenceService {
      * @see de.qucosa.persistence.PersistenceService#getLastOaiRunResult()
      */
     @Override
-    @Nullable
+//    @Nullable
     public OaiRunResult getLastOaiRunResult() {
 
         OaiRunResult oaiRunResult = null;
@@ -93,21 +91,21 @@ public class PostgrePersistenceService implements PersistenceService {
             while (rs.next()) {
                 ++rowCount;
 
-                Date lastRun = convertSQLTimestampToJavaDate(rs.getTimestamp("timestampOfRun"));
+                Date lastRun = convertNullableSQLTimestampToJavaDate(rs.getTimestamp("timestampOfRun"));
                 if (lastRun == null) {
                     logger.error(errorMsg + "Error: 'timestampOfRun' must not be null.");
                     break;
                 }
 
-                Date responseDate = convertSQLTimestampToJavaDate(rs.getTimestamp("responseDate"));
+                Date responseDate = convertNullableSQLTimestampToJavaDate(rs.getTimestamp("responseDate"));
                 if (responseDate == null) {
                     logger.error(errorMsg + "Error: 'responseDate' must not be null.");
                     break;
                 }
 
                 oaiRunResult = new OaiRunResult(lastRun, responseDate, rs.getString("resumptionToken"),
-                        convertSQLTimestampToJavaDate(rs.getTimestamp("resumptionTokenExpirationDate")),
-                        convertSQLTimestampToJavaDate(rs.getTimestamp("nextFromTimestamp")));
+                        convertNullableSQLTimestampToJavaDate(rs.getTimestamp("resumptionTokenExpirationDate")),
+                        convertNullableSQLTimestampToJavaDate(rs.getTimestamp("nextFromTimestamp")));
 
             }
 
@@ -131,18 +129,20 @@ public class PostgrePersistenceService implements PersistenceService {
      * oai.OaiRunResult)
      */
     @Override
-    public void storeOaiRunResult(@NonNull OaiRunResult oaiRunResult) throws PersistenceException {
+    public void storeOaiRunResult(OaiRunResult oaiRunResult) throws PersistenceException {
 
+        //TODO check oaiRunResult == null; throw NPE or PersistenceException?
+        
         String insertStm = "INSERT INTO \"OAIRunResult\"(\"timestampOfRun\", \"responseDate\", \"resumptionToken\", \"resumptionTokenExpirationDate\", \"nextFromTimestamp\") VALUES(?, ?, ?, ?, ?)";
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
              PreparedStatement pst = con.prepareStatement(insertStm)) {
 
-            pst.setTimestamp(1, convertJAVADateToSQLTimestamp(oaiRunResult.getTimestampOfRun()));
-            pst.setTimestamp(2, convertJAVADateToSQLTimestamp(oaiRunResult.getResponseDate()));
+            pst.setTimestamp(1, convertNullableJAVADateToSQLTimestamp(oaiRunResult.getTimestampOfRun()));
+            pst.setTimestamp(2, convertNullableJAVADateToSQLTimestamp(oaiRunResult.getResponseDate()));
             pst.setString(3, oaiRunResult.getResumptionToken());
-            pst.setTimestamp(4, convertJAVADateToSQLTimestamp(oaiRunResult.getResumptionTokenExpirationDate()));
-            pst.setTimestamp(5, convertJAVADateToSQLTimestamp(oaiRunResult.getNextFromTimestamp()));
+            pst.setTimestamp(4, convertNullableJAVADateToSQLTimestamp(oaiRunResult.getResumptionTokenExpirationDate()));
+            pst.setTimestamp(5, convertNullableJAVADateToSQLTimestamp(oaiRunResult.getNextFromTimestamp()));
             pst.executeUpdate();
 
         } catch (SQLException e) {
@@ -152,8 +152,10 @@ public class PostgrePersistenceService implements PersistenceService {
     }
 
     @Override
-    public void cleanupOaiRunResults(@NonNull Date oldestResultToKeep) throws PersistenceException {
+    public void cleanupOaiRunResults(Date oldestResultToKeep) throws PersistenceException {
 
+        //TODO check oldestResultToKeep == null; throw NPE or PersistenceException?
+        
         Integer lastOaiRunResultIDtoKeep = null;
         String getID = "SELECT \"ID\" FROM \"OAIRunResult\" order by \"ID\" desc limit 1";
 
@@ -183,7 +185,7 @@ public class PostgrePersistenceService implements PersistenceService {
             try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
                  PreparedStatement pst = con.prepareStatement(deleteHistory)) {
 
-                pst.setTimestamp(1, convertJAVADateToSQLTimestamp(oldestResultToKeep));
+                pst.setTimestamp(1, convertNullableJAVADateToSQLTimestamp(oldestResultToKeep));
                 pst.setInt(2, lastOaiRunResultIDtoKeep);
                 int result = pst.executeUpdate();
 
@@ -197,8 +199,10 @@ public class PostgrePersistenceService implements PersistenceService {
     }
 
     @Override
-    public void addOrUpdateHeaders(@NonNull List<OaiHeader> headers) throws PersistenceException {
+    public void addOrUpdateHeaders(List<OaiHeader> headers) throws PersistenceException {
 
+        //TODO check headers == null; throw NPE or PersistenceException?
+        
         String basicErrorMsg = "Could not store all OaiHeaders in database. ";
         String stm = "INSERT INTO \"OAIHeader\" (\"recordIdentifier\", \"datestamp\" , \"setSpec\", \"statusIsDeleted\") VALUES (?, ?, ?, ?) ON CONFLICT (\"recordIdentifier\") DO UPDATE SET \"datestamp\" = ?, \"setSpec\" = ?, \"statusIsDeleted\" = ?";
         int[] results = {};
@@ -211,7 +215,7 @@ public class PostgrePersistenceService implements PersistenceService {
             for (OaiHeader header : headers) {
 
                 pst.setString(1, header.getRecordIdentifier());
-                Timestamp datestamp = convertJAVADateToSQLTimestamp(header.getDatestamp());
+                Timestamp datestamp = convertNullableJAVADateToSQLTimestamp(header.getDatestamp());
                 pst.setTimestamp(2, datestamp);
 
                 Array setSpecArray = con.createArrayOf("varchar", header.getSetSpec().toArray());
@@ -281,7 +285,7 @@ public class PostgrePersistenceService implements PersistenceService {
                     continue;
                 }
 
-                Date datestamp = convertSQLTimestampToJavaDate(rs.getTimestamp("datestamp"));
+                Date datestamp = convertNullableSQLTimestampToJavaDate(rs.getTimestamp("datestamp"));
                 if (datestamp == null) {
                     logger.error("'datestamp' must not be null. Skipping OaiHeader with recordIdentifier '{}'",
                             recordIdentifier);
@@ -315,8 +319,10 @@ public class PostgrePersistenceService implements PersistenceService {
     }
 
     @Override
-    public List<OaiHeader> removeOaiHeadersIfUnmodified(@NonNull List<OaiHeader> headersToRemove)
+    public List<OaiHeader> removeOaiHeadersIfUnmodified(List<OaiHeader> headersToRemove)
             throws PersistenceException {
+        
+        //TODO check headersToRemove == null; throw NPE or PersistenceException?
 
         // delete statements only if they did not change since we read them from
         // database
@@ -332,7 +338,7 @@ public class PostgrePersistenceService implements PersistenceService {
             for (OaiHeader header : headersToRemove) {
 
                 pst.setString(1, header.getRecordIdentifier());
-                Timestamp datestamp = convertJAVADateToSQLTimestamp(header.getDatestamp());
+                Timestamp datestamp = convertNullableJAVADateToSQLTimestamp(header.getDatestamp());
                 pst.setTimestamp(2, datestamp);
                 pst.setBoolean(3, header.isStatusIsDeleted());
                 pst.addBatch();
@@ -382,12 +388,12 @@ public class PostgrePersistenceService implements PersistenceService {
     }
 
     /**
-     * @param date the {@link java.util.Date} to convert or null
-     * @return {@link java.sql.Timestamp} the converted value or null if
-     * argument date was null
+     * @param date the {@link java.util.Date} to convert or {@code null}
+     * @return {@link java.sql.Timestamp} the converted value or {@code null} if
+     * argument date was {@code null}
      */
-    @Nullable
-    private Timestamp convertJAVADateToSQLTimestamp(@Nullable Date date) {
+//    @Nullable
+    private Timestamp convertNullableJAVADateToSQLTimestamp(Date date) {
         Timestamp sqlTimestamp = null;
 
         if (date != null) {
@@ -398,8 +404,13 @@ public class PostgrePersistenceService implements PersistenceService {
         return sqlTimestamp;
     }
 
-    @Nullable
-    private Date convertSQLTimestampToJavaDate(@Nullable Timestamp timestamp) {
+    /**
+     * @param timestamp the {@link java.sql.Timestamp} to convert to or {@code null}
+     * @return {@link java.util.Date} the converted value or {@code null} if
+     * argument timestamp was {@code null}
+     */
+//    @Nullable
+    private Date convertNullableSQLTimestampToJavaDate(Timestamp timestamp) {
         Date date = null;
         if (timestamp != null) {
             // do we lose precision? Date has milliseconds, Timestamp

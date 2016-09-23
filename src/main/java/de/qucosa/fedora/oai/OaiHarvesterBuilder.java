@@ -17,7 +17,6 @@
 package de.qucosa.fedora.oai;
 
 import de.qucosa.persistence.PersistenceService;
-import org.eclipse.jdt.annotation.NonNull;
 import org.joda.time.Duration;
 
 import java.net.URI;
@@ -60,28 +59,44 @@ public class OaiHarvesterBuilder {
      * is set.
      *
      * @param pollInterval
-     * @return
+     * @return this {@link OaiHarvesterBuilder} instance, never {@code null}.
      */
-    @NonNull
+//    @NonNull
     public OaiHarvesterBuilder setPollingInterval(Duration pollInterval) {
         this.pollingInterval = pollInterval.isShorterThan(OaiHarvesterBuilder.MINIMUM_POLLING_INTERVAL)
                 ? OaiHarvesterBuilder.MINIMUM_POLLING_INTERVAL : pollInterval;
         return this;
     }
 
-    @NonNull
+    /**
+     * @param oaiRunResultHistory to set
+     * @return this {@link OaiHarvesterBuilder} instance, never {@code null}.
+     */
+//    @NonNull
     public OaiHarvesterBuilder setOaiRunResultHistory(Duration oaiRunResultHistory) {
         this.oaiRunResultHistory = oaiRunResultHistory;
         return this;
     }
 
-    @NonNull
+    /**
+     * @param oaiHeaderFilter to set
+     * @return this {@link OaiHarvesterBuilder} instance, never {@code null}.
+     */
+//    @NonNull
     public OaiHarvesterBuilder setOaiHeaderFilter(OaiHeaderFilter oaiHeaderFilter) {
         this.oaiHeaderFilter = oaiHeaderFilter;
         return this;
     }
 
-    @NonNull
+    /**
+     * Set Fedora Commons 3 compatibility mode to use several workarounds of Fedora Commons 3 bugs such 
+     * as broken time stamp format, missing the 'Z' in the end; resumption token flow control bug, not 
+     * closing tha last page of a paginated response with an empty resumption token    
+     * 
+     * @param useFC3CompatibilityMode {@code true} if Fedora Commons 3 compatibility mode has to be used. 
+     * @return this {@link OaiHarvesterBuilder} instance, never {@code null}.
+     */
+//    @NonNull
     public OaiHarvesterBuilder setFC3CompatibilityMode(boolean useFC3CompatibilityMode) {
         this.useFC3CompatibilityMode = useFC3CompatibilityMode;
         return this;
