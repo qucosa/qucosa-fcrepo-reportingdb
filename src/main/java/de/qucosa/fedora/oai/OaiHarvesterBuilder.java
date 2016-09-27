@@ -17,6 +17,9 @@
 package de.qucosa.fedora.oai;
 
 import de.qucosa.persistence.PersistenceService;
+
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.joda.time.Duration;
 
 import java.net.URI;
@@ -35,22 +38,31 @@ public class OaiHarvesterBuilder {
         public List<OaiHeader> filterOaiHeaders(List<OaiHeader> identifiers) {
             return new LinkedList<>(identifiers);
         }
-    };
+    };    
+    
     private final PersistenceService persistenceService;
     private final URI uriToHarvest;
+    private final CloseableHttpClient httpClient;
+    
     private OaiHeaderFilter oaiHeaderFilter = DEFAULT_OAI_HEADER_FILTER;
     private Duration oaiRunResultHistory = DEFAULT_OAI_RUN_RESULT_HISTORY_LENGTH;
     private Duration pollingInterval = DEFAULT_POLLING_INTERVAL;
     private boolean useFC3CompatibilityMode = DEFAULT_FCREPO3_COMPATIBILITY_MODE;
 
-    public OaiHarvesterBuilder(URI uriToHarvest, PersistenceService persistenceService) {
+    /**
+     * @param uriToHarvest the OAI service provider's URI  
+     * @param httpClient to be used by {@link OaiHarvester} for communication with the OAI service provider
+     * @param persistenceService to be used by {@link OaiHarvester} to persist harvested data and its status
+     */
+    public OaiHarvesterBuilder(URI uriToHarvest, CloseableHttpClient httpClient, PersistenceService persistenceService) {
         this.uriToHarvest = uriToHarvest;
+        this.httpClient = httpClient;
         this.persistenceService = persistenceService;
     }
 
     public OaiHarvester build() {
         return new OaiHarvester(uriToHarvest, pollingInterval, oaiHeaderFilter, persistenceService, oaiRunResultHistory,
-                useFC3CompatibilityMode);
+                useFC3CompatibilityMode, httpClient);
     }
 
     /**

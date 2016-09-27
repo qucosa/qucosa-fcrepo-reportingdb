@@ -16,22 +16,25 @@
 
 package de.qucosa.fedora.reporting;
 
-import de.qucosa.fedora.oai.OaiHarvester;
-import de.qucosa.fedora.oai.OaiHarvesterBuilder;
-import de.qucosa.fedora.oai.QucosaDocumentFilter;
-import de.qucosa.persistence.PersistenceService;
-import de.qucosa.persistence.PostgrePersistenceService;
-import org.joda.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
+import static org.slf4j.MarkerFactory.getMarker;
 
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.slf4j.MarkerFactory.getMarker;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+
+import de.qucosa.fedora.oai.OaiHarvester;
+import de.qucosa.fedora.oai.OaiHarvesterBuilder;
+import de.qucosa.fedora.oai.QucosaDocumentFilter;
+import de.qucosa.persistence.PersistenceService;
+import de.qucosa.persistence.PostgrePersistenceService;
 
 public class ReportingManager {
 
@@ -55,7 +58,10 @@ public class ReportingManager {
 
             URI uriToHarvest = new URI(prop.getOaiDataProviderURL());
 
-            OaiHarvester oaiHarvester = new OaiHarvesterBuilder(uriToHarvest, persistenceService)
+            //TODO is httpClient closed on shutdown?
+            CloseableHttpClient httpClient = HttpClients.createMinimal();
+            
+            OaiHarvester oaiHarvester = new OaiHarvesterBuilder(uriToHarvest, httpClient, persistenceService)
                     .setPollingInterval(Duration.standardSeconds(prop.getOaiDataProviderPollingInterval()))
                     .setOaiHeaderFilter(new QucosaDocumentFilter())
                     .setFC3CompatibilityMode(prop.getFC3CompatibilityMode())

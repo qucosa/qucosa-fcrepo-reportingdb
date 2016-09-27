@@ -16,25 +16,17 @@
 
 package de.qucosa.fedora.oai;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import de.qucosa.persistence.PersistenceService;
-import de.qucosa.util.TerminateableRunnable;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.joda.time.Duration;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import javax.xml.bind.DatatypeConverter;
-import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -43,15 +35,25 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import javax.xml.bind.DatatypeConverter;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.joda.time.Duration;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.MockitoAnnotations;
+
+import de.qucosa.persistence.PersistenceService;
+import de.qucosa.util.TerminateableRunnable;
 
 public class OaiHarvesterTest {
 
@@ -65,23 +67,26 @@ public class OaiHarvesterTest {
     private static final String OAI_EMPTY_RESUMPTION_TOKEN_XML = "/oai/emptyResumptionToken.xml";
     private static final String OAI_IDENTIFIERS_TO_FILTER_XML = "/oai/ListIdentifiersToFilter.xml";
 
-    private EmbeddedHttpHandler embeddedHttpHandler;
-    private HttpServer httpServer;
     private PersistenceService mockedPersistenceService;
+
+    private CloseableHttpClient mockedHttpClient;    
+    private StatusLine mockedStatusLine;
+    private HttpEntity mockedHttpEntity;
     private OaiHarvester oaiHarvester;
 
     @Captor
     private ArgumentCaptor<List<OaiHeader>> oaiHeaderCaptor;
 
     /**
-     * Harvest two OAI headers from ListIdentifiers and store them in
-     * persistence layer.
+     * Send ListIdentifiers request to OAI service provider, receive two OAI headers in response 
+     * and store them in persistence layer.
      *
      * @throws Exception
      */
     @Test
     public void createOaiHeadersForListedIdentifier() throws Exception {
-        embeddedHttpHandler.resourcePath = OAI_LIST_IDENTIFIERS_XML;
+
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_LIST_IDENTIFIERS_XML));
         runAndWait(oaiHarvester);
 
         List<OaiHeader> expectedHeaders = new LinkedList<>();
@@ -110,10 +115,10 @@ public class OaiHarvesterTest {
     @Test
     public void filterHarvestedOaiHeaders() throws Exception {
 
-        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedPersistenceService)
+        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedHttpClient, mockedPersistenceService)
                 .setPollingInterval(Duration.standardSeconds(1)).setOaiHeaderFilter(new QucosaDocumentFilter()).build();
 
-        embeddedHttpHandler.resourcePath = OAI_IDENTIFIERS_TO_FILTER_XML;
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_IDENTIFIERS_TO_FILTER_XML));
         runAndWait(oaiHarvester);
 
         verify(mockedPersistenceService).addOrUpdateHeaders(oaiHeaderCaptor.capture());
@@ -150,16 +155,23 @@ public class OaiHarvesterTest {
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(null);
 
         // just let the harvester do something to have one successful loop
-        // (OAI data provider's response is ignored)
-        embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
+        // (OAI data provider's response is processed by OaiHarvester but its result is ignored in this test)
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
 
+        ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
+        verify(mockedHttpClient).execute(captor.capture());
+        HttpGet actualHttpGet = captor.getValue();
+        assertNotNull("No HttpGet was sent to OAI service provider", actualHttpGet);
+
+        String actualQuery = actualHttpGet.getURI().getQuery();
         assertFalse("No from parameter in OAI query allowed",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("from="));
+                actualQuery.contains("from="));
         assertFalse("No resumptionToken parameter in OAI query allowed",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("resumptionToken="));
+                actualQuery.contains("resumptionToken="));
+        assertTrue("OAI query must contain verb ListIdentifiers", actualQuery.contains("verb=ListIdentifiers"));
         assertTrue("OAI query must contain parameter metadataPrefix with value oai_dc",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("metadataPrefix=oai_dc"));
+                actualQuery.contains("metadataPrefix=oai_dc"));
     }
 
     /**
@@ -183,16 +195,21 @@ public class OaiHarvesterTest {
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastRun);
 
         // just let the harvester do something to have one successful loop
-        // (OAI data provider's response is ignored)
-        embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
+        // (OAI data provider's response is processed by OaiHarvester but its result is ignored in this test)
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
 
-        assertFalse("No from parameter in OAI query allowed",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("from="));
+        ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
+        verify(mockedHttpClient).execute(captor.capture());
+        HttpGet actualHttpGet = captor.getValue();
+        assertNotNull("No HttpGet was sent to OAI service provider", actualHttpGet);
+
+        String actualQuery = actualHttpGet.getURI().getQuery();
+        assertFalse("No from parameter in OAI query allowed", actualQuery.contains("from="));
         assertTrue("Parameter resumptionToken with value '111222333' in OAI query required",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("resumptionToken=111222333"));
+                actualQuery.contains("resumptionToken=111222333"));
         assertFalse("OAI query must not contain parameter metadataPrefix if resumptionToken is present",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("metadataPrefix"));
+                actualQuery.contains("metadataPrefix"));
     }
 
     /**
@@ -218,16 +235,21 @@ public class OaiHarvesterTest {
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastRun);
 
         // just let the harvester do something to have one successful loop
-        // (OAI data provider's response is ignored)
-        embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
+        // (OAI data provider's response is processed by OaiHarvester but its result is ignored in this test)
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
 
-        assertFalse("No from parameter in OAI query allowed",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("from="));
+        ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
+        verify(mockedHttpClient).execute(captor.capture());
+        HttpGet actualHttpGet = captor.getValue();
+        assertNotNull("No HttpGet was sent to OAI service provider", actualHttpGet);
+
+        String actualQuery = actualHttpGet.getURI().getQuery();
+        assertFalse("No from parameter in OAI query allowed", actualQuery.contains("from="));
         assertTrue("Parameter resumptionToken with value '111222333' in OAI query required",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("resumptionToken=111222333"));
+                actualQuery.contains("resumptionToken=111222333"));
         assertFalse("OAI query must not contain parameter metadataPrefix if resumptionToken is present",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("metadataPrefix"));
+                actualQuery.contains("metadataPrefix"));
     }
 
     /**
@@ -251,16 +273,22 @@ public class OaiHarvesterTest {
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastRun);
 
         // just let the harvester do something to have one successful loop
-        // (OAI data provider's response is ignored)
-        embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
+        // (OAI data provider's response is processed by OaiHarvester but its result is ignored in this test)
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
+        
+        ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
+        verify(mockedHttpClient).execute(captor.capture());
+        HttpGet actualHttpGet = captor.getValue();
+        assertNotNull("No HttpGet was sent to OAI service provider", actualHttpGet);
 
+        String actualQuery = actualHttpGet.getURI().getQuery();
         assertTrue("Parameter from with value 2015-02-02T02:02:02 in OAI query required.",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("from=2015-02-02T02:02:02"));
+                actualQuery.contains("from=2015-02-02T02:02:02"));
         assertFalse("No resumptionToken parameter in OAI query allowed",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("resumptionToken="));
+                actualQuery.contains("resumptionToken="));
         assertTrue("OAI query must contain parameter metadataPrefix with value oai_dc",
-                embeddedHttpHandler.lastRequestUri.getQuery().contains("metadataPrefix=oai_dc"));
+                actualQuery.contains("metadataPrefix=oai_dc"));
     }
 
     /*---- End test 4 combinations of last OaiRunResult's resumptionToken and nextFromTimestamp to build GET request ---- */
@@ -282,7 +310,7 @@ public class OaiHarvesterTest {
 
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(null);
 
-        embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
@@ -330,7 +358,7 @@ public class OaiHarvesterTest {
 
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastOaiRunResult);
 
-        embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
@@ -374,7 +402,7 @@ public class OaiHarvesterTest {
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastRun);
 
         // use any "normal" response without resumptionToken
-        embeddedHttpHandler.resourcePath = OAI_EMPTY_RESUMPTION_TOKEN_XML;
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_EMPTY_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
@@ -400,7 +428,7 @@ public class OaiHarvesterTest {
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(null);
 
         // use any "normal" response without resumptionToken
-        embeddedHttpHandler.resourcePath = OAI_LIST_IDENTIFIERS_XML;
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_LIST_IDENTIFIERS_XML));
         runAndWait(oaiHarvester);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
@@ -441,7 +469,7 @@ public class OaiHarvesterTest {
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastOaiRunResult);
 
         // use any "normal" response without resumptionToken
-        embeddedHttpHandler.resourcePath = OAI_LIST_IDENTIFIERS_XML;
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_LIST_IDENTIFIERS_XML));
         runAndWait(oaiHarvester);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
@@ -479,7 +507,7 @@ public class OaiHarvesterTest {
                 resumptionTokenExpirationDate, nextFromTimestamp);
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(lastOaiRunResult);
 
-        embeddedHttpHandler.resourcePath = OAI_EMPTY_RESUMPTION_TOKEN_XML;
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_EMPTY_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
@@ -508,7 +536,7 @@ public class OaiHarvesterTest {
     @Test
     public void errorNoRecordsMatchInResponse() throws Exception {
 
-        embeddedHttpHandler.resourcePath = OAI_ERROR_NO_RECORDS_MATCH_XML;
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_ERROR_NO_RECORDS_MATCH_XML));
         runAndWait(oaiHarvester);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
@@ -539,7 +567,7 @@ public class OaiHarvesterTest {
                 null, initialNextRunTimestamp);
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(initialOaiRunResult);
 
-        embeddedHttpHandler.resourcePath = OAI_ERROR_BAD_RESUMPTION_TOKEN_XML;
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_ERROR_BAD_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
@@ -578,7 +606,7 @@ public class OaiHarvesterTest {
                 null, initialNextRunTimestamp);
         when(mockedPersistenceService.getLastOaiRunResult()).thenReturn(initialOaiRunResult);
 
-        embeddedHttpHandler.resourcePath = OAI_ERROR_MULTIPLE_ERRORS_XML;
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_ERROR_MULTIPLE_ERRORS_XML));
         runAndWait(oaiHarvester);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
@@ -612,12 +640,13 @@ public class OaiHarvesterTest {
 
         // new OaiHarvester that keeps a history of 1 day
         Duration historyLength = Duration.standardDays(1);
-        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedPersistenceService)
+        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedHttpClient, mockedPersistenceService)
                 .setPollingInterval(Duration.standardSeconds(1)).setOaiRunResultHistory(historyLength).build();
 
         // just let the harvester do something to have one successful loop
-        // and invoke the cleanup (the Oai data provider's response is ignored)
-        embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
+        // and invoke the cleanup (the OAI data provider's response is processed 
+        // by OaiHarvester but its result is ignored in this test)
+        when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML));
         Date beforeHarvesterRuns = now();
         runAndWait(oaiHarvester);
         Date afterHarvesterRuns = now();
@@ -642,18 +671,18 @@ public class OaiHarvesterTest {
     public void noCleanupOfOaiRunResultHistoryAfterUnsuccessfulRun() throws Exception {
 
         // new OaiHarvester that keeps a history of 1 day
-        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedPersistenceService)
+        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedHttpClient, mockedPersistenceService)
                 .setPollingInterval(Duration.standardSeconds(1)).setOaiRunResultHistory(Duration.standardDays(1))
                 .build();
 
         // let the harvester receive a http 404 to have one UNsuccessful loop,
         // NOT writing a 4th OaiRunResult to database and invoke the cleanup
-        embeddedHttpHandler.resourcePath = OAI_RESUMPTION_TOKEN_XML;
-        embeddedHttpHandler.httpStatusCode = 404;
+        when(mockedStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_NOT_FOUND);
+        when(mockedStatusLine.getReasonPhrase()).thenReturn("Not Found");
         runAndWait(oaiHarvester);
 
-        verify(mockedPersistenceService, never()).cleanupOaiRunResults(Mockito.any(Date.class));
-        verify(mockedPersistenceService, never()).storeOaiRunResult(Mockito.any(OaiRunResult.class));
+        verify(mockedPersistenceService, never()).cleanupOaiRunResults(any(Date.class));
+        verify(mockedPersistenceService, never()).storeOaiRunResult(any(OaiRunResult.class));
     }
 
     /*---- End test logic for cleanup of OaiRunResult history ----*/
@@ -663,17 +692,22 @@ public class OaiHarvesterTest {
 
         MockitoAnnotations.initMocks(this);
         mockedPersistenceService = mock(PersistenceService.class);
+        
+        mockedHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse mockedHttpResponse = mock(CloseableHttpResponse.class);
+        when(mockedHttpClient.execute(any(HttpUriRequest.class))).thenReturn(mockedHttpResponse);
+        mockedStatusLine = mock(StatusLine.class);
+        when(mockedHttpResponse.getStatusLine()).thenReturn(mockedStatusLine);
+        when(mockedStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_OK);
+        mockedHttpEntity = mock(HttpEntity.class);
+        when(mockedHttpResponse.getEntity()).thenReturn(mockedHttpEntity);
+
         createOaiHarvester();
-        setupHttpServer();
     }
 
-    @After
-    public void stopHttpServer() {
-        httpServer.stop(1);
-    }
 
     private void createOaiHarvester() throws Exception {
-        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedPersistenceService)
+        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedHttpClient, mockedPersistenceService)
                 .setPollingInterval(Duration.standardSeconds(1)).build();
     }
 
@@ -683,14 +717,6 @@ public class OaiHarvesterTest {
         TimeUnit.MILLISECONDS.sleep(1000);
         runnable.terminate();
         thread.join();
-    }
-
-    private void setupHttpServer() throws IOException {
-        httpServer = HttpServer.create(new InetSocketAddress(8000), 0);
-        embeddedHttpHandler = new EmbeddedHttpHandler();
-        httpServer.createContext("/fedora/oai", embeddedHttpHandler);
-        httpServer.setExecutor(null); // creates a default executor
-        httpServer.start();
     }
 
     private Date now() {
@@ -703,21 +729,6 @@ public class OaiHarvesterTest {
             throw new IllegalArgumentException("timestamp must not be null or empty");
         }
         return DatatypeConverter.parseDateTime(timestamp).getTime();
-    }
-
-    class EmbeddedHttpHandler implements HttpHandler {
-
-        public int httpStatusCode = 200;
-        public URI lastRequestUri;
-        public String resourcePath;
-
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            lastRequestUri = exchange.getRequestURI();
-            exchange.sendResponseHeaders(httpStatusCode, 0);
-            IOUtils.copy(this.getClass().getResourceAsStream(resourcePath), exchange.getResponseBody());
-            exchange.getResponseBody().close();
-        }
     }
 
 }

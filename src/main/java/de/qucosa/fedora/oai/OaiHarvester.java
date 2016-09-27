@@ -16,13 +16,35 @@
 
 package de.qucosa.fedora.oai;
 
-import de.qucosa.persistence.PersistenceException;
-import de.qucosa.persistence.PersistenceService;
-import de.qucosa.util.TerminateableRunnable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import javax.ws.rs.core.UriBuilder;
+import javax.xml.bind.DatatypeConverter;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -38,28 +60,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.ws.rs.core.UriBuilder;
-import javax.xml.bind.DatatypeConverter;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.URI;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import de.qucosa.persistence.PersistenceException;
+import de.qucosa.persistence.PersistenceService;
+import de.qucosa.util.TerminateableRunnable;
 
 public class OaiHarvester extends TerminateableRunnable {
 
@@ -96,12 +99,14 @@ public class OaiHarvester extends TerminateableRunnable {
     private final SimpleDateFormat uriTimestampFormat;
     private final boolean useFC3CompatibilityMode;
     private List<OaiHeader> harvestedHeaders = new LinkedList<>();
+    
+    private final CloseableHttpClient httpClient; 
 
     // TODO constructor does no checks now, everything done by builder. don't
     // really like this...
     protected OaiHarvester(URI harvestingUri, Duration pollInterval, OaiHeaderFilter oaiHeaderFilter,
                            PersistenceService persistenceService, Duration oaiRunResultHistoryLength,
-                           boolean useFC3CompatibilityMode) {
+                           boolean useFC3CompatibilityMode,CloseableHttpClient httpClient) {
 
         this.uri = harvestingUri;
         this.pollInterval = pollInterval;
@@ -110,6 +115,7 @@ public class OaiHarvester extends TerminateableRunnable {
         this.oaiHeaderFilter = oaiHeaderFilter;
         this.useFC3CompatibilityMode = useFC3CompatibilityMode;
         this.uriTimestampFormat = (useFC3CompatibilityMode) ? FCREPO3_TIMESTAMP_FORMAT : DEFAULT_URI_TIMESTAMP_FORMAT;
+        this.httpClient = httpClient;
     }
 
     @Override
@@ -215,11 +221,8 @@ public class OaiHarvester extends TerminateableRunnable {
         logger.debug("Requesting {}", uri.toASCIIString());
 
         HttpGet httpGet = new HttpGet(uri);
-
-        //FIXME why is httpClient never closed? Move code to try-with-resources?
-        CloseableHttpClient httpClient = HttpClients.createMinimal();
         OaiRunResult result = EMPTY_OAI_RUN_RESULT;
-
+        
         try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
             if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                 HttpEntity httpEntity = httpResponse.getEntity();
