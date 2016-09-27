@@ -34,7 +34,7 @@ public class ReportingProperties {
 
     private ReportingProperties() throws IOException {
         try (InputStream in = getClass().getResourceAsStream(DEFAULT_PROPERTIES_FILE);
-             Reader reader = new InputStreamReader(in, "UTF-8")) {
+             Reader reader = new InputStreamReader(in, "ISO-8859-1")) {
             props.load(reader);
             overwriteWithSystemProperties();
         }
