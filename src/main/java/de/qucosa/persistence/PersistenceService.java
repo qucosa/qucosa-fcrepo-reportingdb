@@ -52,7 +52,7 @@ public interface PersistenceService {
     /**
      * Persist all {@link OaiHeader}s. If the persistence layer already contains
      * a {@link OaiHeader} object that matches
-     * {@link OaiHeader#getRecordIdentifier()}, this object updated.
+     * {@link OaiHeader#getRecordIdentifier()}, this object is updated.
      *
      * @param headers {@link OaiHeader}s to add or update.
      * @throws PersistenceException if any error occurred.

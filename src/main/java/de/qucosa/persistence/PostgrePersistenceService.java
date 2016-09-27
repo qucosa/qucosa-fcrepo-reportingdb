@@ -49,9 +49,11 @@ public class PostgrePersistenceService implements PersistenceService {
      * @param databasePassword as required by
      *                         {@link DriverManager#getConnection(String, String, String)}
      * @throws IllegalArgumentException if any parameter is {@code null}
+     * @throws SQLException    in case credentials can't be used to extablish a database connection
+     * to the url or a database access error occurs 
      */
     public PostgrePersistenceService(String url, String databaseUser,
-                                     String databasePassword) throws IllegalArgumentException {
+                                     String databasePassword) throws IllegalArgumentException, SQLException {
         if (url == null) {
             throw new IllegalArgumentException("parameter url must not be null");
         }
@@ -65,6 +67,10 @@ public class PostgrePersistenceService implements PersistenceService {
         this.url = url;
         this.databaseUser = databaseUser;
         this.databasePassword = databasePassword;
+
+        // check url and credentials and throw SQLException if a database access error occurs
+        Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
+        con.close();
     }
 
     /*
