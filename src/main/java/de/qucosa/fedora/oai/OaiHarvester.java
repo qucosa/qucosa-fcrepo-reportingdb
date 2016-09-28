@@ -99,7 +99,12 @@ public class OaiHarvester extends TerminateableRunnable {
     private final boolean useFC3CompatibilityMode;
     private List<OaiHeader> harvestedHeaders = new LinkedList<>();
     
-    private final CloseableHttpClient httpClient; 
+    private final CloseableHttpClient httpClient;
+    
+    /**
+     * If true, the last run was not successful and no OaiRunResult has been written to persistence.
+     */
+    private boolean lastRunResultedInError = false; 
 
     // TODO constructor does no checks now, everything done by builder. don't
     // really like this...
@@ -156,11 +161,14 @@ public class OaiHarvester extends TerminateableRunnable {
                             logger.error("The status of the current run could not be persisted, "
                                     + "the previous OaiRunResult remains the most recent one.", exception);
                         }
+                        lastRunResultedInError = false;
 
                     } catch (PersistenceException exception) {
                         logger.error("Harvested headers could not be persisted. This run was not successful, "
                                 + "the previous OaiRunResult is still the most recent one. ", exception);
                     }
+                } else {
+                    lastRunResultedInError = true;
                 }
                 cleanupOaiRunResultsInPersistence(currentRun);
             }
@@ -186,24 +194,44 @@ public class OaiHarvester extends TerminateableRunnable {
         }
     }
 
+    /**
+     * See file /doc/HarvesterResumptionLogic.xlsx, sheet "waitForNextRun logic" for details on how to calculate
+     * the time to wait. 
+     * 
+     * @param lastrun
+     * @return
+     */
     private boolean waitForNextRun(OaiRunResult lastrun) {
         Date start = now();
-        Duration waitTime = pollInterval;
-
         Date timestampLastRun = lastrun.getTimestampOfRun();
-        if (timestampLastRun != null && lastrun.isInFutureOf(start)) {
+        long waitTime = pollInterval.getMillis();
 
-            logger.error("The timestamp of the last run seems to be in the future. "
-                    + "Either the persistence layer is corrupted or the local servers clock travels in time...");
+        if (timestampLastRun == null && !lastRunResultedInError) {
+            // case 1: very first run of harvester, start immediately
+            waitTime = 0;
+        
+        } else if (timestampLastRun != null && !lastrun.hasResumptionToken() && !lastRunResultedInError) {
+            if (!timestampLastRun.after(start)) {
+                // case 2: next run is at timestampLastRun + pollInterval 
+                waitTime = pollInterval.getMillis() - (start.getTime() - timestampLastRun.getTime());
 
-        } else if (lastrun.hasResumptionToken()) {
+            } else {
+              // exception: something is wrong with the clock
+              waitTime = pollInterval.getMillis();
+              logger.error("The timestamp of the last run seems to be in the future. "
+                      + "Either the persistence layer is corrupted or the local servers clock travels in time...");
+            }
+        } else if (lastrun.hasResumptionToken() && !lastRunResultedInError) {
+            // case 3: we have a resumption token, process OAI service provider's paginated response
 
-            // This is the interval between two paginated requests
-            waitTime = minimumWaittimeBetweenTwoRequests;
+            waitTime = minimumWaittimeBetweenTwoRequests.getMillis();
+        } else {
+            // case 4: on any other case
+            waitTime = pollInterval.getMillis();
         }
-
+        
         try {
-            TimeUnit.MILLISECONDS.sleep(waitTime.getMillis());
+            TimeUnit.MILLISECONDS.sleep(waitTime);
             return true;
         } catch (InterruptedException e) {
             logger.warn("Interrupted while waiting for next OAI run: {}", e.getMessage());
@@ -303,6 +331,20 @@ public class OaiHarvester extends TerminateableRunnable {
         return builder.build();
     }
 
+    /**
+     * See file /doc/HarvesterResumptionLogic.xlsx, sheet "OaiRunResult processing" for details on how the new 
+     * {@link OaiRunResult} is created, based on lastRunResult, resumptionToken flow control (and OAI-PMH errors) 
+     * 
+     * @param content
+     * @param startTimeOfCurrentRun
+     * @param lastRunResult
+     * @return
+     * @throws ParserConfigurationException
+     * @throws IOException
+     * @throws SAXException
+     * @throws XPathExpressionException
+     * @throws IllegalArgumentException
+     */
     private OaiRunResult handleXmlResult(InputStream content, Date startTimeOfCurrentRun, OaiRunResult lastRunResult)
             throws ParserConfigurationException, IOException, SAXException, XPathExpressionException,
             IllegalArgumentException {

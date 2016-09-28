@@ -156,10 +156,6 @@ public final class OaiRunResult {
         return nextFromTimestamp;
     }
 
-    public boolean isInFutureOf(Date date) {
-        return timestampOfRun != null && timestampOfRun.after(date);
-    }
-
     public boolean hasTimestampOfRun() {
         return timestampOfRun != null;
     }
