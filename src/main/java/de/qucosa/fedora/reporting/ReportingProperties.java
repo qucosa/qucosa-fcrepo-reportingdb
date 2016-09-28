@@ -16,17 +16,19 @@
 
 package de.qucosa.fedora.reporting;
 
-import org.joda.time.Duration;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Properties;
 
+import org.joda.time.Duration;
+
 public class ReportingProperties {
 
     private static final String DEFAULT_PROPERTIES_FILE = "/default.properties";
+    private static final String LOCAL_PROPERTIES_FILE = "/local.properties";
+    private static final String PROPERTIES_FILE_FORMAT = "ISO-8859-1";
 
     private static ReportingProperties instance;
 
@@ -34,10 +36,11 @@ public class ReportingProperties {
 
     private ReportingProperties() throws IOException {
         try (InputStream in = getClass().getResourceAsStream(DEFAULT_PROPERTIES_FILE);
-             Reader reader = new InputStreamReader(in, "ISO-8859-1")) {
+             Reader reader = new InputStreamReader(in, PROPERTIES_FILE_FORMAT)) {
             props.load(reader);
-            overwriteWithSystemProperties();
         }
+        overwriteWithLocalProperties();
+        overwriteWithSystemProperties();
     }
 
     public static ReportingProperties getInstance() throws IOException {
@@ -45,6 +48,18 @@ public class ReportingProperties {
             instance = new ReportingProperties();
         }
         return instance;
+    }
+    
+    private void overwriteWithLocalProperties() throws IOException {
+            try (InputStream in = getClass().getResourceAsStream(LOCAL_PROPERTIES_FILE)) {
+
+                // file local.properties is optional, it may not exist  
+                if (in != null) {
+                    try (Reader reader = new InputStreamReader(in, PROPERTIES_FILE_FORMAT)) {
+                        props.load(reader);                        
+                    }
+                }
+            }
     }
 
     private void overwriteWithSystemProperties() {
