@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -56,6 +57,15 @@ import de.qucosa.persistence.PersistenceService;
 import de.qucosa.util.TerminateableRunnable;
 
 public class OaiHarvesterTest {
+
+    /* aggressive timings to speed up execution time of JUnit tests 
+     * very safe values are 1000 millis each.
+     * make sure SLEEP_TIME_RUN_AND_WAIT is not too short and 
+     * MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS <= 1 milisecond
+     */
+    private static final int SLEEP_TIME_RUN_AND_WAIT = 20;
+    private static final Duration POLLING_INTERVAL = Duration.millis(0);
+    private static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.millis(1); // min 1 mili!
 
     private static final boolean FCREPO3_COMPATIBILITY_MODE = false;
 
@@ -115,8 +125,9 @@ public class OaiHarvesterTest {
     @Test
     public void filterHarvestedOaiHeaders() throws Exception {
 
-        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedHttpClient, mockedPersistenceService)
-                .setPollingInterval(Duration.standardSeconds(1)).setOaiHeaderFilter(new QucosaDocumentFilter()).build();
+        oaiHarvester = createDefaultOaiHarvesterBuilderHelper()
+                .setOaiHeaderFilter(new QucosaDocumentFilter())
+                .build();
 
         when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_IDENTIFIERS_TO_FILTER_XML));
         runAndWait(oaiHarvester);
@@ -159,9 +170,10 @@ public class OaiHarvesterTest {
         when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
 
+        // we are interested in the first request only
         ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
-        verify(mockedHttpClient).execute(captor.capture());
-        HttpGet actualHttpGet = captor.getValue();
+        verify(mockedHttpClient, atLeastOnce()).execute(captor.capture());
+        HttpGet actualHttpGet = captor.getAllValues().get(0);
         assertNotNull("No HttpGet was sent to OAI service provider", actualHttpGet);
 
         String actualQuery = actualHttpGet.getURI().getQuery();
@@ -199,9 +211,10 @@ public class OaiHarvesterTest {
         when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
 
+        // we are interested in the first request only
         ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
-        verify(mockedHttpClient).execute(captor.capture());
-        HttpGet actualHttpGet = captor.getValue();
+        verify(mockedHttpClient, atLeastOnce()).execute(captor.capture());
+        HttpGet actualHttpGet = captor.getAllValues().get(0);
         assertNotNull("No HttpGet was sent to OAI service provider", actualHttpGet);
 
         String actualQuery = actualHttpGet.getURI().getQuery();
@@ -239,9 +252,10 @@ public class OaiHarvesterTest {
         when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
 
+        // we are interested in the first request only
         ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
-        verify(mockedHttpClient).execute(captor.capture());
-        HttpGet actualHttpGet = captor.getValue();
+        verify(mockedHttpClient, atLeastOnce()).execute(captor.capture());
+        HttpGet actualHttpGet = captor.getAllValues().get(0);
         assertNotNull("No HttpGet was sent to OAI service provider", actualHttpGet);
 
         String actualQuery = actualHttpGet.getURI().getQuery();
@@ -276,10 +290,11 @@ public class OaiHarvesterTest {
         // (OAI data provider's response is processed by OaiHarvester but its result is ignored in this test)
         when(mockedHttpEntity.getContent()).thenReturn(this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML));
         runAndWait(oaiHarvester);
-        
+
+        // we are interested in the first request only
         ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
-        verify(mockedHttpClient).execute(captor.capture());
-        HttpGet actualHttpGet = captor.getValue();
+        verify(mockedHttpClient, atLeastOnce()).execute(captor.capture());
+        HttpGet actualHttpGet = captor.getAllValues().get(0);
         assertNotNull("No HttpGet was sent to OAI service provider", actualHttpGet);
 
         String actualQuery = actualHttpGet.getURI().getQuery();
@@ -640,8 +655,7 @@ public class OaiHarvesterTest {
 
         // new OaiHarvester that keeps a history of 1 day
         Duration historyLength = Duration.standardDays(1);
-        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedHttpClient, mockedPersistenceService)
-                .setPollingInterval(Duration.standardSeconds(1)).setOaiRunResultHistory(historyLength).build();
+        oaiHarvester = createDefaultOaiHarvesterBuilderHelper().setOaiRunResultHistory(historyLength).build();
 
         // just let the harvester do something to have one successful loop
         // and invoke the cleanup (the OAI data provider's response is processed 
@@ -671,8 +685,8 @@ public class OaiHarvesterTest {
     public void noCleanupOfOaiRunResultHistoryAfterUnsuccessfulRun() throws Exception {
 
         // new OaiHarvester that keeps a history of 1 day
-        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedHttpClient, mockedPersistenceService)
-                .setPollingInterval(Duration.standardSeconds(1)).setOaiRunResultHistory(Duration.standardDays(1))
+        oaiHarvester = createDefaultOaiHarvesterBuilderHelper()
+                .setOaiRunResultHistory(Duration.standardDays(1))
                 .build();
 
         // let the harvester receive a http 404 to have one UNsuccessful loop,
@@ -702,19 +716,24 @@ public class OaiHarvesterTest {
         mockedHttpEntity = mock(HttpEntity.class);
         when(mockedHttpResponse.getEntity()).thenReturn(mockedHttpEntity);
 
-        createOaiHarvester();
+        oaiHarvester = createDefaultOaiHarvesterBuilderHelper().build();
     }
 
 
-    private void createOaiHarvester() throws Exception {
-        oaiHarvester = new OaiHarvesterBuilder(new URI("http://localhost:8000/fedora/oai"), mockedHttpClient, mockedPersistenceService)
-                .setPollingInterval(Duration.standardSeconds(1)).build();
+    /**
+     * @return standard configuration for a OaiHarvester to be used in JUnit tests
+     * @throws Exception
+     */
+    private OaiHarvesterBuilderHelper createDefaultOaiHarvesterBuilderHelper() throws Exception {
+        return new OaiHarvesterBuilderHelper(new URI("http://localhost:8000/fedora/oai"), mockedHttpClient, mockedPersistenceService)
+                .setMinimumWaittimeBetweenTwoRequests(MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS)
+                .setPollingIntervalForUnitTest(POLLING_INTERVAL);
     }
 
     private void runAndWait(TerminateableRunnable runnable) throws InterruptedException {
         Thread thread = new Thread(runnable);
         thread.start();
-        TimeUnit.MILLISECONDS.sleep(1000);
+        TimeUnit.MILLISECONDS.sleep(SLEEP_TIME_RUN_AND_WAIT);
         runnable.terminate();
         thread.join();
     }

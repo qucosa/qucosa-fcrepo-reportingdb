@@ -44,11 +44,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.joda.time.Duration;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
@@ -86,7 +84,7 @@ public class OaiHarvester extends TerminateableRunnable {
     private static final SimpleDateFormat DEFAULT_URI_TIMESTAMP_FORMAT = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final OaiRunResult EMPTY_OAI_RUN_RESULT = new OaiRunResult();
-    private static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.standardSeconds(1);
+//    private static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.standardSeconds(1);
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final OaiHeaderFilter oaiHeaderFilter;
     /**
@@ -95,6 +93,7 @@ public class OaiHarvester extends TerminateableRunnable {
     private final Duration oaiRunResultHistoryLength;
     private final PersistenceService persistenceService;
     private final Duration pollInterval;
+    private final Duration minimumWaittimeBetweenTwoRequests;// = Duration.millis(10);
     private final URI uri;
     private final SimpleDateFormat uriTimestampFormat;
     private final boolean useFC3CompatibilityMode;
@@ -104,12 +103,14 @@ public class OaiHarvester extends TerminateableRunnable {
 
     // TODO constructor does no checks now, everything done by builder. don't
     // really like this...
-    protected OaiHarvester(URI harvestingUri, Duration pollInterval, OaiHeaderFilter oaiHeaderFilter,
-                           PersistenceService persistenceService, Duration oaiRunResultHistoryLength,
-                           boolean useFC3CompatibilityMode,CloseableHttpClient httpClient) {
+    protected OaiHarvester(URI harvestingUri, Duration pollInterval, Duration minimumWaittimeBetweenTwoRequests, 
+                           OaiHeaderFilter oaiHeaderFilter, PersistenceService persistenceService, 
+                           Duration oaiRunResultHistoryLength, boolean useFC3CompatibilityMode,
+                           CloseableHttpClient httpClient) {
 
         this.uri = harvestingUri;
         this.pollInterval = pollInterval;
+        this.minimumWaittimeBetweenTwoRequests = minimumWaittimeBetweenTwoRequests;
         this.oaiRunResultHistoryLength = oaiRunResultHistoryLength;
         this.persistenceService = persistenceService;
         this.oaiHeaderFilter = oaiHeaderFilter;
@@ -197,8 +198,8 @@ public class OaiHarvester extends TerminateableRunnable {
 
         } else if (lastrun.hasResumptionToken()) {
 
-            // Is this the interval between two paginated requests
-            waitTime = MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS;
+            // This is the interval between two paginated requests
+            waitTime = minimumWaittimeBetweenTwoRequests;
         }
 
         try {

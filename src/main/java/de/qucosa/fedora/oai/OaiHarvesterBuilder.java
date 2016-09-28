@@ -19,7 +19,6 @@ package de.qucosa.fedora.oai;
 import de.qucosa.persistence.PersistenceService;
 
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.joda.time.Duration;
 
 import java.net.URI;
@@ -32,6 +31,7 @@ public class OaiHarvesterBuilder {
     public static final boolean DEFAULT_FCREPO3_COMPATIBILITY_MODE = true;
     public static final Duration DEFAULT_POLLING_INTERVAL = Duration.standardMinutes(5);
     public static final Duration MINIMUM_POLLING_INTERVAL = Duration.standardSeconds(1);
+    public static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.standardSeconds(1);
     public static final Duration DEFAULT_OAI_RUN_RESULT_HISTORY_LENGTH = Duration.standardDays(2);
     public static final OaiHeaderFilter DEFAULT_OAI_HEADER_FILTER = new OaiHeaderFilter() {
         @Override
@@ -61,8 +61,8 @@ public class OaiHarvesterBuilder {
     }
 
     public OaiHarvester build() {
-        return new OaiHarvester(uriToHarvest, pollingInterval, oaiHeaderFilter, persistenceService, oaiRunResultHistory,
-                useFC3CompatibilityMode, httpClient);
+        return new OaiHarvester(uriToHarvest, pollingInterval, MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS, oaiHeaderFilter,
+                persistenceService, oaiRunResultHistory, useFC3CompatibilityMode, httpClient);
     }
 
     /**
@@ -114,4 +114,33 @@ public class OaiHarvesterBuilder {
         return this;
     }
 
+    public PersistenceService getPersistenceService() {
+        return persistenceService;
+    }
+
+    public URI getUriToHarvest() {
+        return uriToHarvest;
+    }
+
+    public CloseableHttpClient getHttpClient() {
+        return httpClient;
+    }
+
+    public OaiHeaderFilter getOaiHeaderFilter() {
+        return oaiHeaderFilter;
+    }
+
+    public Duration getOaiRunResultHistory() {
+        return oaiRunResultHistory;
+    }
+
+    public Duration getPollingInterval() {
+        return pollingInterval;
+    }
+
+    public boolean isUseFC3CompatibilityMode() {
+        return useFC3CompatibilityMode;
+    }
+
+    
 }
