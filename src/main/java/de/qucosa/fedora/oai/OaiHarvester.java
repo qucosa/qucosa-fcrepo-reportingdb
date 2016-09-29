@@ -141,7 +141,7 @@ public class OaiHarvester extends TerminateableRunnable {
     }
 
     private void harvestLoop() {
-        while (isRunning()) {
+        do {
             final OaiRunResult lastRun = getLastrunParameters();
             if (waitForNextRun(lastRun)) {
 
@@ -172,7 +172,7 @@ public class OaiHarvester extends TerminateableRunnable {
                 }
                 cleanupOaiRunResultsInPersistence(currentRun);
             }
-        }
+        } while (isRunning());
     }
 
     private void cleanupOaiRunResultsInPersistence(OaiRunResult currentOaiRunResult) {
