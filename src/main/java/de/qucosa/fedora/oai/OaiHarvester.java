@@ -201,6 +201,7 @@ public class OaiHarvester extends TerminateableRunnable {
      * @param lastrun
      * @return
      */
+    //TODO: write UnitTests for waitForNextRun logic
     private boolean waitForNextRun(OaiRunResult lastrun) {
         Date start = now();
         Date timestampLastRun = lastrun.getTimestampOfRun();

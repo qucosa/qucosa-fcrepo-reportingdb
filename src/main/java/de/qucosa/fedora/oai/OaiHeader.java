@@ -42,8 +42,8 @@ public class OaiHeader {
      * @param a                list with zero or more elements, each representing the content
      *                         of a setSpec element
      * @param statusIsDeleted  true if the header contains the status deleted element
-     * @throws IllegalArgumentException if recordIdentifier or datestamp are whitespace, empty ("")
-     *                                  or {code null} or if setSpec is {code null}
+     * @throws IllegalArgumentException if recordIdentifier is whitespace, empty ("") or {@code null}
+     *                         or if datestamp or setSpec is {@code null}
      */
     public OaiHeader(String recordIdentifier, Date datestamp, List<String> setSpec,
                      boolean statusIsDeleted) throws IllegalArgumentException {
@@ -66,7 +66,7 @@ public class OaiHeader {
      * @param datestamp        the date of creation, modification or deletion of the record
      * @param statusIsDeleted  true if the header contains the status deleted element
      * @throws IllegalArgumentException if recordIdentifier or datestamp are whitespace, empty ("")
-     *                                  or {code null}
+     *                                  or {@code null}
      */
     public OaiHeader(String recordIdentifier, Date datestamp, boolean statusIsDeleted) {
         this(recordIdentifier, datestamp, new LinkedList<String>(), statusIsDeleted);
