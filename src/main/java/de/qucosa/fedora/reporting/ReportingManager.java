@@ -19,6 +19,7 @@ package de.qucosa.fedora.reporting;
 import static org.slf4j.MarkerFactory.getMarker;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
+import de.qucosa.fedora.mets.MetsHarvester;
 import de.qucosa.fedora.oai.OaiHarvester;
 import de.qucosa.fedora.oai.OaiHarvesterBuilder;
 import de.qucosa.fedora.oai.QucosaDocumentFilter;
@@ -51,25 +53,52 @@ public class ReportingManager {
             logger.info("Starting up...");
             ReportingProperties prop = ReportingProperties.getInstance();
 
-            PersistenceService persistenceService = new PostgrePersistenceService(
+            
+            // initialize OaiHarvester
+            //TODO check if PostgrePersistenceService is thread safe, use one service for all components
+            PersistenceService persistenceServiceOaiHarvester = new PostgrePersistenceService(
                     prop.getPostgreSQLDatabaseURL(),
                     prop.getPostgreSQLUser(),
                     prop.getPostgreSQLPasswd());
 
-            URI uriToHarvest = new URI(prop.getOaiDataProviderURL());
+            URI uriToHarvestOAI = new URI(prop.getOaiDataProviderURL());
 
             //TODO is httpClient closed on shutdown?
-            CloseableHttpClient httpClient = HttpClients.createMinimal();
+            CloseableHttpClient httpClientOaiHarvester = HttpClients.createMinimal();
             
-            OaiHarvester oaiHarvester = new OaiHarvesterBuilder(uriToHarvest, httpClient, persistenceService)
+            OaiHarvester oaiHarvester = new OaiHarvesterBuilder(uriToHarvestOAI, httpClientOaiHarvester, persistenceServiceOaiHarvester)
                     .setPollingInterval(Duration.standardSeconds(prop.getOaiDataProviderPollingInterval()))
                     .setOaiHeaderFilter(new QucosaDocumentFilter())
                     .setFC3CompatibilityMode(prop.getFC3CompatibilityMode())
                     .setOaiRunResultHistory(prop.getOaiRunResultHistoryLength())
                     .build();
+            
+            
+            // initialize MetsHarvester
+            PersistenceService persistenceServiceMetsHarvester = new PostgrePersistenceService(
+                    prop.getPostgreSQLDatabaseURL(),
+                    prop.getPostgreSQLUser(),
+                    prop.getPostgreSQLPasswd());
+            
+            URI metsUri = new URI(prop.getMetsDisseminationURL());
+            Duration pollInterval = Duration.standardSeconds(prop.getMetsDisseminationPollingInterval());
+            Duration minimumWaittimeBetweenTwoRequests = Duration.standardSeconds(1);
+             
+            // TODO @Ralf: put this to properties file?
+            HashMap<String, String> prefMap = new HashMap<>();
+            prefMap.put("mets", "http://www.loc.gov/METS/");
+            prefMap.put("slub", "http://slub-dresden.de/");
+            prefMap.put("v3", "http://www.loc.gov/mods/v3");
 
-            executorService = Executors.newSingleThreadExecutor();
+            //TODO is httpClient closed on shutdown?
+            CloseableHttpClient httpClientMetsHarvester = HttpClients.createMinimal();             
+             
+            MetsHarvester metsHarvester = new MetsHarvester(metsUri, pollInterval,
+            minimumWaittimeBetweenTwoRequests, prefMap, persistenceServiceMetsHarvester, httpClientMetsHarvester);
+
+            executorService = Executors.newCachedThreadPool();
             executorService.execute(oaiHarvester);
+            executorService.execute(metsHarvester);
 
             logger.info("Started");
 

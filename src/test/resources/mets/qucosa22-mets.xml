@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2016 Saxon State and University Library Dresden (SLUB)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<mets:mets OBJID="qucosa:22" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd" xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <mets:dmdSec ID="DMD_000" STATUS="ACTIVE">
+    <mets:mdWrap MDTYPE="MODS">
+      <mets:xmlData>
+        <v3:mods xmlns:v3="http://www.loc.gov/mods/v3">
+          <v3:titleInfo lang="ger" usage="primary">
+            <v3:title>Klinoskop</v3:title>
+            <v3:subTitle>Zeitschrift der Klinikum Chemnitz gGmbH</v3:subTitle>
+          </v3:titleInfo>
+          <v3:abstract lang="ger" type="summary">Das Klinoskop ist die Firmenzeitschrift des Klinikums Chemnitz für Mitarbeiter, Patienten, Angehörige und für unsere Partner. Es erscheint in vier bis fünf Ausgaben pro Jahr in einem Umfang von 40 bis 92 Seiten im Vollfarbdruck.
+
+Unsere Firmenzeitschrift wurde seit 2006 von einer qualitativen Mitarbeiterinformation kontinuierlich zu einem relevanten Informationsmedium für unsere Partner wie niedergelassene Ärzte weiterentwickelt. Parallel soll das Klinoskop eine Publikation sein, mit der Patienten und Angehörige einen informativen Zugang zu Ihrem Klinkum Chemnitz erhalten. Damit möchten wir auch unseren Anspruch einer offenen Kommunikation unterlegen.</v3:abstract>
+          <v3:abstract lang="eng" type="summary">The Klinoskop is the corporate magazine of the Klinikum Chemnitz for our staff, patients and their family members as well as for our cooperating partners. It is published in full colour, with four or five issues per year, and each issue contains between 40 and 92 pages.
+
+Since 2006, our corporate magazine has been continuously refined from a high-quality publication for our staff to the relevant information medium for our partners, in particular physicians in private practice. 
+
+At the same time, the Klinoskop is intended to be a publication that provides patients and their relatives with more detailed information about their Hospital in Chemnitz. This also helps us to emphasize our intentions of fostering open communication.</v3:abstract>
+          <v3:classification authority="ddc">610</v3:classification>
+          <v3:classification authority="rvk">XA</v3:classification>
+          <v3:classification authority="z" lang="ger">Klinikum Chemnitz gGmbH, Sachsen, Medizin, Kunst, Kultur, Patient, Chemnitz, Mitarbeiterzeitschrift, Zeitschrift, Mitarbeiter, Krankenhaus, Klinik, Mitarbeiter, Gesundheit, Prävention, Krankheit, Operation</v3:classification>
+          <v3:classification authority="z" lang="eng">Klinikum Chemnitz gGmbH, Saxony, medicine, art, culture, patient, Chemnitz, corporate magazine, staff, magazine, hospital, clinic, employees, health, prevention, disease, illness, sickness, operation, surgery</v3:classification>
+          <v3:originInfo eventType="distribution">
+            <v3:publisher>Saechsische Landesbibliothek- Staats- und Universitaetsbibliothek Dresden</v3:publisher>
+            <v3:place>
+              <v3:placeTerm type="text">Dresden</v3:placeTerm>
+            </v3:place>
+            <v3:dateIssued encoding="iso8601" keyDate="yes">2011-03-31</v3:dateIssued>
+            <v3:edition>[Electronic ed.]</v3:edition>
+          </v3:originInfo>
+          <v3:identifier type="opus">6686</v3:identifier>
+          <v3:identifier type="qucosa:urn">urn:nbn:de:bsz:14-qucosa-66862</v3:identifier>
+          <v3:name ID="CORP_93C62E61" displayLabel="mapping-hack-other" type="corporate">
+            <v3:namePart>Klinikum Chemnitz gGmbH</v3:namePart>
+            <v3:role>
+              <v3:roleTerm authority="marcrelator" authorityURI="http://id.loc.gov/vocabulary/relators" type="code" valueURI="http://id.loc.gov/vocabulary/relators/pbl">pbl</v3:roleTerm>
+            </v3:role>
+          </v3:name>
+          <v3:language>
+            <v3:languageTerm authority="iso639-2b" type="code">ger</v3:languageTerm>
+          </v3:language>
+          <v3:originInfo eventType="publication"/>
+          <v3:relatedItem displayLabel="" type="series" xlin:href="http://nbn-resolving.de/urn:nbn:de:bsz:14-qucosa-67303" xmlns:xlin="http://www.w3.org/1999/xlink">
+            <v3:identifier type="urn">urn:nbn:de:bsz:14-qucosa-67303</v3:identifier>
+            <v3:titleInfo>
+              <v3:partNumber>201101</v3:partNumber>
+            </v3:titleInfo>
+          </v3:relatedItem>
+        </v3:mods>
+      </mets:xmlData>
+    </mets:mdWrap>
+  </mets:dmdSec>
+  <mets:amdSec ID="AMD_000">
+    <mets:techMD ID="TECH_000">
+      <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBINFO" MIMETYPE="application/vnd.slub-info+xml">
+        <mets:xmlData>
+          <slub:info xmlns:slub="http://slub-dresden.de/">
+            <slub:submitter>
+              <ns:Person xmlns:ns="http://xmlns.com/foaf/0.1/">
+                <ns:name>Uwe Kreißig</ns:name>
+                <ns:mbox>u.kreissig@skc.de</ns:mbox>
+              </ns:Person>
+            </slub:submitter>
+            <slub:documentType>issue</slub:documentType>
+            <slub:rights>
+              <slub:agreement given="yes"/>
+              <slub:attachment hasArchivalValue="yes" isDownloadable="yes" isRedistributable="yes" ref="ATT-0"/>
+            </slub:rights>
+          </slub:info>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:techMD>
+  </mets:amdSec>
+  <mets:fileSec>
+    <mets:fileGrp USE="ORIGINAL"/>
+    <mets:fileGrp USE="DOWNLOAD">
+      <mets:file ID="ATT-0" MIMETYPE="application/pdf" mext:LABEL="Volltext (PDF)" CHECKSUMTYPE="SHA-512" CHECKSUM="2ea986af461741a4f0c533a2e9b6fdf87a0c3b591ee95b35001c05ca21dcddabcfd46523ae8a4c058ced7eb146d85626406d6555097359a3d035f851520023f4" USE="ARCHIVE" xmlns:mext="http://slub-dresden.de/mets">
+        <mets:FLocat LOCTYPE="URL" xlin:href="http://sdvcmr-prod-core01:8080/fedora/objects/qucosa:22/datastreams/ATT-0/content" xlin:title="Volltext (PDF)" xmlns:xlin="http://www.w3.org/1999/xlink"/>
+      </mets:file>
+    </mets:fileGrp>
+  </mets:fileSec>
+  <mets:structMap TYPE="LOGICAL">
+    <mets:div ID="LOG_001" TYPE="issue" DMDID="DMD_000">
+      <mets:fptr FILEID="ATT-0"/>
+    </mets:div>
+  </mets:structMap>
+</mets:mets>

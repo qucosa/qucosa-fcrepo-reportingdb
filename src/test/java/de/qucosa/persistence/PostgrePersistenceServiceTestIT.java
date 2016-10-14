@@ -372,7 +372,7 @@ public class PostgrePersistenceServiceTestIT {
         OaiHeader header_2 = new OaiHeader("oai:example.org:qucosa:199", dateStamp_2, setSpec2, true);
         expectedHeaders.add(header_2);
 
-        persistenceService.addOrUpdateHeaders(expectedHeaders);
+        persistenceService.addOrUpdateOaiHeaders(expectedHeaders);
         List<OaiHeader> actualHeaders = persistenceService.getOaiHeaders();
 
         assertEquals(expectedHeaders, actualHeaders);
@@ -394,7 +394,7 @@ public class PostgrePersistenceServiceTestIT {
         Date dateStamp_1 = DatatypeConverter.parseDateTime("2012-03-30T06:54:12Z").getTime();
         OaiHeader header_1 = new OaiHeader(recordIdentifier, dateStamp_1, false);
         initialHeaders.add(header_1);
-        persistenceService.addOrUpdateHeaders(initialHeaders);
+        persistenceService.addOrUpdateOaiHeaders(initialHeaders);
 
         List<OaiHeader> expectedHeaders = new LinkedList<>();
         Date dateStamp_2 = DatatypeConverter.parseDateTime("2016-07-20T11:22:57Z").getTime();
@@ -404,7 +404,7 @@ public class PostgrePersistenceServiceTestIT {
         setSpec2.add("test,\" with separator and quotes");
         OaiHeader header_2 = new OaiHeader(recordIdentifier, dateStamp_2, setSpec2, true);
         expectedHeaders.add(header_2);
-        persistenceService.addOrUpdateHeaders(expectedHeaders);
+        persistenceService.addOrUpdateOaiHeaders(expectedHeaders);
 
         List<OaiHeader> actualHeaders = persistenceService.getOaiHeaders();
         assertEquals(expectedHeaders, actualHeaders);
@@ -427,7 +427,7 @@ public class PostgrePersistenceServiceTestIT {
         Date dateStamp_3 = DatatypeConverter.parseDateTime("2010-04-14T03:27:52Z").getTime();
         OaiHeader header_3 = new OaiHeader(recordIdentifier_3, dateStamp_3, true);
         headersToStore.add(header_3);
-        persistenceService.addOrUpdateHeaders(headersToStore);
+        persistenceService.addOrUpdateOaiHeaders(headersToStore);
 
         // remove header_1 and header_2
         List<OaiHeader> headersToRemove = new LinkedList<>();
@@ -474,13 +474,13 @@ public class PostgrePersistenceServiceTestIT {
         Date dateStamp_1 = DatatypeConverter.parseDateTime("2012-03-30T06:54:12Z").getTime();
         OaiHeader header_1 = new OaiHeader(recordIdentifier, dateStamp_1, false);
         initialHeaders.add(header_1);
-        persistenceService.addOrUpdateHeaders(initialHeaders);
+        persistenceService.addOrUpdateOaiHeaders(initialHeaders);
 
         List<OaiHeader> updatedHeaders = new LinkedList<>();
         Date dateStamp_2 = DatatypeConverter.parseDateTime("2016-07-20T11:22:57Z").getTime();
         OaiHeader header_2 = new OaiHeader(recordIdentifier, dateStamp_2, false);
         updatedHeaders.add(header_2);
-        persistenceService.addOrUpdateHeaders(updatedHeaders);
+        persistenceService.addOrUpdateOaiHeaders(updatedHeaders);
 
         List<OaiHeader> headersNotRemoved = persistenceService.removeOaiHeadersIfUnmodified(initialHeaders);
         assertEquals("The OaiHeaders must not have been removed.", initialHeaders, headersNotRemoved);

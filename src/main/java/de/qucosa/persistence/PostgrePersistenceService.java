@@ -16,6 +16,7 @@
 
 package de.qucosa.persistence;
 
+import de.qucosa.fedora.mets.ReportingDocumentMetadata;
 import de.qucosa.fedora.oai.OaiHeader;
 import de.qucosa.fedora.oai.OaiRunResult;
 import org.slf4j.Logger;
@@ -205,7 +206,7 @@ public class PostgrePersistenceService implements PersistenceService {
     }
 
     @Override
-    public void addOrUpdateHeaders(List<OaiHeader> headers) throws PersistenceException {
+    public void addOrUpdateOaiHeaders(List<OaiHeader> headers) throws PersistenceException {
 
         //TODO check headers == null; throw NPE or PersistenceException?
         
@@ -262,6 +263,8 @@ public class PostgrePersistenceService implements PersistenceService {
             }
         }
         if (!allUpdatesSuccess) {
+            
+            //TODO @Ralf: should we rollback if there were items not persisted?
             throw new PersistenceException(basicErrorMsg + resultError);
         }
     }
@@ -275,7 +278,7 @@ public class PostgrePersistenceService implements PersistenceService {
     public List<OaiHeader> getOaiHeaders() throws PersistenceException {
         List<OaiHeader> headers = new LinkedList<>();
 
-        String stm = "SELECT \"recordIdentifier\", \"datestamp\" , \"setSpec\", \"statusIsDeleted\" from \"OAIHeader\" LIMIT 1000";
+        String stm = "SELECT \"recordIdentifier\", \"datestamp\" , \"setSpec\", \"statusIsDeleted\" from \"OAIHeader\" LIMIT 100";
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
              PreparedStatement pst = con.prepareStatement(stm);
@@ -323,7 +326,13 @@ public class PostgrePersistenceService implements PersistenceService {
 
         return headers;
     }
+    
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see de.qucosa.persistence.PersistenceService#getOaiHeaders()
+     */
     @Override
     public List<OaiHeader> removeOaiHeadersIfUnmodified(List<OaiHeader> headersToRemove)
             throws PersistenceException {
@@ -391,6 +400,85 @@ public class PostgrePersistenceService implements PersistenceService {
         }
 
         return headersNotRemoved;
+    }
+    
+      
+    
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see de.qucosa.persistence.PersistenceService#getOaiHeaders()
+     */
+    @Override
+    public void addOrUpdateReportingDocuments(List<ReportingDocumentMetadata> reportingDocuments)
+            throws PersistenceException {
+
+        //TODO check reportingDocuments == null; throw NPE or PersistenceException?
+        
+        String basicErrorMsg = "Could not store all OaiHeaders in database. ";
+        String stm = "INSERT INTO \"ReportingDocuments\" (\"recordIdentifier\", \"mandator\" , \"documentType\", \"distributionDate\", \"headerLastModified\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"recordIdentifier\") DO UPDATE SET \"mandator\" = ?, \"documentType\" = ?, \"distributionDate\" = ?, \"headerLastModified\" = ?";
+        int[] results = {};
+
+        try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
+             PreparedStatement pst = con.prepareStatement(stm)) {
+
+            con.setAutoCommit(false);
+
+            for (ReportingDocumentMetadata reportingDoc : reportingDocuments) {
+
+                pst.setString(1, reportingDoc.getRecordIdentifier());
+
+                pst.setString(2, reportingDoc.getMandator());
+
+                pst.setString(3, reportingDoc.getDocumentType());
+
+                Timestamp distributionDate = convertNullableJAVADateToSQLTimestamp(reportingDoc.getDistributionDate());
+                pst.setTimestamp(4, distributionDate);
+
+                Timestamp headerLastModified = convertNullableJAVADateToSQLTimestamp(reportingDoc.getHeaderLastModified());
+                pst.setTimestamp(5, headerLastModified);
+
+                pst.setString(6, reportingDoc.getMandator());
+
+                pst.setString(7, reportingDoc.getDocumentType());
+
+                pst.setTimestamp(8, distributionDate);
+
+                pst.setTimestamp(9, headerLastModified);
+
+                pst.addBatch();
+            }
+
+            results = pst.executeBatch();
+            con.commit();
+
+        } catch (SQLException e) {
+            throw new PersistenceException(basicErrorMsg, e);
+        }
+
+        StringBuilder resultError = new StringBuilder();
+        boolean allUpdatesSuccess = true;
+
+        for (int index = 0; index < results.length; index++) {
+            int singleResult = results[index];
+
+            if ((singleResult < 0) && (singleResult != Statement.SUCCESS_NO_INFO)) {
+                resultError.append("Could not insert or update '").append(reportingDocuments.get(index)).append("'. ");
+                allUpdatesSuccess = false;
+
+            } else if (singleResult > 1) {
+                resultError.append(singleResult)
+                        .append(" reportingDocuments have been added or modified when trying to add/modify one single item '")
+                        .append(reportingDocuments.get(index)).append("'. Database may be corrupted! ");
+                allUpdatesSuccess = false;
+            }
+        }
+        if (!allUpdatesSuccess) {
+            
+            //TODO @Ralf: should we rollback if there were items not persisted or updated?
+            throw new PersistenceException(basicErrorMsg + resultError);
+        }
     }
 
     /**

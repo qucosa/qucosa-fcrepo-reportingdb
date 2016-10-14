@@ -116,7 +116,7 @@ public class OaiHarvesterTest {
         OaiHeader oaiHeader2 = new OaiHeader("oai:example.org:qucosa:1234", datestamp2, setSpec, true);
         expectedHeaders.add(oaiHeader2);
 
-        verify(mockedPersistenceService, atLeastOnce()).addOrUpdateHeaders(expectedHeaders);
+        verify(mockedPersistenceService, atLeastOnce()).addOrUpdateOaiHeaders(expectedHeaders);
     }
 
     /*----  test filtering of harvested OAI headers  ----*/
@@ -141,7 +141,7 @@ public class OaiHarvesterTest {
         });
         runAndWait(oaiHarvester);
 
-        verify(mockedPersistenceService, atLeastOnce()).addOrUpdateHeaders(oaiHeaderCaptor.capture());
+        verify(mockedPersistenceService, atLeastOnce()).addOrUpdateOaiHeaders(oaiHeaderCaptor.capture());
         List<OaiHeader> actualOaiHeaders = (List<OaiHeader>) oaiHeaderCaptor.getAllValues().get(0);
         assertEquals("Wrong number of headers, filter does not work.", 6, actualOaiHeaders.size());
 
@@ -382,7 +382,7 @@ public class OaiHarvesterTest {
      * data provider returns a resumption token.<br />
      * Parse OAI responseDate, resumptionToken, expiration date and from OAI
      * data provider's response and store it as new {@link OaiRunResult} in
-     * database. Assert, that this {@link OaiRunResult}'s nextFromTimestamp is
+     * persistence. Assert, that this {@link OaiRunResult}'s nextFromTimestamp is
      * the same as the last {@link OaiRunResult}'s nextFromTimestamp.
      *
      * @throws Exception
@@ -763,7 +763,7 @@ public class OaiHarvesterTest {
                 .build();
 
         // let the harvester receive a http 404 to have one UNsuccessful loop,
-        // NOT writing a 4th OaiRunResult to database and invoke the cleanup
+        // NOT writing an OaiRunResult to persistence and NOT invoking the cleanup
         when(mockedStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_NOT_FOUND);
         when(mockedStatusLine.getReasonPhrase()).thenReturn("Not Found");
         runAndWait(oaiHarvester);

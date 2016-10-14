@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2016 Saxon State and University Library Dresden (SLUB)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<mets:mets OBJID="qucosa:31790" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd" xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <mets:dmdSec ID="DMD_000" STATUS="ACTIVE">
+    <mets:mdWrap MDTYPE="MODS">
+      <mets:xmlData>
+        <mods:mods version="3.6" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-6.xsd" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:slub="http://slub-dresden.de/">
+          <mods:language>
+            <mods:languageTerm authority="iso639-2b" type="code">ger</mods:languageTerm>
+          </mods:language>
+          <mods:titleInfo lang="ger" usage="primary">
+            <mods:title>Foo Bar</mods:title>
+          </mods:titleInfo>
+          <mods:identifier type="qucosa:urn">urn:nbn:de:bsz:14-qucosa2-317906</mods:identifier>
+          <mods:physicalDescription>
+            <mods:digitalOrigin>born digital</mods:digitalOrigin>
+          </mods:physicalDescription>
+          <mods:name ID="QUCOSA_000" type="personal">
+            <mods:role>
+              <mods:roleTerm authority="marcrelator" type="code">aut</mods:roleTerm>
+            </mods:role>
+            <mods:namePart type="termsOfAddress">Dr.</mods:namePart>
+            <mods:namePart type="family">Mettwurst</mods:namePart>
+          </mods:name>
+          <mods:extension>
+            <foaf:Person rdf:about="#QUCOSA_000">
+              <foaf:gender>male</foaf:gender>
+            </foaf:Person>
+          </mods:extension>
+          <mods:classification authority="z" lang="ger">Foo</mods:classification>
+          <mods:originInfo eventType="distribution">
+            <mods:dateIssued encoding="iso8601" keyDate="yes">2016-10-10T11:27:33+0200</mods:dateIssued>
+          </mods:originInfo>
+          <mods:extension>
+            <slub:info>
+              <slub:corporation href="https://www.slub-dresden.de" place="Dresden" slub:address="Zellescher Weg 18, 01069 Dresden" slub:ref="#QUCOSA_001">
+                <slub:university>Sächsische Landesbibliothek – Staats- und Universitätsbibliothek Dresden</slub:university>
+              </slub:corporation>
+            </slub:info>
+          </mods:extension>
+          <mods:name ID="QUCOSA_001" displayLabel="mapping-hack-default-publisher" type="corporate">
+            <mods:nameIdentifier type="gnd">4519974-7</mods:nameIdentifier>
+          </mods:name>
+        </mods:mods>
+      </mets:xmlData>
+    </mets:mdWrap>
+  </mets:dmdSec>
+  <mets:amdSec ID="AMD_000">
+    <mets:techMD ID="TECH_000">
+      <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBINFO" MIMETYPE="application/vnd.slub-info+xml">
+        <mets:xmlData>
+          <slub:info xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:slub="http://slub-dresden.de/">
+            <slub:submitter>
+              <foaf:Person>
+                <foaf:name>RC</foaf:name>
+                <foaf:mbox>ralf.claussnitzer@slub-dresden.de</foaf:mbox>
+              </foaf:Person>
+            </slub:submitter>
+            <slub:rights>
+              <slub:agreement given="yes"/>
+              <slub:attachment hasArchivalValue="no" isDownloadable="yes" ref="ATT-0"/>
+            </slub:rights>
+            <slub:documentType>article</slub:documentType>
+          </slub:info>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:techMD>
+  </mets:amdSec>
+  <mets:fileSec>
+    <mets:fileGrp USE="ORIGINAL"/>
+    <mets:fileGrp USE="DOWNLOAD">
+      <mets:file ID="ATT-0" MIMETYPE="application/pdf" mext:LABEL="Volltext (PDF)" xmlns:mext="http://slub-dresden.de/mets">
+        <mets:FLocat LOCTYPE="URL" xlin:href="http://sdvcmr-app01:8080/fedora/objects/qucosa:31790/datastreams/ATT-0/content" xlin:title="Volltext (PDF)" xmlns:xlin="http://www.w3.org/1999/xlink"/>
+      </mets:file>
+    </mets:fileGrp>
+  </mets:fileSec>
+  <mets:structMap TYPE="LOGICAL">
+    <mets:div ID="LOG_001" TYPE="article" DMDID="DMD_000">
+      <mets:fptr FILEID="ATT-0"/>
+    </mets:div>
+  </mets:structMap>
+</mets:mets>

@@ -45,9 +45,4 @@ public class QucosaDocumentFilter extends OaiHeaderFilter {
         return acceptedHeaders;
 
     }
-
-    private String getLocalIdentifier(String oaiId) {
-        return oaiId.substring(oaiId.indexOf(':', "oai:".length()) + 1);
-    }
-
 }

@@ -152,7 +152,7 @@ public class OaiHarvester extends TerminateableRunnable {
                     harvestedHeaders = oaiHeaderFilter.filterOaiHeaders(harvestedHeaders);
 
                     try {
-                        persistenceService.addOrUpdateHeaders(new LinkedList<>(harvestedHeaders));
+                        persistenceService.addOrUpdateOaiHeaders(new LinkedList<>(harvestedHeaders));
                         harvestedHeaders = new LinkedList<>();
 
                         try {
@@ -261,7 +261,7 @@ public class OaiHarvester extends TerminateableRunnable {
                     // against schema - is it valid OAI-PMH?
                     result = handleXmlResult(httpEntity.getContent(), startTimeOfCurrentRun, lastRunResult);
                 } else {
-                    logger.warn("Got empty response from OAI service.");
+                    logger.error("Got empty response from OAI service.");
                 }
             } else {
                 logger.error("Unexpected OAI service response: {} {}", httpResponse.getStatusLine().getStatusCode(),
@@ -436,6 +436,8 @@ public class OaiHarvester extends TerminateableRunnable {
                         oaiErrorsFound.get(OAI_PMH_ERROR_NO_RECORDS_MATCH));
 
             } else if (oaiErrorsFound.containsKey(OAI_PMH_ERROR_BAD_RESUMPTION_TOKEN)) {
+                
+                //FIXME: if this happens in the first harvest run while looping over the paginated request of the initial run, there is no nextFromTimestamp! lastRunResult.getNextFromTimestamp() might be null ??
                 nextFromTimestamp = lastRunResult.getNextFromTimestamp();
                 logger.warn(
                         "Last resumption token was invalid or unknown to server. "

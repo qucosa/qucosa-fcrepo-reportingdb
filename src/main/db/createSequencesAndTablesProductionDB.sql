@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS public."OAIHeader"
   datestamp timestamp with time zone NOT NULL, -- last modification of the document
   "setSpec" character varying(256)[], -- the sets this record belongs to
   "statusIsDeleted" boolean, -- true if the header contains the status deleted element
-  CONSTRAINT "recordIdentifier" PRIMARY KEY ("recordIdentifier")
+  CONSTRAINT "OAIHeader.recordIdentifier" PRIMARY KEY ("recordIdentifier")
 )
 WITH (
   OIDS=FALSE
@@ -59,3 +59,31 @@ COMMENT ON COLUMN public."OAIHeader"."recordIdentifier" IS 'the record identifie
 COMMENT ON COLUMN public."OAIHeader".datestamp IS 'last modification of the document';
 COMMENT ON COLUMN public."OAIHeader"."setSpec" IS 'the sets this record belongs to';
 COMMENT ON COLUMN public."OAIHeader"."statusIsDeleted" IS 'true if the header contains the status deleted element';
+
+
+
+
+
+-- Table: public."ReportingDocuments"
+
+-- DROP TABLE public."ReportingDocuments";
+
+CREATE TABLE IF NOT EXISTS public."ReportingDocuments"
+(
+  "recordIdentifier" character varying(256) NOT NULL, -- the unique identifier of this item in a repository
+  "mandator" character varying(256) NOT NULL, -- the mandator this item is related to
+  "documentType" character varying(256) NOT NULL, -- a document type such as article, book, issue
+  "distributionDate" timestamp with time zone NOT NULL, -- the date this item has been published in the repository
+  "headerLastModified" timestamp with time zone NOT NULL, -- the date the metadata has been updated in the repository
+  CONSTRAINT "ReportingDocuments.recordIdentifier" PRIMARY KEY ("recordIdentifier")
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public."ReportingDocuments"
+  OWNER TO "reportingDB";
+COMMENT ON COLUMN public."ReportingDocuments"."recordIdentifier" IS 'the unique identifier of this item in a repository';
+COMMENT ON COLUMN public."ReportingDocuments"."mandator" IS 'the mandator this item is related to';
+COMMENT ON COLUMN public."ReportingDocuments"."documentType" IS 'a document type such as article, book, issue';
+COMMENT ON COLUMN public."ReportingDocuments"."distributionDate" IS 'the date this item has been published in the repository';
+COMMENT ON COLUMN public."ReportingDocuments"."headerLastModified" IS 'the date the metadata has been updated in the repository';

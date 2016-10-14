@@ -65,7 +65,7 @@ public class ReportingProperties {
     private void overwriteWithSystemProperties() {
         for (Object o : System.getProperties().keySet()) {
             String key = (String) o;
-            if (key.startsWith("db.") || key.startsWith("oai.")) {
+            if (key.startsWith("db.") || key.startsWith("oai.") || key.startsWith("mets.")) {
                 props.setProperty(key, System.getProperty(key));
             }
         }
@@ -97,5 +97,14 @@ public class ReportingProperties {
 
     public Duration getOaiRunResultHistoryLength() {
         return Duration.standardHours(Long.parseLong(props.getProperty("oai.runresulthistorylengthhours")));
+    }  
+
+    public String getMetsDisseminationURL() {
+        return props.getProperty("mets.url");
     }
+
+    public int getMetsDisseminationPollingInterval() {
+        return Integer.parseInt(props.getProperty("mets.pollseconds"));
+    }
+    
 }

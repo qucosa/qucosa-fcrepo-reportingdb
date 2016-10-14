@@ -16,6 +16,7 @@
 
 package de.qucosa.persistence;
 
+import de.qucosa.fedora.mets.ReportingDocumentMetadata;
 import de.qucosa.fedora.oai.OaiHeader;
 import de.qucosa.fedora.oai.OaiRunResult;
 
@@ -57,10 +58,10 @@ public interface PersistenceService {
      * @param headers {@link OaiHeader}s to add or update.
      * @throws PersistenceException if any error occurred.
      */
-    public void addOrUpdateHeaders(List<OaiHeader> headers) throws PersistenceException;
+    public void addOrUpdateOaiHeaders(List<OaiHeader> headers) throws PersistenceException;
 
     /**
-     * Get {@link OaiHeader}s from persistence. At most 1000 headers are
+     * Get {@link OaiHeader}s from persistence. At most 100 headers are
      * returned.
      *
      * @return {@link OaiHeader}s from persistence, list my be empty but never {@code null}.
@@ -71,9 +72,9 @@ public interface PersistenceService {
 
     /**
      * Deletes the {@link OaiHeader}s. An {@link OaiHeader} is removed from
-     * persistence iff it equals an object in the {@code headersToRemove}. All
-     * objects from {@code headersToRemove} that are not found in persistence
-     * are returned to the caller.
+     * persistence iff it <b>equals</b> an object in the {@code headersToRemove}. All
+     * objects from {@code headersToRemove} that are not found in persistence (i.e. 
+     * are returned to the caller. 
      *
      * @param headersToRemove {@link OaiHeader}s to be removed if unmodified.
      * @return the headers that were requested to be deleted but have not been
@@ -85,4 +86,16 @@ public interface PersistenceService {
     public List<OaiHeader> removeOaiHeadersIfUnmodified(List<OaiHeader> headersToRemove)
             throws PersistenceException;
 
+
+    /**
+     * Persist all {@link ReportingDocumentMetadata} objects. If the persistence layer already contains
+     * a {@link ReportingDocumentMetadata} object that matches
+     * {@link ReportingDocumentMetadata#getRecordIdentifier()}, this object is updated.
+     * 
+     * @param reportingDocuments {@link ReportingDocumentMetadata} objects to store or update
+     * @throws PersistenceException if any error occurred.
+     */
+    //  @NonNull    
+    public void addOrUpdateReportingDocuments(List<ReportingDocumentMetadata> reportingDocuments) 
+            throws PersistenceException;
 }

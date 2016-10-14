@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2016 Saxon State and University Library Dresden (SLUB)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<mets:mets OBJID="qucosa:13" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd" xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <mets:dmdSec ID="DMD_000" STATUS="ACTIVE">
+    <mets:mdWrap MDTYPE="MODS">
+      <mets:xmlData>
+        <v3:mods xmlns:v3="http://www.loc.gov/mods/v3">
+          <v3:titleInfo lang="ger" usage="primary">
+            <v3:title>Sapere aude</v3:title>
+            <v3:subTitle>Afranischer Bote ; Zeitschrift des Vereins der Altafraner</v3:subTitle>
+          </v3:titleInfo>
+          <v3:abstract lang="ger" type="summary">Zeitschrift des Vereins der Altafraner e.V.</v3:abstract>
+          <v3:classification authority="ddc">370</v3:classification>
+          <v3:classification authority="rvk">DK 1061</v3:classification>
+          <v3:classification authority="z" lang="ger">Ehemaliger Schüler, Sächsisches Landesgymnasium St. Afra zu Meißen, Verein</v3:classification>
+          <v3:originInfo eventType="distribution">
+            <v3:publisher>Saechsische Landesbibliothek- Staats- und Universitaetsbibliothek Dresden</v3:publisher>
+            <v3:place>
+              <v3:placeTerm type="text">Dresden</v3:placeTerm>
+            </v3:place>
+            <v3:dateIssued encoding="iso8601" keyDate="yes">2008-08-04</v3:dateIssued>
+            <v3:edition>[Electronic ed.]</v3:edition>
+          </v3:originInfo>
+          <v3:identifier type="opus">25</v3:identifier>
+          <v3:identifier type="urn">urn:nbn:de:bsz:14-ds-1217856328179-62212</v3:identifier>
+          <v3:identifier type="issn">1867-559X</v3:identifier>
+          <v3:name ID="CORP_12872166" displayLabel="mapping-hack-other" type="corporate">
+            <v3:namePart>Verein der Altafraner e.V., Meißen</v3:namePart>
+            <v3:role>
+              <v3:roleTerm authority="marcrelator" authorityURI="http://id.loc.gov/vocabulary/relators" type="code" valueURI="http://id.loc.gov/vocabulary/relators/pbl">pbl</v3:roleTerm>
+            </v3:role>
+          </v3:name>
+          <v3:language>
+            <v3:languageTerm authority="iso639-2b" type="code">ger</v3:languageTerm>
+          </v3:language>
+          <v3:originInfo eventType="publication"/>
+          <v3:relatedItem displayLabel="" type="series" xlin:href="http://nbn-resolving.de/urn:nbn:de:bsz:14-qucosa-64469" xmlns:xlin="http://www.w3.org/1999/xlink">
+            <v3:identifier type="urn">urn:nbn:de:bsz:14-qucosa-64469</v3:identifier>
+            <v3:titleInfo>
+              <v3:partNumber>2007</v3:partNumber>
+            </v3:titleInfo>
+          </v3:relatedItem>
+        </v3:mods>
+      </mets:xmlData>
+    </mets:mdWrap>
+  </mets:dmdSec>
+  <mets:amdSec ID="AMD_000">
+    <mets:techMD ID="TECH_000">
+      <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBINFO" MIMETYPE="application/vnd.slub-info+xml">
+        <mets:xmlData>
+          <slub:info xmlns:slub="http://slub-dresden.de/">
+            <slub:documentType>issue</slub:documentType>
+            <slub:rights>
+              <slub:agreement given="yes"/>
+              <slub:attachment hasArchivalValue="yes" isDownloadable="yes" isRedistributable="yes" ref="ATT-0"/>
+            </slub:rights>
+          </slub:info>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:techMD>
+  </mets:amdSec>
+  <mets:fileSec>
+    <mets:fileGrp USE="ORIGINAL"/>
+    <mets:fileGrp USE="DOWNLOAD">
+      <mets:file ID="ATT-0" MIMETYPE="application/pdf" mext:LABEL="Volltextdokument (PDF)" CHECKSUMTYPE="SHA-512" CHECKSUM="65cc259e368b2a279360384a2b711607dbbb79b8697ef14e98a27264208f449421ec6353ddd27db62c8b83f89f51fefce6aac3323c25ead300bffb049ed29c32" USE="ARCHIVE" xmlns:mext="http://slub-dresden.de/mets">
+        <mets:FLocat LOCTYPE="URL" xlin:href="http://sdvcmr-prod-core01:8080/fedora/objects/qucosa:13/datastreams/ATT-0/content" xlin:title="Volltextdokument (PDF)" xmlns:xlin="http://www.w3.org/1999/xlink"/>
+      </mets:file>
+    </mets:fileGrp>
+  </mets:fileSec>
+  <mets:structMap TYPE="LOGICAL">
+    <mets:div ID="LOG_001" TYPE="issue" DMDID="DMD_000">
+      <mets:fptr FILEID="ATT-0"/>
+    </mets:div>
+  </mets:structMap>
+</mets:mets>
