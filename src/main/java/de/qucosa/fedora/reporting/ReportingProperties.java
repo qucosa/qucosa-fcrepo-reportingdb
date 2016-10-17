@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.joda.time.Duration;
@@ -29,6 +31,7 @@ public class ReportingProperties {
     private static final String DEFAULT_PROPERTIES_FILE = "/default.properties";
     private static final String LOCAL_PROPERTIES_FILE = "/local.properties";
     private static final String PROPERTIES_FILE_FORMAT = "ISO-8859-1";
+    private static final String XML_PREFIX_IDENTIFIER = "mets.namespace.";
 
     private static ReportingProperties instance;
 
@@ -107,4 +110,17 @@ public class ReportingProperties {
         return Integer.parseInt(props.getProperty("mets.pollseconds"));
     }
     
+    public HashMap<String, String> getMetsXmlPrefixes(){
+        HashMap<String, String> prefMap = new HashMap<>();
+        for (Entry<Object, Object> property: props.entrySet()){
+            
+            String key = (String)property.getKey();
+            if (key.startsWith(XML_PREFIX_IDENTIFIER)) {
+                String prefix = key.substring(XML_PREFIX_IDENTIFIER.length(), key.length());
+                String uri = (String) property.getValue();
+                prefMap.put(prefix, uri);
+            }
+        }
+        return prefMap;
+    }
 }

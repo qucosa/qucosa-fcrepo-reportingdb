@@ -83,18 +83,13 @@ public class ReportingManager {
             URI metsUri = new URI(prop.getMetsDisseminationURL());
             Duration pollInterval = Duration.standardSeconds(prop.getMetsDisseminationPollingInterval());
             Duration minimumWaittimeBetweenTwoRequests = Duration.standardSeconds(1);
-             
-            // TODO @Ralf: put this to properties file?
-            HashMap<String, String> prefMap = new HashMap<>();
-            prefMap.put("mets", "http://www.loc.gov/METS/");
-            prefMap.put("slub", "http://slub-dresden.de/");
-            prefMap.put("v3", "http://www.loc.gov/mods/v3");
+            HashMap<String, String> metsXmlPrefixes = prop.getMetsXmlPrefixes();
 
             //TODO is httpClient closed on shutdown?
             CloseableHttpClient httpClientMetsHarvester = HttpClients.createMinimal();             
              
             MetsHarvester metsHarvester = new MetsHarvester(metsUri, pollInterval,
-            minimumWaittimeBetweenTwoRequests, prefMap, persistenceServiceMetsHarvester, httpClientMetsHarvester);
+            minimumWaittimeBetweenTwoRequests, metsXmlPrefixes, persistenceServiceMetsHarvester, httpClientMetsHarvester);
 
             executorService = Executors.newCachedThreadPool();
             executorService.execute(oaiHarvester);
