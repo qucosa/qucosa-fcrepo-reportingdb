@@ -22,6 +22,11 @@ package de.qucosa.persistence;
  */
 public class PersistenceException extends Exception {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 6468792332681574174L;
+
     public PersistenceException() {
     }
 

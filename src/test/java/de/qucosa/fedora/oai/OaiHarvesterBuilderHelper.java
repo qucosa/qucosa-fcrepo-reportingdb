@@ -22,7 +22,6 @@ public class OaiHarvesterBuilderHelper extends OaiHarvesterBuilder {
     protected OaiHarvesterBuilderHelper(URI uriToHarvest, CloseableHttpClient httpClient,
             PersistenceService persistenceService) {
         super(uriToHarvest, httpClient, persistenceService);
-        // TODO Auto-generated constructor stub
     }
     
     public OaiHarvester build() {
