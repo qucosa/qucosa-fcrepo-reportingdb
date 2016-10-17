@@ -17,14 +17,23 @@
 package de.qucosa.persistence;
 
 import java.io.InputStream;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
+import de.qucosa.fedora.mets.ReportingDocumentMetadata;
 import de.qucosa.fedora.oai.OaiHarvesterTest;
+import de.qucosa.fedora.oai.OaiHeader;
 
 /**
  * Helper class for integration tests
@@ -69,6 +78,58 @@ public class PostgrePersistenceServiceTestHelper {
         }
         return count;
     }
+    
+    
+    public List<ReportingDocumentMetadata> getReportingDocumentMetadata() throws PersistenceException {
+        List<ReportingDocumentMetadata> reportingDocuments = new LinkedList<>();
+
+        String stm = "SELECT \"recordIdentifier\", \"mandator\" , \"documentType\", \"distributionDate\", \"headerLastModified\" from \"ReportingDocuments\" LIMIT 100";
+
+        try (PreparedStatement pst = getConnection().prepareStatement(stm);
+             ResultSet rs = pst.executeQuery();) {
+
+            while (rs.next()) {
+                String recordIdentifier = rs.getString("recordIdentifier");
+                String mandator = rs.getString("mandator");
+                String documentType = rs.getString("documentType");
+                Date distributionDate = convertNullableSQLTimestampToJavaDate(rs.getTimestamp("distributionDate"));
+                Date headerLastModified = convertNullableSQLTimestampToJavaDate(rs.getTimestamp("headerLastModified"));
+                ReportingDocumentMetadata document = new ReportingDocumentMetadata(recordIdentifier, mandator, documentType, distributionDate, headerLastModified);
+
+                reportingDocuments.add(document);
+
+            }
+        } catch (Exception e) {
+            throw new PersistenceException("Could not fetch ReportingDocuments from database.", e);
+        }
+
+        return reportingDocuments;
+    }
+    
+    
+
+
+    /**
+     * @param timestamp the {@link java.sql.Timestamp} to convert to or {@code null}
+     * @return {@link java.util.Date} the converted value or {@code null} if
+     * argument timestamp was {@code null}
+     */
+//    @Nullable
+    private Date convertNullableSQLTimestampToJavaDate(Timestamp timestamp) {
+        Date date = null;
+        if (timestamp != null) {
+            // do we lose precision? Date has milliseconds, Timestamp
+            // nanoseconds
+            int microsAndNanos = timestamp.getNanos() % 1000000;
+
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(timestamp);
+            date = cal.getTime();
+        }
+
+        return date;
+    }
+    
 
     /**
      * Establishes the connection to the test database if there is no valid

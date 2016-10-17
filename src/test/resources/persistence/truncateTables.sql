@@ -22,3 +22,5 @@ ALTER SEQUENCE "oairunresult_ID_seq" RESTART WITH 1;
 
 
  TRUNCATE TABLE "OAIHeader";
+ 
+ TRUNCATE TABLE "ReportingDocuments";

@@ -16,8 +16,11 @@
 
 package de.qucosa.persistence;
 
+import de.qucosa.fedora.mets.ReportingDocumentMetadata;
 import de.qucosa.fedora.oai.OaiHeader;
 import de.qucosa.fedora.oai.OaiRunResult;
+
+import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -490,6 +493,44 @@ public class PostgrePersistenceServiceTestIT {
     }
 
     /* ---- End OaiHeader tests ---- */
+    /* ---- Begin ReportingDocumentMetadata tests ---- */
+    
+    /**
+     * Write two {@link ReportingDocumentMetadata} objects to database and verify they have been written.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void writeReportingDocumentMetadata() throws Exception {
+
+        String recordIdentifier101 = "oai:example.org:qucosa:101";
+        String mandator101 = "Default mandator";
+        String documentType101 = "monograph";
+        Date distributionDate101 = new Date(new DateTime("2008-05-14T00:00:00+02").getMillis());
+        Date headerLastModified101 = new Date(new DateTime("2015-12-17T17:03:45+01").getMillis());
+        ReportingDocumentMetadata doc101 = new ReportingDocumentMetadata(recordIdentifier101, mandator101, documentType101, distributionDate101, headerLastModified101);
+        
+        //"oai:example.org:qucosa:66";"Default mandator";"article";"2009-06-02 00:00:00+02";"2015-12-17 17:03:36+01"
+        
+        String recordIdentifier66 = "oai:example.org:qucosa:66";
+        String mandator66 = "Default mandator";
+        String documentType66 = "article";
+        Date distributionDate66 = new Date(new DateTime("2009-06-02T00:00:00+02").getMillis());
+        Date headerLastModified66 = new Date(new DateTime("2015-12-17T17:03:36+01").getMillis());
+        ReportingDocumentMetadata doc66 = new ReportingDocumentMetadata(recordIdentifier66, mandator66, documentType66, distributionDate66, headerLastModified66);
+        
+        List<ReportingDocumentMetadata> reportingDocuments = new LinkedList<>();
+        reportingDocuments.add(doc66);
+        reportingDocuments.add(doc101);
+        persistenceService.addOrUpdateReportingDocuments(reportingDocuments );
+        
+        List<ReportingDocumentMetadata> reportingDocumentMetadata = testPersistenceService.getReportingDocumentMetadata();
+        
+        assertEquals("Table should contain exactly 2 objects.", 2, reportingDocumentMetadata.size());
+        assertTrue(reportingDocumentMetadata.contains(doc66));
+        assertTrue(reportingDocumentMetadata.contains(doc101));
+    }
+    
 
     @Before
     public void setUp() throws Exception {
