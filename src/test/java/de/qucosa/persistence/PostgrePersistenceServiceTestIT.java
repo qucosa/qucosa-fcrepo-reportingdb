@@ -53,6 +53,7 @@ public class PostgrePersistenceServiceTestIT {
     private static final String TRUNCATE_TABLES_SQL = "/persistence/truncateTables.sql";
     private static final String INSERT_OAI_RUN_RESULTS_SQL = "/persistence/insertOAIRunResults.sql";
     private static final String INSERT_OAI_HEADERS_SQL = "/persistence/insertOaiHeaders.sql";
+    private static final String INSERT_REPORTING_DOCUMENT_METADATA_SQL = "/persistence/insertReportingDocumentMetadata.sql";
 
     private static PostgrePersistenceServiceTestHelper testPersistenceService;
     private PersistenceService persistenceService;
@@ -510,8 +511,6 @@ public class PostgrePersistenceServiceTestIT {
         Date headerLastModified101 = new Date(new DateTime("2015-12-17T17:03:45+01").getMillis());
         ReportingDocumentMetadata doc101 = new ReportingDocumentMetadata(recordIdentifier101, mandator101, documentType101, distributionDate101, headerLastModified101);
         
-        //"oai:example.org:qucosa:66";"Default mandator";"article";"2009-06-02 00:00:00+02";"2015-12-17 17:03:36+01"
-        
         String recordIdentifier66 = "oai:example.org:qucosa:66";
         String mandator66 = "Default mandator";
         String documentType66 = "article";
@@ -520,8 +519,8 @@ public class PostgrePersistenceServiceTestIT {
         ReportingDocumentMetadata doc66 = new ReportingDocumentMetadata(recordIdentifier66, mandator66, documentType66, distributionDate66, headerLastModified66);
         
         List<ReportingDocumentMetadata> reportingDocuments = new LinkedList<>();
-        reportingDocuments.add(doc66);
         reportingDocuments.add(doc101);
+        reportingDocuments.add(doc66);
         persistenceService.addOrUpdateReportingDocuments(reportingDocuments );
         
         List<ReportingDocumentMetadata> reportingDocumentMetadata = testPersistenceService.getReportingDocumentMetadata();
@@ -532,6 +531,48 @@ public class PostgrePersistenceServiceTestIT {
     }
     
 
+    /**
+     * Update an existing ReportingDocument in database.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void updateReportingDocumentMetadata() throws Exception {
+        // insert two documents to database 
+        testPersistenceService.executeQueriesFromFile(INSERT_REPORTING_DOCUMENT_METADATA_SQL);
+        assertEquals("Wrong number of ReportingDocumentMetadata objects in database, precondition of test failed!", 2,
+                testPersistenceService.getReportingDocumentMetadata().size());
+
+        // modify document qucosa:101
+        String recordIdentifier101 = "oai:example.org:qucosa:101";
+        String mandator101 = "SLUB Dresden";
+        String documentType101 = "article";
+        Date distributionDate101 = new Date(new DateTime("2012-03-14T16:20:10+02").getMillis());
+        Date headerLastModified101 = new Date(new DateTime("2016-10-17T11:33:24+01").getMillis());
+        ReportingDocumentMetadata doc101 = new ReportingDocumentMetadata(recordIdentifier101, mandator101, documentType101, distributionDate101, headerLastModified101);
+
+        List<ReportingDocumentMetadata> reportingDocuments = new LinkedList<>();
+        reportingDocuments.add(doc101);
+        persistenceService.addOrUpdateReportingDocuments(reportingDocuments);
+
+        // assert the modified document can be read from database
+        List<ReportingDocumentMetadata> reportingDocumentMetadata = testPersistenceService.getReportingDocumentMetadata();
+        assertEquals("Table should contain exactly 2 objects.", 2, reportingDocumentMetadata.size());
+        assertTrue(reportingDocumentMetadata.contains(doc101));
+
+        // assert that qucosa:66 has not been modified
+        String recordIdentifier66 = "oai:example.org:qucosa:66";
+        String mandator66 = "TU Dresden";
+        String documentType66 = "article";
+        Date distributionDate66 = new Date(new DateTime("2009-06-02T00:00:00+02").getMillis());
+        Date headerLastModified66 = new Date(new DateTime("2015-12-17T17:03:36+01").getMillis());
+        ReportingDocumentMetadata doc66 = new ReportingDocumentMetadata(recordIdentifier66, mandator66, documentType66, distributionDate66, headerLastModified66);
+        assertTrue(reportingDocumentMetadata.contains(doc66));
+    }
+    
+    /* ---- End ReportingDocumentMetadata tests ---- */
+    
+    
     @Before
     public void setUp() throws Exception {
 

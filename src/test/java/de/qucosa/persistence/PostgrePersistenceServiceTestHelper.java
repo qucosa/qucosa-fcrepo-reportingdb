@@ -105,8 +105,7 @@ public class PostgrePersistenceServiceTestHelper {
 
         return reportingDocuments;
     }
-    
-    
+
 
 
     /**
