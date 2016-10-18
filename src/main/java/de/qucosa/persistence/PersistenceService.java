@@ -73,7 +73,7 @@ public interface PersistenceService {
     /**
      * Deletes the {@link OaiHeader}s. An {@link OaiHeader} is removed from
      * persistence iff it <b>equals</b> an object in the {@code headersToRemove}. All
-     * objects from {@code headersToRemove} that are not found in persistence (i.e. 
+     * objects from {@code headersToRemove} that are not found in persistence 
      * are returned to the caller. 
      *
      * @param headersToRemove {@link OaiHeader}s to be removed if unmodified.

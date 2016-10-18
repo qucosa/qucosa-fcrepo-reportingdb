@@ -62,7 +62,7 @@ import de.qucosa.fedora.oai.OaiHeader;
 import de.qucosa.persistence.PersistenceService;
 import de.qucosa.util.TerminateableRunnable;
 
-public class MetsHarvesterTest {
+public class MetsProcessorTest {
 
     private static final int SLEEP_TIME_RUN_AND_WAIT = 0;
     private static final Duration POLLING_INTERVAL = Duration.millis(0);
@@ -78,7 +78,7 @@ public class MetsHarvesterTest {
     private CloseableHttpResponse mockedHttpResponse;
     private StatusLine mockedStatusLine;
     private HttpEntity mockedHttpEntity;
-    private MetsHarvester metsHarvester;
+    private MetsProcessor metsHarvester;
 
     @Captor
     private ArgumentCaptor<List<ReportingDocumentMetadata>> reportingDocumentMetadataCaptor;
@@ -87,7 +87,7 @@ public class MetsHarvesterTest {
     private ArgumentCaptor<List<OaiHeader>> oaiHeaderCaptor;
 
     /**
-     * Test standard functionality of {@link MetsHarvester}.<br />
+     * Test standard functionality of {@link MetsProcessor}.<br />
      * Load one {@link OaiHeader} from persistence, query mets dissemination service, parse METS XML and extract data
      * relevant to reporting, store {@link ReportingDocumentMetadata} in persistence and remove {@link OaiHeader} from
      * persistence.
@@ -139,7 +139,7 @@ public class MetsHarvesterTest {
     }
 
     /**
-     * Test standard functionality of {@link MetsHarvester}.<br />
+     * Test standard functionality of {@link MetsProcessor}.<br />
      * Load two {@link OaiHeader}s from persistence, query mets dissemination service, parse METS XML and extract data
      * relevant to reporting, store {@link ReportingDocumentMetadata} objects in persistence and remove both
      * {@link OaiHeader}s from persistence.
@@ -260,7 +260,7 @@ public class MetsHarvesterTest {
     }
 
     /**
-     * Make sure the date parser used by {@link MetsHarvester} can parse a date such as "2016-10-10T11:27:33+0200".
+     * Make sure the date parser used by {@link MetsProcessor} can parse a date such as "2016-10-10T11:27:33+0200".
      * (There is no colon in the time zone, some parsers have problem with that)
      * 
      * @throws Exception
@@ -352,7 +352,7 @@ public class MetsHarvesterTest {
                 String logMsg = ((LoggingEvent) argument).getFormattedMessage();
 
                 return (logLevel == Level.ERROR)
-                        && (logMsg.contains(MetsHarvester.ERROR_MSG_EMPTY_RESPONSE_FROM_METS_DISSEMINATION_SERVICE))
+                        && (logMsg.contains(MetsProcessor.ERROR_MSG_EMPTY_RESPONSE_FROM_METS_DISSEMINATION_SERVICE))
                         && (logMsg.contains(recordIdentifier13));
             }
         }));
@@ -412,7 +412,7 @@ public class MetsHarvesterTest {
                 Level logLevel = ((LoggingEvent) argument).getLevel();
                 String logMsg = ((LoggingEvent) argument).getFormattedMessage();
 
-                return (logLevel == Level.ERROR) && (logMsg.contains(MetsHarvester.ERROR_MSG_UNEXPECTED_HTTP_RESPONSE))
+                return (logLevel == Level.ERROR) && (logMsg.contains(MetsProcessor.ERROR_MSG_UNEXPECTED_HTTP_RESPONSE))
                         && (logMsg.contains(recordIdentifier13));
             }
         }));
@@ -452,7 +452,7 @@ public class MetsHarvesterTest {
         prefMap.put("slub", "http://slub-dresden.de/");
         prefMap.put("v3", "http://www.loc.gov/mods/v3");
 
-        metsHarvester = new MetsHarvester(new URI("http://localhost:8080/mets/"), POLLING_INTERVAL,
+        metsHarvester = new MetsProcessor(new URI("http://localhost:8080/mets/"), POLLING_INTERVAL,
                 MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS, prefMap, mockedPersistenceService, mockedHttpClient);
 
     }

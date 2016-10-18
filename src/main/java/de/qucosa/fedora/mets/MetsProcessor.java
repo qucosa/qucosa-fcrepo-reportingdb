@@ -65,12 +65,12 @@ import de.qucosa.persistence.PersistenceService;
 import de.qucosa.util.TerminateableRunnable;
 
 /**
- * The {@link MetsHarvester} reads {@link OaiHeader}s from
+ * The {@link MetsProcessor} reads {@link OaiHeader}s from
  * {@link PersistenceService}, requests a external METS disemmination service,
  * processes the XML result, i.e. extracts data relevant for reporting and
  * stores the results in {@link PersistenceService}.
  */
-public class MetsHarvester extends TerminateableRunnable {
+public class MetsProcessor extends TerminateableRunnable {
 
     public static final String ERROR_MSG_EMPTY_RESPONSE_FROM_METS_DISSEMINATION_SERVICE = "Got empty response from METS dissemination service.";
     public static final String ERROR_MSG_UNEXPECTED_HTTP_RESPONSE = "Unexpected METS dissemination service response HTTP";
@@ -95,7 +95,7 @@ public class MetsHarvester extends TerminateableRunnable {
     // TODO better name.
     private boolean moreOAIHeadersToProcess = true;
 
-    public MetsHarvester(URI harvestingUri, Duration pollInterval, Duration minimumWaittimeBetweenTwoRequests,
+    public MetsProcessor(URI harvestingUri, Duration pollInterval, Duration minimumWaittimeBetweenTwoRequests,
             HashMap<String, String> xmlPrefixes, PersistenceService persistenceService,
             CloseableHttpClient httpClient) {
         this.uri = harvestingUri;

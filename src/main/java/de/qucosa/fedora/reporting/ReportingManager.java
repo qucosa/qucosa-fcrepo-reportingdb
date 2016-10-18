@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
-import de.qucosa.fedora.mets.MetsHarvester;
+import de.qucosa.fedora.mets.MetsProcessor;
 import de.qucosa.fedora.oai.OaiHarvester;
 import de.qucosa.fedora.oai.OaiHarvesterBuilder;
 import de.qucosa.fedora.oai.QucosaDocumentFilter;
@@ -88,7 +88,7 @@ public class ReportingManager {
             //TODO is httpClient closed on shutdown?
             CloseableHttpClient httpClientMetsHarvester = HttpClients.createMinimal();             
              
-            MetsHarvester metsHarvester = new MetsHarvester(metsUri, pollInterval,
+            MetsProcessor metsHarvester = new MetsProcessor(metsUri, pollInterval,
             minimumWaittimeBetweenTwoRequests, metsXmlPrefixes, persistenceServiceMetsHarvester, httpClientMetsHarvester);
 
             executorService = Executors.newCachedThreadPool();
