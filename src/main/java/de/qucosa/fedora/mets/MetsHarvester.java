@@ -72,6 +72,8 @@ import de.qucosa.util.TerminateableRunnable;
  */
 public class MetsHarvester extends TerminateableRunnable {
 
+    public static final String ERROR_MSG_EMPTY_RESPONSE_FROM_METS_DISSEMINATION_SERVICE = "Got empty response from METS dissemination service.";
+    public static final String ERROR_MSG_UNEXPECTED_HTTP_RESPONSE = "Unexpected METS dissemination service response HTTP";
     private static final String XPATH_DISTRIBUTION_DATE = "//v3:originInfo[@eventType='distribution']/v3:dateIssued";
     private static final String XPATH_DOCUMENT_TYPE = "//mets:structMap[@TYPE='LOGICAL']/mets:div/@TYPE";
     // FIXME: use correct xPath as soon as the mets dissemination service
@@ -111,7 +113,7 @@ public class MetsHarvester extends TerminateableRunnable {
         logger.info("Requesting METS data from URL: {}", this.uri.toASCIIString());
         do {
 
-            // get OaiHeader from persistence
+            // get OaiHeaders from persistence
             List<OaiHeader> oaiHeadersToProcess = new LinkedList<>();
             try {
                 oaiHeadersToProcess = persistenceService.getOaiHeaders();
@@ -171,7 +173,7 @@ public class MetsHarvester extends TerminateableRunnable {
         URI uri = buildMetsRequestURI(header.getRecordIdentifier());
         HttpGet httpGet = new HttpGet(uri);
         ReportingDocumentMetadata reportingDocument = null;
-        String errorMsg = "METS document for id '" + header.getRecordIdentifier() + "' could not be processed.";
+        String errorMsgWithRecordIdentifier = "METS document for id '" + header.getRecordIdentifier() + "' could not be processed.";
 
         try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
             if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -179,14 +181,14 @@ public class MetsHarvester extends TerminateableRunnable {
                 if (httpEntity != null) {
                     reportingDocument = handleXmlResult(httpEntity.getContent(), header);
                 } else {
-                    logger.error("{} Got empty response from METS dissemination service.", errorMsg);
+                    logger.error("{} {}", errorMsgWithRecordIdentifier, ERROR_MSG_EMPTY_RESPONSE_FROM_METS_DISSEMINATION_SERVICE);
                 }
             } else {
-                logger.error("{} Unexpected METS dissemination service response: {} {}", errorMsg,
+                logger.error("{} {} {} {}" , errorMsgWithRecordIdentifier, ERROR_MSG_UNEXPECTED_HTTP_RESPONSE,
                         httpResponse.getStatusLine().getStatusCode(), httpResponse.getStatusLine().getReasonPhrase());
             }
         } catch (Exception ex) {
-            logger.error(errorMsg + ensureMessage(ex));
+            logger.error(errorMsgWithRecordIdentifier + ensureMessage(ex));
         }
         return reportingDocument;
     }

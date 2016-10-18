@@ -19,6 +19,7 @@ package de.qucosa.fedora.mets;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -46,11 +47,17 @@ import org.joda.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.slf4j.LoggerFactory;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
 import de.qucosa.fedora.oai.OaiHeader;
 import de.qucosa.persistence.PersistenceService;
 import de.qucosa.util.TerminateableRunnable;
@@ -79,13 +86,11 @@ public class MetsHarvesterTest {
     @Captor
     private ArgumentCaptor<List<OaiHeader>> oaiHeaderCaptor;
 
-
     /**
      * Test standard functionality of {@link MetsHarvester}.<br />
-     * Load one {@link OaiHeader} from persistence, query mets dissemination
-     * service, parse METS XML and extract data relevant to reporting, store
-     * {@link ReportingDocumentMetadata} in persistence and remove
-     * {@link OaiHeader} from persistence.
+     * Load one {@link OaiHeader} from persistence, query mets dissemination service, parse METS XML and extract data
+     * relevant to reporting, store {@link ReportingDocumentMetadata} in persistence and remove {@link OaiHeader} from
+     * persistence.
      * 
      * @throws Exception
      */
@@ -127,7 +132,7 @@ public class MetsHarvesterTest {
 
         // assert OaiHeader has been removed from persistence
         verify(mockedPersistenceService, atLeastOnce()).removeOaiHeadersIfUnmodified(oaiHeaderCaptor.capture());
-        List<OaiHeader> actualOaiHeaders = (List<OaiHeader>) oaiHeaderCaptor.getAllValues().get(0);
+        List<OaiHeader> actualOaiHeaders = oaiHeaderCaptor.getAllValues().get(0);
         assertEquals("Exactly one OaiHeader should have been removed from persistence.", 1, actualOaiHeaders.size());
         assertEquals("The removed OaiHeader object is not equal to the expected object.", oaiHeaders.get(0),
                 actualOaiHeaders.get(0));
@@ -135,9 +140,8 @@ public class MetsHarvesterTest {
 
     /**
      * Test standard functionality of {@link MetsHarvester}.<br />
-     * Load two {@link OaiHeader}s from persistence, query mets dissemination
-     * service, parse METS XML and extract data relevant to reporting, store
-     * {@link ReportingDocumentMetadata} objects in persistence and remove both
+     * Load two {@link OaiHeader}s from persistence, query mets dissemination service, parse METS XML and extract data
+     * relevant to reporting, store {@link ReportingDocumentMetadata} objects in persistence and remove both
      * {@link OaiHeader}s from persistence.
      * 
      * @throws Exception
@@ -201,7 +205,7 @@ public class MetsHarvesterTest {
 
         // assert both OaiHeaders have been removed from persistence
         verify(mockedPersistenceService, atLeastOnce()).removeOaiHeadersIfUnmodified(oaiHeaderCaptor.capture());
-        List<OaiHeader> actualOaiHeaders = (List<OaiHeader>) oaiHeaderCaptor.getAllValues().get(0);
+        List<OaiHeader> actualOaiHeaders = oaiHeaderCaptor.getAllValues().get(0);
         assertEquals("Exactly two OaiHeaders should have been removed from persistence.", 2, actualOaiHeaders.size());
         for (OaiHeader expected : oaiHeaders) {
             assertTrue("The OaiHeader '" + expected + "' has not been removed from persistence.",
@@ -210,11 +214,9 @@ public class MetsHarvesterTest {
     }
 
     /**
-     * If receiving an incomplete METS XML that does not contain all required
-     * data such as a documentType, no {@link ReportingDocumentMetadata} is
-     * persisted. Anyhow, the OaiHeader is removed from persistence to avoid
-     * processing this document again as long as it has not been modified on the
-     * server.
+     * If receiving an incomplete METS XML that does not contain all required data such as a documentType, no
+     * {@link ReportingDocumentMetadata} is persisted. Anyhow, the OaiHeader is removed from persistence to avoid
+     * processing this document again as long as it has not been modified on the server.
      * 
      * @throws Exception
      */
@@ -251,16 +253,15 @@ public class MetsHarvesterTest {
 
         // assert OaiHeader has been removed from persistence
         verify(mockedPersistenceService, atLeastOnce()).removeOaiHeadersIfUnmodified(oaiHeaderCaptor.capture());
-        List<OaiHeader> actualOaiHeaders = (List<OaiHeader>) oaiHeaderCaptor.getAllValues().get(0);
+        List<OaiHeader> actualOaiHeaders = oaiHeaderCaptor.getAllValues().get(0);
         assertEquals("Exactly one OaiHeader should have been removed from persistence.", 1, actualOaiHeaders.size());
         assertEquals("The removed OaiHeader object is not equal to the expected object.", oaiHeaders.get(0),
                 actualOaiHeaders.get(0));
     }
 
     /**
-     * Make sure the date parser used by {@link MetsHarvester} can parse a date
-     * such as "2016-10-10T11:27:33+0200". (There is no colon in the time zone,
-     * some parsers have problem with that)
+     * Make sure the date parser used by {@link MetsHarvester} can parse a date such as "2016-10-10T11:27:33+0200".
+     * (There is no colon in the time zone, some parsers have problem with that)
      * 
      * @throws Exception
      */
@@ -287,8 +288,7 @@ public class MetsHarvesterTest {
 
         runAndWait(metsHarvester);
 
-        // assert that ReportingDocumentMetadata has been parsed from mets
-        // dissemination and put to persistence
+        // assert that ReportingDocumentMetadata has been parsed from mets dissemination and put to persistence
         verify(mockedPersistenceService, atLeastOnce())
                 .addOrUpdateReportingDocuments(reportingDocumentMetadataCaptor.capture());
         List<ReportingDocumentMetadata> actualReportingDoc = reportingDocumentMetadataCaptor.getAllValues().get(0);
@@ -305,32 +305,59 @@ public class MetsHarvesterTest {
 
         // assert OaiHeader has been removed from persistence
         verify(mockedPersistenceService, atLeastOnce()).removeOaiHeadersIfUnmodified(oaiHeaderCaptor.capture());
-        List<OaiHeader> actualOaiHeaders = (List<OaiHeader>) oaiHeaderCaptor.getAllValues().get(0);
+        List<OaiHeader> actualOaiHeaders = oaiHeaderCaptor.getAllValues().get(0);
         assertEquals("Exactly one OaiHeader should have been removed from persistence.", 1, actualOaiHeaders.size());
         assertEquals("The removed OaiHeader object is not equal to the expected object.", oaiHeaders.get(0),
                 actualOaiHeaders.get(0));
     }
 
+    /**
+     * In case the METS dissemination service's http response does not contain a message entity, no
+     * {@link ReportingDocumentMetadata} is written to persistence. A message is written to error log, containing the
+     * recordIdentifier of the document that has not been processed successfully. The {@link OaiHeader} is removed from
+     * persistence.
+     * 
+     * @throws Exception
+     */
     @Test
-    public void rejectEmptyResponseFromMetsDissemination() throws Exception {
+    public void logEmptyResponseFromMetsDissemination() throws Exception {
 
         // mock persistence returning any OaiHeader
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         Date datestamp13 = dateFormat.parse("2015-12-17T16:03:17Z");
-        String recordIdentifier13 = "oai:example.org:qucosa:13";
+        final String recordIdentifier13 = "oai:example.org:qucosa:13";
         OaiHeader qucosa13Header = new OaiHeader(recordIdentifier13, datestamp13, false);
 
         List<OaiHeader> oaiHeaders = new LinkedList<>();
         oaiHeaders.add(qucosa13Header);
         when(mockedPersistenceService.getOaiHeaders()).thenReturn(oaiHeaders);
 
-        // mock mets dissemination service, returning
+        // mock mets dissemination service, returning no message entity in its response
         when(mockedHttpResponse.getEntity()).thenReturn(null);
+
+        // mock log appender
+        Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        final Appender mockAppender = mock(Appender.class);
+        when(mockAppender.getName()).thenReturn("MOCK");
+        rootLogger.addAppender(mockAppender);
 
         runAndWait(metsHarvester);
 
-        // assert that no ReportingDocumentMetadata object has been put to
-        // persistence
+        // assert that a message has been written to error log, containing the recordIdentifier of the document
+        verify(mockAppender).doAppend(argThat(new ArgumentMatcher() {
+            @Override
+            public boolean matches(final Object argument) {
+
+                Level logLevel = ((LoggingEvent) argument).getLevel();
+                String logMsg = ((LoggingEvent) argument).getFormattedMessage();
+
+                return (logLevel == Level.ERROR)
+                        && (logMsg.contains(MetsHarvester.ERROR_MSG_EMPTY_RESPONSE_FROM_METS_DISSEMINATION_SERVICE))
+                        && (logMsg.contains(recordIdentifier13));
+            }
+        }));
+
+        // assert no ReportingDocumentMetadata has been put to persistence
         verify(mockedPersistenceService, atLeastOnce())
                 .addOrUpdateReportingDocuments(reportingDocumentMetadataCaptor.capture());
         List<ReportingDocumentMetadata> actualReportingDoc = reportingDocumentMetadataCaptor.getAllValues().get(0);
@@ -339,7 +366,67 @@ public class MetsHarvesterTest {
 
         // assert OaiHeader has been removed from persistence
         verify(mockedPersistenceService, atLeastOnce()).removeOaiHeadersIfUnmodified(oaiHeaderCaptor.capture());
-        List<OaiHeader> actualOaiHeaders = (List<OaiHeader>) oaiHeaderCaptor.getAllValues().get(0);
+        List<OaiHeader> actualOaiHeaders = oaiHeaderCaptor.getAllValues().get(0);
+        assertEquals("Exactly one OaiHeader should have been removed from persistence.", 1, actualOaiHeaders.size());
+        assertEquals("The removed OaiHeader object is not equal to the expected object.", oaiHeaders.get(0),
+                actualOaiHeaders.get(0));
+    }
+
+    /**
+     * In case the METS dissemination service's http response is 404, no {@link ReportingDocumentMetadata} is written to
+     * persistence. A message is written to error log, containing the recordIdentifier of the document that has not been
+     * processed successfully. The {@link OaiHeader} is removed from persistence.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void logHttpErrorResponseFromMetsDissemination() throws Exception {
+
+        // mock persistence returning any OaiHeader
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        Date datestamp13 = dateFormat.parse("2015-12-17T16:03:17Z");
+        final String recordIdentifier13 = "oai:example.org:qucosa:13";
+        OaiHeader qucosa13Header = new OaiHeader(recordIdentifier13, datestamp13, false);
+
+        List<OaiHeader> oaiHeaders = new LinkedList<>();
+        oaiHeaders.add(qucosa13Header);
+        when(mockedPersistenceService.getOaiHeaders()).thenReturn(oaiHeaders);
+
+        // mock mets dissemination service, returning HTTP 404
+        when(mockedStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_NOT_FOUND);
+        when(mockedStatusLine.getReasonPhrase()).thenReturn("Not Found");
+
+        // mock log appender
+        Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        final Appender mockAppender = mock(Appender.class);
+        when(mockAppender.getName()).thenReturn("MOCK");
+        rootLogger.addAppender(mockAppender);
+
+        runAndWait(metsHarvester);
+
+        // assert that a message has been written to error log, containing the recordIdentifier of the document
+        verify(mockAppender).doAppend(argThat(new ArgumentMatcher() {
+            @Override
+            public boolean matches(final Object argument) {
+
+                Level logLevel = ((LoggingEvent) argument).getLevel();
+                String logMsg = ((LoggingEvent) argument).getFormattedMessage();
+
+                return (logLevel == Level.ERROR) && (logMsg.contains(MetsHarvester.ERROR_MSG_UNEXPECTED_HTTP_RESPONSE))
+                        && (logMsg.contains(recordIdentifier13));
+            }
+        }));
+
+        // assert no ReportingDocumentMetadata has been put to persistence
+        verify(mockedPersistenceService, atLeastOnce())
+                .addOrUpdateReportingDocuments(reportingDocumentMetadataCaptor.capture());
+        List<ReportingDocumentMetadata> actualReportingDoc = reportingDocumentMetadataCaptor.getAllValues().get(0);
+
+        assertTrue("No ReportingDocumentMetadata object should have been persisted", actualReportingDoc.isEmpty());
+
+        // assert OaiHeader has been removed from persistence
+        verify(mockedPersistenceService, atLeastOnce()).removeOaiHeadersIfUnmodified(oaiHeaderCaptor.capture());
+        List<OaiHeader> actualOaiHeaders = oaiHeaderCaptor.getAllValues().get(0);
         assertEquals("Exactly one OaiHeader should have been removed from persistence.", 1, actualOaiHeaders.size());
         assertEquals("The removed OaiHeader object is not equal to the expected object.", oaiHeaders.get(0),
                 actualOaiHeaders.get(0));
@@ -378,3 +465,26 @@ public class MetsHarvesterTest {
         thread.join();
     }
 }
+
+//
+// class TestAppender extends AppenderSkeleton {
+// private final List<LoggingEvent> log = new ArrayList<LoggingEvent>();
+//
+// @Override
+// public boolean requiresLayout() {
+// return false;
+// }
+//
+// @Override
+// protected void append(final LoggingEvent loggingEvent) {
+// log.add(loggingEvent);
+// }
+//
+// @Override
+// public void close() {
+// }
+//
+// public List<LoggingEvent> getLog() {
+// return new ArrayList<LoggingEvent>(log);
+// }
+// }
