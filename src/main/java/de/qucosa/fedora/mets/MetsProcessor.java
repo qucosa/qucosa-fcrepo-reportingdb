@@ -76,9 +76,7 @@ public class MetsProcessor extends TerminateableRunnable {
     public static final String ERROR_MSG_UNEXPECTED_HTTP_RESPONSE = "Unexpected METS dissemination service response HTTP";
     private static final String XPATH_DISTRIBUTION_DATE = "//v3:originInfo[@eventType='distribution']/v3:dateIssued";
     private static final String XPATH_DOCUMENT_TYPE = "//mets:structMap[@TYPE='LOGICAL']/mets:div/@TYPE";
-    // FIXME: use correct xPath as soon as the mets dissemination service
-    // provides this information
-    private static final String XPATH_MANDATOR = "FIXME";
+    private static final String XPATH_MANDATOR = "//mets:metsHdr/mets:agent[@ROLE='EDITOR']/mets:name";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final CloseableHttpClient httpClient;
@@ -274,10 +272,6 @@ public class MetsProcessor extends TerminateableRunnable {
 
         XPathExpression xSelectMandator = xPath.compile(XPATH_MANDATOR);
         String mandator = (String) xSelectMandator.evaluate(document, XPathConstants.STRING);
-
-        // FIXME: remove line, to use real mandator as soon as the mets
-        // dissemination service provides this information
-        mandator = "Default mandator";
         return mandator;
     }
 

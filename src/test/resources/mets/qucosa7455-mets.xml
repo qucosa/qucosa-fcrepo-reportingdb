@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2016 Saxon State and University Library Dresden (SLUB)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="qucosa:7455"
+ xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+ <mets:metsHdr RECORDSTATUS="ACTIVE" CREATEDATE="2016-05-24T10:33:56.975+00:00" LASTMODDATE="2016-10-28T14:13:28.130+00:00">
+   <mets:agent ROLE="EDITOR" TYPE="ORGANIZATION">
+     <mets:name>slub</mets:name>
+   </mets:agent>
+ </mets:metsHdr> 
+ <mets:dmdSec ID="DMD_000" STATUS="ACTIVE">
+  <mets:mdWrap MDTYPE="MODS">
+   <mets:xmlData>
+    <mods:mods xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:mods="http://www.loc.gov/mods/v3"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:slub="http://slub-dresden.de/" version="3.6"
+     xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-6.xsd">
+     <mods:language>
+      <mods:languageTerm authority="iso639-2b" type="code">ger</mods:languageTerm>
+     </mods:language>
+     <mods:titleInfo lang="ger" usage="primary">
+      <mods:title>„Bibo am Sonntag“ – Endlich mal auslesen!</mods:title>
+      <mods:subTitle>Sonntagsöffnung in der SLUB Dresden durch us!b</mods:subTitle>
+     </mods:titleInfo>
+     <mods:originInfo eventType="publication">
+      <mods:dateIssued encoding="iso8601">2005</mods:dateIssued>
+     </mods:originInfo>
+     <mods:identifier type="qucosa:urn">urn:nbn:de:bsz:14-qucosa2-74552</mods:identifier>
+     <mods:originInfo eventType="production">
+      <mods:edition>published</mods:edition>
+     </mods:originInfo>
+     <mods:physicalDescription>
+      <mods:digitalOrigin>born digital</mods:digitalOrigin>
+     </mods:physicalDescription>
+     <mods:name ID="QUCOSA_000" type="personal">
+      <mods:role>
+       <mods:roleTerm authority="marcrelator" type="code">aut</mods:roleTerm>
+      </mods:role>
+      <mods:namePart type="given">Jens</mods:namePart>
+      <mods:namePart type="family">Bemme</mods:namePart>
+     </mods:name>
+     <mods:extension>
+      <foaf:Person rdf:about="#QUCOSA_000">
+       <foaf:gender>male</foaf:gender>
+      </foaf:Person>
+     </mods:extension>
+     <mods:name ID="QUCOSA_001" displayLabel="mapping-hack-other" type="corporate">
+      <mods:role>
+       <mods:roleTerm authorityURI="http://id.loc.gov/vocabulary/relators" type="code"
+        valueURI="http://id.loc.gov/vocabulary/relators/???">pbl</mods:roleTerm>
+      </mods:role>
+     </mods:name>
+     <mods:extension>
+      <slub:info>
+       <slub:corporation place="Bad Honnef" slub:ref="#QUCOSA_001" type="publisher">
+        <mods:namePart>Bock + Herchen</mods:namePart>
+       </slub:corporation>
+      </slub:info>
+     </mods:extension>
+     <mods:abstract lang="ger" type="summary">
+Die Sächsische Landesbibliothek – Staats- und Universitätsbibliothek Dresden öffnet seit 2003 auch sonntags zur Prüfungsvorbereitung, überwiegend finanziert von Studenten. Der Dauerstreit über Studiengebühren, die Rolle des Staates und das studentische Selbstverständnis sind dabei ständige Begleiter. Die Aktion „Bibo am Sonntag' führte im März 2005 zur Gründung der ersten deutschen Studentenstiftung in Dresden. Taugt die Idee zum Nachahmen?
+</mods:abstract>
+     <mods:classification authority="z" lang="ger">Bibliothek, Dresden, SLUB, Studenten</mods:classification>
+     <mods:classification authority="ddc">027.73-027.79</mods:classification>
+     <mods:classification authority="rvk">AN 80190, AN 76000</mods:classification>
+     <mods:classification authority="sswd">
+Sächsische Landesbibliothek - Staats- und Universitätsbibliothek Dresden, Förderverein, Öffnungszeit, Sonntag
+</mods:classification>
+     <mods:relatedItem type="original">
+      <mods:titleInfo>
+       <mods:title>With a little help from my friends</mods:title>
+      </mods:titleInfo>
+      <mods:titleInfo>
+       <mods:subTitle>Freundeskreise und Fördervereine für Bibliotheken</mods:subTitle>
+      </mods:titleInfo>
+      <mods:originInfo>
+       <mods:place>
+        <mods:placeTerm type="text">Bad Honnef</mods:placeTerm>
+       </mods:place>
+      </mods:originInfo>
+      <mods:originInfo>
+       <mods:dateIssued>2005</mods:dateIssued>
+      </mods:originInfo>
+      <mods:originInfo>
+       <mods:publisher>Bock + Herchen</mods:publisher>
+      </mods:originInfo>
+      <mods:relatedItem type="series">
+       <mods:titleInfo>
+        <mods:title>Beiträge zur bibliothekarischen Weiterbildung</mods:title>
+       </mods:titleInfo>
+      </mods:relatedItem>
+      <mods:part type="volume">
+       <mods:detail>
+        <mods:number>19</mods:number>
+       </mods:detail>
+      </mods:part>
+      <mods:identifier type="isbn">3-88347-244-1</mods:identifier>
+     </mods:relatedItem>
+     <mods:part type="section">
+      <mods:extent unit="pages">
+       <mods:start>193</mods:start>
+      </mods:extent>
+      <mods:extent unit="pages">
+       <mods:end>196</mods:end>
+      </mods:extent>
+     </mods:part>
+     <mods:originInfo eventType="distribution">
+      <mods:dateIssued encoding="iso8601" keyDate="yes">2016-05-24T12:33:56+0200</mods:dateIssued>
+     </mods:originInfo>
+     <mods:extension>
+      <slub:info>
+       <slub:corporation href="https://www.slub-dresden.de" place="Dresden" slub:address="Zellescher Weg 18, 01069 Dresden"
+        slub:ref="#QUCOSA_002">
+        <slub:university>
+         Sächsische Landesbibliothek – Staats- und Universitätsbibliothek Dresden
+        </slub:university>
+       </slub:corporation>
+      </slub:info>
+     </mods:extension>
+     <mods:name ID="QUCOSA_002" displayLabel="mapping-hack-default-publisher" type="corporate">
+      <mods:nameIdentifier type="gnd">4519974-7</mods:nameIdentifier>
+     </mods:name>
+    </mods:mods>
+   </mets:xmlData>
+  </mets:mdWrap>
+ </mets:dmdSec>
+ <mets:amdSec ID="AMD_000">
+  <mets:techMD ID="TECH_000">
+   <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBINFO" MIMETYPE="application/vnd.slub-info+xml">
+    <mets:xmlData>
+     <slub:info xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:slub="http://slub-dresden.de/">
+      <slub:submitter>
+       <foaf:Person>
+        <foaf:name>Jens Bemme</foaf:name>
+        <foaf:mbox>jens.bemme@gmx.net</foaf:mbox>
+        <foaf:phone>0176-22861226</foaf:phone>
+       </foaf:Person>
+      </slub:submitter>
+      <slub:submitter>
+       <slub:notice>
+        Hallo, das PDF enstammt dieser Seite:
+        http://www.bibliotheksverband.de/fachgruppen/konferenz-der-freundeskreise/publikationen.html Ob es ein PDF-A
+        ist, weiß ich nicht. Beste Grüße Jens Bemme
+       </slub:notice>
+      </slub:submitter>
+      <slub:rights>
+       <slub:agreement given="yes" />
+       <slub:attachment hasArchivalValue="yes" isDownloadable="no" ref="ATT-1" />
+       <slub:attachment hasArchivalValue="yes" isDownloadable="yes" ref="ATT-0" />
+      </slub:rights>
+      <slub:documentType>in_book</slub:documentType>
+     </slub:info>
+    </mets:xmlData>
+   </mets:mdWrap>
+  </mets:techMD>
+ </mets:amdSec>
+ <mets:fileSec>
+  <mets:fileGrp USE="ORIGINAL">
+   <mets:file xmlns:mext="http://slub-dresden.de/mets" ID="ATT-1" MIMETYPE="application/pdf" mext:LABEL="RS_2011_07_SLUB.pdf"
+    USE="ARCHIVE">
+    <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink" LOCTYPE="URL"
+     xlin:href="http://sdvcmr-prod-core01:8080/fedora/objects/qucosa:7455/datastreams/ATT-1/content" xlin:title="RS_2011_07_SLUB.pdf" />
+   </mets:file>
+  </mets:fileGrp>
+  <mets:fileGrp USE="DOWNLOAD">
+   <mets:file xmlns:mext="http://slub-dresden.de/mets" ID="ATT-0" MIMETYPE="application/pdf" mext:LABEL="Volltext (PDF)"
+    USE="ARCHIVE">
+    <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink" LOCTYPE="URL"
+     xlin:href="http://sdvcmr-prod-core01:8080/fedora/objects/qucosa:7455/datastreams/ATT-0/content" xlin:title="Volltext (PDF)" />
+   </mets:file>
+  </mets:fileGrp>
+ </mets:fileSec>
+ <mets:structMap TYPE="LOGICAL">
+  <mets:div ID="LOG_001" TYPE="in_book" DMDID="DMD_000">
+   <mets:fptr FILEID="ATT-1" />
+   <mets:fptr FILEID="ATT-0" />
+  </mets:div>
+ </mets:structMap>
+</mets:mets>

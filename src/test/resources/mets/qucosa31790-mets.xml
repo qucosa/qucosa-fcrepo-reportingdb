@@ -16,6 +16,11 @@
   -->
 
 <mets:mets OBJID="qucosa:31790" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd" xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <mets:metsHdr RECORDSTATUS="ACTIVE" CREATEDATE="2016-05-24T10:33:56.975+00:00" LASTMODDATE="2016-10-28T14:13:28.130+00:00">
+   <mets:agent ROLE="EDITOR" TYPE="ORGANIZATION">
+     <mets:name>slub</mets:name>
+ </mets:agent>
+ </mets:metsHdr>
   <mets:dmdSec ID="DMD_000" STATUS="ACTIVE">
     <mets:mdWrap MDTYPE="MODS">
       <mets:xmlData>

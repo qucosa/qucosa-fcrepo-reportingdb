@@ -70,6 +70,7 @@ public class MetsProcessorTest {
 
     private static final String METS_QUCOSA_13_XML = "/mets/qucosa13-mets.xml";
     private static final String METS_QUCOSA_22_XML = "/mets/qucosa22-mets.xml";
+    private static final String METS_QUCOSA_7455_XML = "/mets/qucosa7455-mets.xml";
     private static final String METS_QUCOSA_31789_XML = "/mets/qucosa31789-mets.xml";
     private static final String METS_QUCOSA_31790_XML = "/mets/qucosa31790-mets.xml";
 
@@ -86,6 +87,8 @@ public class MetsProcessorTest {
     @Captor
     private ArgumentCaptor<List<OaiHeader>> oaiHeaderCaptor;
 
+
+
     /**
      * Test standard functionality of {@link MetsProcessor}.<br />
      * Load one {@link OaiHeader} from persistence, query mets dissemination service, parse METS XML and extract data
@@ -100,7 +103,7 @@ public class MetsProcessorTest {
         // mock persistence returning one OaiHeader
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         Date datestamp = dateFormat.parse("2015-12-17T16:03:17Z");
-        String recordIdentifier = "oai:example.org:qucosa:13";
+        String recordIdentifier = "oai:example.org:qucosa:7455";
         OaiHeader qucosa13Header = new OaiHeader(recordIdentifier, datestamp, false);
         List<OaiHeader> oaiHeaders = new LinkedList<>();
         oaiHeaders.add(qucosa13Header);
@@ -109,15 +112,15 @@ public class MetsProcessorTest {
         // mock mets dissemination service
         when(mockedHttpEntity.getContent()).thenAnswer(new Answer<InputStream>() {
             public InputStream answer(InvocationOnMock invocation) {
-                return this.getClass().getResourceAsStream(METS_QUCOSA_13_XML);
+                return this.getClass().getResourceAsStream(METS_QUCOSA_7455_XML);
             }
         });
 
         runAndWait(metsHarvester);
 
-        Date distributionDate = DatatypeConverter.parseDateTime("2008-08-04").getTime();
+        Date distributionDate = new Date(new DateTime("2016-05-24T12:33:56+0200").getMillis());
         ReportingDocumentMetadata expectedReportingDoc = new ReportingDocumentMetadata(recordIdentifier,
-                "Default mandator", "issue", distributionDate, datestamp);
+                "slub", "in_book", distributionDate, datestamp);
 
         // assert that ReportingDocumentMetadata has been parsed from mets
         // dissemination and put to persistence
@@ -137,6 +140,7 @@ public class MetsProcessorTest {
         assertEquals("The removed OaiHeader object is not equal to the expected object.", oaiHeaders.get(0),
                 actualOaiHeaders.get(0));
     }
+    
 
     /**
      * Test standard functionality of {@link MetsProcessor}.<br />
@@ -183,11 +187,11 @@ public class MetsProcessorTest {
         // dissemination and put to persistence
         Date distributionDate13 = DatatypeConverter.parseDateTime("2008-08-04").getTime();
         ReportingDocumentMetadata expectedReportingDoc13 = new ReportingDocumentMetadata(recordIdentifier13,
-                "Default mandator", "issue", distributionDate13, datestamp13);
+                "SLUB", "issue", distributionDate13, datestamp13);
 
         Date distributionDate22 = DatatypeConverter.parseDateTime("2011-03-31").getTime();
         ReportingDocumentMetadata expectedReportingDoc22 = new ReportingDocumentMetadata(recordIdentifier22,
-                "Default mandator", "issue", distributionDate22, datestamp22);
+                "TU Dresden", "issue", distributionDate22, datestamp22);
 
         verify(mockedPersistenceService, atLeastOnce())
                 .addOrUpdateReportingDocuments(reportingDocumentMetadataCaptor.capture());
@@ -298,7 +302,7 @@ public class MetsProcessorTest {
 
         Date distributionDate = new Date(new DateTime("2016-10-10T11:27:33+0200").getMillis());
         ReportingDocumentMetadata expectedReportingDoc = new ReportingDocumentMetadata(recordIdentifier31790,
-                "Default mandator", "article", distributionDate, datestamp31790);
+                "slub", "article", distributionDate, datestamp31790);
 
         assertEquals("The persisted ReportingDocumentMetadata object is not equal to the expected object.",
                 expectedReportingDoc, actualReportingDoc.get(0));
