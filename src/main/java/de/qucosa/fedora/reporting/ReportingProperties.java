@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.HashMap;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.joda.time.Duration;
@@ -78,6 +76,10 @@ public class ReportingProperties {
         return props.getProperty("db.url");
     }
 
+    public String getPostgreSQLDriver() {
+        return props.getProperty("db.driver");
+    }
+    
     public String getPostgreSQLUser() {
         return props.getProperty("db.user");
     }
@@ -108,19 +110,5 @@ public class ReportingProperties {
 
     public int getMetsDisseminationPollingInterval() {
         return Integer.parseInt(props.getProperty("mets.pollseconds"));
-    }
-    
-    public HashMap<String, String> getMetsXmlPrefixes(){
-        HashMap<String, String> prefMap = new HashMap<>();
-        for (Entry<Object, Object> property: props.entrySet()){
-            
-            String key = (String)property.getKey();
-            if (key.startsWith(XML_PREFIX_IDENTIFIER)) {
-                String prefix = key.substring(XML_PREFIX_IDENTIFIER.length(), key.length());
-                String uri = (String) property.getValue();
-                prefMap.put(prefix, uri);
-            }
-        }
-        return prefMap;
     }
 }

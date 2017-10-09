@@ -46,6 +46,7 @@ public class PostgrePersistenceServiceTestIT {
 
     // TODO read from Properties file??
     private static final String DATABASE_URL = "jdbc:postgresql://localhost:5432/reportingUnitTest";
+    private static final String DATABASE_DRIVER = "org.postgresql.Driver";
     private static final String DATABASE_USER = "reportingDBUnitTest";
     private static final String DATABASE_PASSWORD = "76Sp)qpH2D";
 
@@ -577,7 +578,7 @@ public class PostgrePersistenceServiceTestIT {
     public void setUp() throws Exception {
 
         testPersistenceService.executeQueriesFromFile(TRUNCATE_TABLES_SQL);
-        persistenceService = new PostgrePersistenceService(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+        persistenceService = new PostgrePersistenceService(DATABASE_DRIVER, DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
     }
 
     /**
