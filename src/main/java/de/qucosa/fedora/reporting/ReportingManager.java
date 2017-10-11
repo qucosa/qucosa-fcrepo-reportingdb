@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.io.IOException;
@@ -47,10 +46,6 @@ public class ReportingManager implements ServletContextListener {
     public static final Marker FATAL = getMarker("FATAL");
 
     private Logger logger = LoggerFactory.getLogger(getClass());
-
-    private Thread thread = null;
-
-    private ServletContext servletContext;
 
     private ExecutorService executorService;
 

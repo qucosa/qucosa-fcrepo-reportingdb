@@ -140,7 +140,7 @@ public class OaiHarvesterTest {
         runAndWait(oaiHarvester);
 
         verify(mockedPersistenceService, atLeastOnce()).addOrUpdateOaiHeaders(oaiHeaderCaptor.capture());
-        List<OaiHeader> actualOaiHeaders = (List<OaiHeader>) oaiHeaderCaptor.getAllValues().get(0);
+        List<OaiHeader> actualOaiHeaders = oaiHeaderCaptor.getAllValues().get(0);
         assertEquals("Wrong number of headers, filter does not work.", 6, actualOaiHeaders.size());
 
         List<String> actualIDs = new LinkedList<>();

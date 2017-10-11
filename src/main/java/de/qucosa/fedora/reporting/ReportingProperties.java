@@ -29,7 +29,6 @@ public class ReportingProperties {
     private static final String DEFAULT_PROPERTIES_FILE = "/default.properties";
     private static final String LOCAL_PROPERTIES_FILE = "/local.properties";
     private static final String PROPERTIES_FILE_FORMAT = "ISO-8859-1";
-    private static final String XML_PREFIX_IDENTIFIER = "mets.namespace.";
 
     private static ReportingProperties instance;
 

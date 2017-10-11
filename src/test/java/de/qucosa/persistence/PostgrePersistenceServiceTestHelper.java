@@ -112,9 +112,6 @@ public class PostgrePersistenceServiceTestHelper {
     private Date convertNullableSQLTimestampToJavaDate(Timestamp timestamp) {
         Date date = null;
         if (timestamp != null) {
-            // do we lose precision? Date has milliseconds, Timestamp nanoseconds
-            int microsAndNanos = timestamp.getNanos() % 1000000;
-
             Calendar cal = Calendar.getInstance();
             cal.setTime(timestamp);
             date = cal.getTime();

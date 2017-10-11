@@ -129,10 +129,6 @@ public class OaiHarvesterBuilder {
         return oaiRunResultHistory;
     }
 
-    public Duration getPollingInterval() {
-        return pollingInterval;
-    }
-
     public boolean isUseFC3CompatibilityMode() {
         return useFC3CompatibilityMode;
     }
