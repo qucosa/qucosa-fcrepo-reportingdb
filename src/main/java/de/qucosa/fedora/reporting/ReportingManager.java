@@ -16,8 +16,22 @@
 
 package de.qucosa.fedora.reporting;
 
-import static org.slf4j.MarkerFactory.getMarker;
+import de.qucosa.fedora.mets.MetsProcessor;
+import de.qucosa.fedora.oai.OaiHarvester;
+import de.qucosa.fedora.oai.OaiHarvesterBuilder;
+import de.qucosa.fedora.oai.QucosaDocumentFilter;
+import de.qucosa.persistence.PersistenceService;
+import de.qucosa.persistence.PostgrePersistenceService;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -27,23 +41,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.joda.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-
-import de.qucosa.fedora.mets.MetsProcessor;
-import de.qucosa.fedora.oai.OaiHarvester;
-import de.qucosa.fedora.oai.OaiHarvesterBuilder;
-import de.qucosa.fedora.oai.QucosaDocumentFilter;
-import de.qucosa.persistence.PersistenceService;
-import de.qucosa.persistence.PostgrePersistenceService;
+import static org.slf4j.MarkerFactory.getMarker;
 
 public class ReportingManager implements ServletContextListener {
     public static final Marker FATAL = getMarker("FATAL");

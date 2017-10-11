@@ -16,24 +16,20 @@
 
 package de.qucosa.persistence;
 
+import de.qucosa.fedora.mets.ReportingDocumentMetadata;
+import de.qucosa.fedora.oai.OaiHarvesterTest;
+import org.apache.commons.io.IOUtils;
+
 import java.io.InputStream;
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.apache.commons.io.IOUtils;
-
-import de.qucosa.fedora.mets.ReportingDocumentMetadata;
-import de.qucosa.fedora.oai.OaiHarvesterTest;
-import de.qucosa.fedora.oai.OaiHeader;
 
 /**
  * Helper class for integration tests

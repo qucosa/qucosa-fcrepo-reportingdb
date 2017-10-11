@@ -16,6 +16,12 @@
 
 package de.qucosa.persistence;
 
+import de.qucosa.fedora.mets.ReportingDocumentMetadata;
+import de.qucosa.fedora.oai.OaiHeader;
+import de.qucosa.fedora.oai.OaiRunResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -28,13 +34,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import de.qucosa.fedora.mets.ReportingDocumentMetadata;
-import de.qucosa.fedora.oai.OaiHeader;
-import de.qucosa.fedora.oai.OaiRunResult;
 
 public class PostgrePersistenceService implements PersistenceService {
 

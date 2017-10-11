@@ -16,12 +16,11 @@
 
 package de.qucosa.fedora.oai;
 
-import java.net.URI;
-
+import de.qucosa.persistence.PersistenceService;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.joda.time.Duration;
 
-import de.qucosa.persistence.PersistenceService;
+import java.net.URI;
 
 /**
  * Helper for JUnit tests to set aggressive timings that should not be used in production environment.

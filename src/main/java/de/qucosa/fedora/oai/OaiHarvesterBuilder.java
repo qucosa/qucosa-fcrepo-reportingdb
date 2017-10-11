@@ -17,7 +17,6 @@
 package de.qucosa.fedora.oai;
 
 import de.qucosa.persistence.PersistenceService;
-
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.joda.time.Duration;
 
