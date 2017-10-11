@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -85,16 +84,12 @@ public class ReportingManager implements ServletContextListener {
             URI metsUri = new URI(prop.getMetsDisseminationURL());
             Duration pollInterval = Duration.standardSeconds(prop.getMetsDisseminationPollingInterval());
             Duration minimumWaittimeBetweenTwoRequests = Duration.standardSeconds(1);
-            HashMap<String, String> metsXmlPrefixes = new HashMap<String, String>() {{
-                put("mets", "http://www.loc.gov/METS/");
-                put("mods", "http://www.loc.gov/mods/v3");
-            }};
 
             //TODO is httpClient closed on shutdown?
             CloseableHttpClient httpClientMetsHarvester = HttpClients.createMinimal();
 
             MetsProcessor metsHarvester = new MetsProcessor(metsUri, pollInterval,
-            minimumWaittimeBetweenTwoRequests, metsXmlPrefixes, persistenceServiceMetsHarvester, httpClientMetsHarvester);
+            minimumWaittimeBetweenTwoRequests, persistenceServiceMetsHarvester, httpClientMetsHarvester);
 
             executorService = Executors.newCachedThreadPool();
             executorService.execute(oaiHarvester);

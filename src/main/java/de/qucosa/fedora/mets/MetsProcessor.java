@@ -78,21 +78,22 @@ public class MetsProcessor extends TerminateableRunnable {
     private final Duration pollInterval;
     private final Duration minimumWaittimeBetweenTwoRequests;
     private final PersistenceService persistenceService;
-    private final SimpleNamespaceContext namespaces;
+    private final SimpleNamespaceContext namespaces = new SimpleNamespaceContext(new HashMap<String, String>() {{
+        put("mets", "http://www.loc.gov/METS/");
+        put("mods", "http://www.loc.gov/mods/v3");
+        put("slub", "http://slub-dresden.de/");
+    }});
 
     // TODO better name.
     private boolean moreOAIHeadersToProcess = true;
 
     public MetsProcessor(URI harvestingUri, Duration pollInterval, Duration minimumWaittimeBetweenTwoRequests,
-            HashMap<String, String> xmlPrefixes, PersistenceService persistenceService,
-            CloseableHttpClient httpClient) {
+                         PersistenceService persistenceService, CloseableHttpClient httpClient) {
         this.uri = harvestingUri;
         this.pollInterval = pollInterval;
         this.minimumWaittimeBetweenTwoRequests = minimumWaittimeBetweenTwoRequests;
         this.persistenceService = persistenceService;
         this.httpClient = httpClient;
-        this.namespaces = new SimpleNamespaceContext(xmlPrefixes);
-
     }
 
     @Override
