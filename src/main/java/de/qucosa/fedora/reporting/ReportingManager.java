@@ -143,7 +143,6 @@ public class ReportingManager implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent sve) {
-//        thread.interrupt();
     }
 
 }

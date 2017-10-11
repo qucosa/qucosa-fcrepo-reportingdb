@@ -54,7 +54,6 @@ public class OaiHarvesterBuilderHelper extends OaiHarvesterBuilder {
      * @param pollInterval
      * @return this {@link OaiHarvesterBuilderHelper} instance, never {@code null}.
      */
-//    @NonNull
     protected OaiHarvesterBuilderHelper setPollingIntervalForUnitTest(Duration pollIntervalForUnitTest) {
         this.pollingIntervalUnitTest = pollIntervalForUnitTest;
         return this;

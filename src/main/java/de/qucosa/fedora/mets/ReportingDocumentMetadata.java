@@ -22,19 +22,14 @@ import org.apache.commons.lang3.StringUtils;
 
 public class ReportingDocumentMetadata {
 
-    // @NonNull
     private final String recordIdentifier;
 
-    // @NonNull
     private final String mandator;
 
-    // @NonNull
     private final String documentType;
 
-    // @NonNull
     private final Date distributionDate;
 
-    // @NonNull
     private final Date headerLastModified;
 
     

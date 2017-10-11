@@ -816,7 +816,6 @@ public class OaiHarvesterTest {
         return Calendar.getInstance().getTime();
     }
 
-//    @NonNull
     private Date parseDateTime(String timestamp) throws IllegalArgumentException {
         if (StringUtils.isBlank(timestamp)) {
             throw new IllegalArgumentException("timestamp must not be null or empty");

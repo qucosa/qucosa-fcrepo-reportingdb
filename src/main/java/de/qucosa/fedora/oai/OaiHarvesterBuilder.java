@@ -73,7 +73,6 @@ public class OaiHarvesterBuilder {
      * @param pollInterval
      * @return this {@link OaiHarvesterBuilder} instance, never {@code null}.
      */
-//    @NonNull
     public OaiHarvesterBuilder setPollingInterval(Duration pollInterval) {
         this.pollingInterval = pollInterval.isShorterThan(OaiHarvesterBuilder.MINIMUM_POLLING_INTERVAL)
                 ? OaiHarvesterBuilder.MINIMUM_POLLING_INTERVAL : pollInterval;
@@ -84,7 +83,6 @@ public class OaiHarvesterBuilder {
      * @param oaiRunResultHistory to set
      * @return this {@link OaiHarvesterBuilder} instance, never {@code null}.
      */
-//    @NonNull
     public OaiHarvesterBuilder setOaiRunResultHistory(Duration oaiRunResultHistory) {
         this.oaiRunResultHistory = oaiRunResultHistory;
         return this;
@@ -94,7 +92,6 @@ public class OaiHarvesterBuilder {
      * @param oaiHeaderFilter to set
      * @return this {@link OaiHarvesterBuilder} instance, never {@code null}.
      */
-//    @NonNull
     public OaiHarvesterBuilder setOaiHeaderFilter(OaiHeaderFilter oaiHeaderFilter) {
         this.oaiHeaderFilter = oaiHeaderFilter;
         return this;
@@ -108,7 +105,6 @@ public class OaiHarvesterBuilder {
      * @param useFC3CompatibilityMode {@code true} if Fedora Commons 3 compatibility mode has to be used. 
      * @return this {@link OaiHarvesterBuilder} instance, never {@code null}.
      */
-//    @NonNull
     public OaiHarvesterBuilder setFC3CompatibilityMode(boolean useFC3CompatibilityMode) {
         this.useFC3CompatibilityMode = useFC3CompatibilityMode;
         return this;

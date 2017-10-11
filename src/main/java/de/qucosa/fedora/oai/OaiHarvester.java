@@ -84,7 +84,6 @@ public class OaiHarvester extends TerminateableRunnable {
     private static final SimpleDateFormat DEFAULT_URI_TIMESTAMP_FORMAT = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final OaiRunResult EMPTY_OAI_RUN_RESULT = new OaiRunResult();
-//    private static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.standardSeconds(1);
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final OaiHeaderFilter oaiHeaderFilter;
     /**
@@ -106,8 +105,7 @@ public class OaiHarvester extends TerminateableRunnable {
      */
     private boolean lastRunResultedInError = false; 
 
-    // TODO constructor does no checks now, everything done by builder. don't
-    // really like this...
+    // TODO constructor does no checks now, everything done by builder.
     protected OaiHarvester(URI harvestingUri, Duration pollInterval, Duration minimumWaittimeBetweenTwoRequests, 
                            OaiHeaderFilter oaiHeaderFilter, PersistenceService persistenceService, 
                            Duration oaiRunResultHistoryLength, boolean useFC3CompatibilityMode,
@@ -257,8 +255,7 @@ public class OaiHarvester extends TerminateableRunnable {
             if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                 HttpEntity httpEntity = httpResponse.getEntity();
                 if (httpEntity != null) {
-                    // TODO nice-to-have validate httpEntity.getContent()
-                    // against schema - is it valid OAI-PMH?
+                    // TODO nice-to-have validate httpEntity.getContent() against schema - is it valid OAI-PMH?
                     result = handleXmlResult(httpEntity.getContent(), startTimeOfCurrentRun, lastRunResult);
                 } else {
                     logger.error("Got empty response from OAI service.");
@@ -298,16 +295,6 @@ public class OaiHarvester extends TerminateableRunnable {
 
         return result;
     }
-
-    // private Date getDate(Map<String, Object> src, String param) {
-    // if (src.containsKey(param)) {
-    // String s = (String) src.get(param);
-    // if (s != null && !s.isEmpty()) {
-    // return DatatypeConverter.parseDateTime(s).getTime();
-    // }
-    // }
-    // return null;
-    // }
 
     /**
      * Build ListIdentifiers URI to request OAI data provider, using the
@@ -503,7 +490,6 @@ public class OaiHarvester extends TerminateableRunnable {
      * String with length() > 0 containing the resumptionTokens's value.
      * @throws XPathExpressionException
      */
-//    @Nullable
     private String extractResumptionToken(Document document) throws XPathExpressionException {
         String resumptionToken = null;
         XPath xPath = XPathFactory.newInstance().newXPath();
@@ -579,7 +565,6 @@ public class OaiHarvester extends TerminateableRunnable {
         }
     }
 
-//    @Nullable
     /**
      * @param timestamp the timestamp to parse, {@code null} allowed
      * @return the date parsed from the timestamp or {@code null} if timestamp was {@code null} or empty string

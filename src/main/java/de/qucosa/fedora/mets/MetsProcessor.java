@@ -205,15 +205,7 @@ public class MetsProcessor extends TerminateableRunnable {
             documentBuilderFactory.setNamespaceAware(true);
             Document document = documentBuilderFactory.newDocumentBuilder().parse(content);
 
-            // TODO nice-to-have: validate httpEntity.getContent() against
-            // schema - is it valid mets?
-
-            // FIXME: remove dirty debug code!!
-            // try {
-            // printDocument(document, System.out);
-            // } catch (TransformerException e) {
-            // e.printStackTrace();
-            // }
+            // TODO nice-to-have: validate httpEntity.getContent() against schema - is it valid mets?
 
             String documentType = extractDocumentType(document);
             Date distributionDate = extractDistributionDate(document);

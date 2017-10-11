@@ -346,8 +346,7 @@ public class PostgrePersistenceService implements PersistenceService {
         
         //TODO check headersToRemove == null; throw NPE or PersistenceException?
 
-        // delete statements only if they did not change since we read them from
-        // database
+        // delete statements only if they did not change since we read them from database
         String stm = "DELETE FROM \"OAIHeader\" WHERE \"recordIdentifier\" = ? AND \"datestamp\" = ? AND \"statusIsDeleted\" = ?";
 
         int[] results = {};
@@ -387,11 +386,6 @@ public class PostgrePersistenceService implements PersistenceService {
                 exceptionMsg.append(singleResult)
                         .append(" OaiHeaders have been deleted when trying to delete the single header '")
                         .append(headersToRemove.get(index)).append("'. Database may be corrupted!");
-
-                // logger.error("{} OaiHeaders have been deleted when trying to
-                // delete the single header {}. "
-                // + "Database may be corrupted!", singleResult,
-                // headersToRemove.get(index));
             }
         }
         if (!headersNotRemoved.isEmpty()) {
@@ -400,9 +394,7 @@ public class PostgrePersistenceService implements PersistenceService {
         }
 
         if (exceptionMsg.length() > 0) {
-            // FIXME @Ralf: should we throw an exception here? It hides the
-            // return value. on the other hand,
-            //
+            // FIXME @Ralf: should we throw an exception here? It hides the return value.
             throw new PersistenceException(exceptionMsg.toString());
         }
 
@@ -493,7 +485,6 @@ public class PostgrePersistenceService implements PersistenceService {
      * @return {@link java.sql.Timestamp} the converted value or {@code null} if
      * argument date was {@code null}
      */
-//    @Nullable
     private Timestamp convertNullableJAVADateToSQLTimestamp(Date date) {
         Timestamp sqlTimestamp = null;
 
@@ -510,12 +501,10 @@ public class PostgrePersistenceService implements PersistenceService {
      * @return {@link java.util.Date} the converted value or {@code null} if
      * argument timestamp was {@code null}
      */
-//    @Nullable
     private Date convertNullableSQLTimestampToJavaDate(Timestamp timestamp) {
         Date date = null;
         if (timestamp != null) {
-            // do we lose precision? Date has milliseconds, Timestamp
-            // nanoseconds
+            // do we lose precision? Date has milliseconds, Timestamp nanoseconds
             int microsAndNanos = timestamp.getNanos() % 1000000;
             if (microsAndNanos != 0) {
                 logger.warn("Loosing precision of " + microsAndNanos
