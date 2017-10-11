@@ -70,7 +70,6 @@ public class MetsProcessorTest {
     private static final String METS_QUCOSA_31789_XML = "/mets/qucosa31789-mets.xml";
     private static final String METS_QUCOSA_31790_XML = "/mets/qucosa31790-mets.xml";
     private MetsProcessor metsHarvester;
-    private CloseableHttpClient mockedHttpClient;
     private HttpEntity mockedHttpEntity;
     private CloseableHttpResponse mockedHttpResponse;
     private PersistenceService mockedPersistenceService;
@@ -433,7 +432,7 @@ public class MetsProcessorTest {
         MockitoAnnotations.initMocks(this);
         mockedPersistenceService = mock(PersistenceService.class);
 
-        mockedHttpClient = mock(CloseableHttpClient.class);
+        CloseableHttpClient mockedHttpClient = mock(CloseableHttpClient.class);
         mockedHttpResponse = mock(CloseableHttpResponse.class);
         when(mockedHttpClient.execute(any(HttpUriRequest.class))).thenReturn(mockedHttpResponse);
         mockedStatusLine = mock(StatusLine.class);
