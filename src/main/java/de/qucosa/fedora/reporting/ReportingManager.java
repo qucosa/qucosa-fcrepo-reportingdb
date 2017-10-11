@@ -42,16 +42,15 @@ import java.util.concurrent.TimeUnit;
 import static org.slf4j.MarkerFactory.getMarker;
 
 public class ReportingManager implements ServletContextListener {
+
     public static final Marker FATAL = getMarker("FATAL");
-
-    private Logger logger = LoggerFactory.getLogger(getClass());
-
     private ExecutorService executorService;
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
     @Override
     public void contextInitialized(ServletContextEvent sve) {
+        logger.info("Starting up...");
         try {
-            logger.info("Starting up...");
             ReportingProperties prop = ReportingProperties.getInstance();
 
             // initialize OaiHarvester
@@ -89,7 +88,7 @@ public class ReportingManager implements ServletContextListener {
             CloseableHttpClient httpClientMetsHarvester = HttpClients.createMinimal();
 
             MetsProcessor metsHarvester = new MetsProcessor(metsUri, pollInterval,
-            minimumWaittimeBetweenTwoRequests, persistenceServiceMetsHarvester, httpClientMetsHarvester);
+                    minimumWaittimeBetweenTwoRequests, persistenceServiceMetsHarvester, httpClientMetsHarvester);
 
             executorService = Executors.newCachedThreadPool();
             executorService.execute(oaiHarvester);
@@ -113,24 +112,21 @@ public class ReportingManager implements ServletContextListener {
                             logger.warn("Orderly shut down was interrupted!");
                         }
                     }
-
-                    logger.info("Shut down completed");
                 }
             });
+
         } catch (IOException e) {
             logger.error(FATAL, "OAI harvester was not started!", e);
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
+        } catch (IllegalArgumentException | URISyntaxException e) {
+            logger.error(FATAL, e.getMessage(), e);
         } catch (SQLException e) {
             logger.error(FATAL, "SQL driver not found!", e);
-            e.printStackTrace();
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public void contextDestroyed(ServletContextEvent sve) {
+    public void contextDestroyed(ServletContextEvent sce) {
+        logger.info("Shut down completed");
     }
 
 }
