@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -311,9 +312,7 @@ public class PostgrePersistenceService implements PersistenceService {
                 List<String> setSpec = new LinkedList<>();
                 if (z != null) {
                     String[] setSpecArray = (String[]) z.getArray();
-                    for (String element : setSpecArray) {
-                        setSpec.add(element);
-                    }
+                    Collections.addAll(setSpec, setSpecArray);
                 }
 
                 OaiHeader actualHeader = new OaiHeader(recordIdentifier, datestamp, setSpec,
