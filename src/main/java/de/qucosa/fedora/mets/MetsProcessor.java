@@ -109,13 +109,17 @@ public class MetsProcessor extends TerminateableRunnable {
                 if (!oaiHeadersToProcess.isEmpty()) {
                     moreOAIHeadersToProcess = true;
                 } else {
+                    // nothing to do, go to sleep
                     moreOAIHeadersToProcess = false;
-                    continue; // nothing to do, go to sleep
+                    waitForNextRun();
+                    continue;
                 }
             } catch (PersistenceException e) {
                 logger.error("Could not load OaiHeaders from persistence service: ", e);
+                // retry after wait
                 moreOAIHeadersToProcess = false;
-                continue; // nothing to do, go to sleep
+                waitForNextRun();
+                continue;
             }
 
             // request METS dissemination
@@ -254,7 +258,7 @@ public class MetsProcessor extends TerminateableRunnable {
      *         any other case.
      */
     private boolean waitForNextRun() {
-        long waitTime = 1000l;
+        long waitTime;
         if(moreOAIHeadersToProcess) {
             waitTime = minimumWaittimeBetweenTwoRequests.getMillis();
         } else {
