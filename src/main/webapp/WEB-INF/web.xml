@@ -15,19 +15,13 @@
   ~ limitations under the License.
   -->
 
-<configuration>
-
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <Pattern>
-                %d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} (%file:%line\) - %msg%n
-            </Pattern>
-        </encoder>
-    </appender>
-
-
-    <root level="info">
-        <appender-ref ref="STDOUT"/>
-    </root>
-
-</configuration>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+		  http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
+	
+	<listener>
+		<listener-class>de.qucosa.fedora.reporting.ReportingManager</listener-class>
+	</listener>
+	
+</web-app>

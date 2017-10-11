@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Saxon State and University Library Dresden (SLUB)
+ * Copyright 2017 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,29 +16,7 @@
 
 package de.qucosa.fedora.oai;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.io.InputStream;
-import java.net.URI;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import javax.xml.bind.DatatypeConverter;
-
+import de.qucosa.persistence.PersistenceService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -56,16 +34,35 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import de.qucosa.persistence.PersistenceService;
-import de.qucosa.util.TerminateableRunnable;
+import javax.xml.bind.DatatypeConverter;
+import java.io.InputStream;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import static de.qucosa.util.TerminateableRunner.runAndWait;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class OaiHarvesterTest {
 
     /* aggressive timings to speed up execution time of JUnit tests
      */
-    private static final int SLEEP_TIME_RUN_AND_WAIT = 0;
+    private static final int RUN_TIMEOUT_MILLISECONDS = 1000;
     private static final Duration POLLING_INTERVAL = Duration.millis(0);
-    private static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.millis(0); 
+    private static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.millis(0);
 
     private static final boolean FCREPO3_COMPATIBILITY_MODE = true;
 
@@ -76,19 +73,17 @@ public class OaiHarvesterTest {
     private static final String OAI_ERROR_MULTIPLE_ERRORS_XML = "/oai/multipleErrors.xml";
     private static final String OAI_EMPTY_RESUMPTION_TOKEN_XML = "/oai/emptyResumptionToken.xml";
     private static final String OAI_IDENTIFIERS_TO_FILTER_XML = "/oai/ListIdentifiersToFilter.xml";
-
-    private PersistenceService mockedPersistenceService;
-
-    private CloseableHttpClient mockedHttpClient;    
-    private StatusLine mockedStatusLine;
+    private CloseableHttpClient mockedHttpClient;
     private HttpEntity mockedHttpEntity;
+    private PersistenceService mockedPersistenceService;
+    private StatusLine mockedStatusLine;
     private OaiHarvester oaiHarvester;
 
     @Captor
     private ArgumentCaptor<List<OaiHeader>> oaiHeaderCaptor;
 
     /**
-     * Send ListIdentifiers request to OAI service provider, receive two OAI headers in response 
+     * Send ListIdentifiers request to OAI service provider, receive two OAI headers in response
      * and store them in persistence layer.
      *
      * @throws Exception
@@ -101,8 +96,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_LIST_IDENTIFIERS_XML);
             }
         });
-        
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         List<OaiHeader> expectedHeaders = new LinkedList<>();
         Date datestamp1 = DatatypeConverter.parseDateTime("2014-05-06T17:33:25Z").getTime();
@@ -139,10 +134,11 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_IDENTIFIERS_TO_FILTER_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         verify(mockedPersistenceService, atLeastOnce()).addOrUpdateOaiHeaders(oaiHeaderCaptor.capture());
-        List<OaiHeader> actualOaiHeaders = (List<OaiHeader>) oaiHeaderCaptor.getAllValues().get(0);
+        List<OaiHeader> actualOaiHeaders = oaiHeaderCaptor.getAllValues().get(0);
         assertEquals("Wrong number of headers, filter does not work.", 6, actualOaiHeaders.size());
 
         List<String> actualIDs = new LinkedList<>();
@@ -181,7 +177,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         // we are interested in the first request only
         ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
@@ -226,7 +223,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         // we are interested in the first request only
         ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
@@ -271,7 +269,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         // we are interested in the first request only
         ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
@@ -314,7 +313,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         // we are interested in the first request only
         ArgumentCaptor<HttpGet> captor = ArgumentCaptor.forClass(HttpGet.class);
@@ -355,7 +355,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
         verify(mockedPersistenceService, atLeastOnce()).storeOaiRunResult(captor.capture());
@@ -407,7 +408,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_RESUMPTION_TOKEN_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
         verify(mockedPersistenceService, atLeastOnce()).storeOaiRunResult(captor.capture());
@@ -451,13 +453,13 @@ public class OaiHarvesterTest {
 
         // use any "normal" response without resumptionToken
         when(mockedHttpEntity.getContent())
-            .thenAnswer(new Answer<InputStream>() {
-                public InputStream answer(InvocationOnMock invocation) {
-                    return this.getClass().getResourceAsStream(OAI_EMPTY_RESUMPTION_TOKEN_XML);
-                }
-            });
-        
-        runAndWait(oaiHarvester);
+                .thenAnswer(new Answer<InputStream>() {
+                    public InputStream answer(InvocationOnMock invocation) {
+                        return this.getClass().getResourceAsStream(OAI_EMPTY_RESUMPTION_TOKEN_XML);
+                    }
+                });
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
         verify(mockedPersistenceService, atLeastOnce()).storeOaiRunResult(captor.capture());
@@ -487,7 +489,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_LIST_IDENTIFIERS_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
         verify(mockedPersistenceService, atLeastOnce()).storeOaiRunResult(captor.capture());
@@ -508,15 +511,15 @@ public class OaiHarvesterTest {
      * last {@link OaiRunResult}'s nextFromTimestamp.<br />
      * anyhow, it seems that Fedora Commons 3 has a bug not closing an paginated
      * result with an empty resumption token... if tests are run in
-     * {@link #FCREPO3_COMPATIBILITY_MODE}, the missing empty resumption token is 
-     * expected and the new{@link OaiRunResult} to store must have a nextFromTimestamp 
+     * {@link #FCREPO3_COMPATIBILITY_MODE}, the missing empty resumption token is
+     * expected and the new{@link OaiRunResult} to store must have a nextFromTimestamp
      * equal to its timestampOfRun.
      *
      * @throws Exception
      */
     // FIXME: Split this Test into 2 tests to test with and without FCREPO3_COMPATIBILITY_MODE
     // currently, there seems to be a bug in the test code or OaiHarvester if FCREPO3_COMPATIBILITY_MODE == false
-    @Test    
+    @Test
     public void createOaiRunResultFromMissingEmptyResumptionToken() throws Exception {
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -536,7 +539,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_LIST_IDENTIFIERS_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
         verify(mockedPersistenceService, atLeastOnce()).storeOaiRunResult(captor.capture());
@@ -578,7 +582,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_EMPTY_RESUMPTION_TOKEN_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
         verify(mockedPersistenceService, atLeastOnce()).storeOaiRunResult(captor.capture());
@@ -611,7 +616,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_ERROR_NO_RECORDS_MATCH_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
         verify(mockedPersistenceService, atLeastOnce()).storeOaiRunResult(captor.capture());
@@ -646,7 +652,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_ERROR_BAD_RESUMPTION_TOKEN_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
         verify(mockedPersistenceService, atLeastOnce()).storeOaiRunResult(captor.capture());
@@ -689,7 +696,8 @@ public class OaiHarvesterTest {
                 return this.getClass().getResourceAsStream(OAI_ERROR_MULTIPLE_ERRORS_XML);
             }
         });
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         ArgumentCaptor<OaiRunResult> captor = ArgumentCaptor.forClass(OaiRunResult.class);
         verify(mockedPersistenceService, atLeastOnce()).storeOaiRunResult(captor.capture());
@@ -734,7 +742,7 @@ public class OaiHarvesterTest {
         });
 
         Date beforeHarvesterRuns = now();
-        runAndWait(oaiHarvester);
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
         Date afterHarvesterRuns = now();
 
         ArgumentCaptor<Date> captor = ArgumentCaptor.forClass(Date.class);
@@ -766,7 +774,8 @@ public class OaiHarvesterTest {
         // NOT writing an OaiRunResult to persistence and NOT invoking the cleanup
         when(mockedStatusLine.getStatusCode()).thenReturn(HttpStatus.SC_NOT_FOUND);
         when(mockedStatusLine.getReasonPhrase()).thenReturn("Not Found");
-        runAndWait(oaiHarvester);
+
+        runAndWait(oaiHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         verify(mockedPersistenceService, never()).cleanupOaiRunResults(any(Date.class));
         verify(mockedPersistenceService, never()).storeOaiRunResult(any(OaiRunResult.class));
@@ -779,7 +788,7 @@ public class OaiHarvesterTest {
 
         MockitoAnnotations.initMocks(this);
         mockedPersistenceService = mock(PersistenceService.class);
-        
+
         mockedHttpClient = mock(CloseableHttpClient.class);
         CloseableHttpResponse mockedHttpResponse = mock(CloseableHttpResponse.class);
         when(mockedHttpClient.execute(any(HttpUriRequest.class))).thenReturn(mockedHttpResponse);
@@ -804,19 +813,11 @@ public class OaiHarvesterTest {
                 .setFC3CompatibilityMode(FCREPO3_COMPATIBILITY_MODE);
     }
 
-    private void runAndWait(TerminateableRunnable runnable) throws InterruptedException {
-        Thread thread = new Thread(runnable);
-        thread.start();
-        TimeUnit.MILLISECONDS.sleep(SLEEP_TIME_RUN_AND_WAIT);
-        runnable.terminate();
-        thread.join();
-    }
 
     private Date now() {
         return Calendar.getInstance().getTime();
     }
 
-//    @NonNull
     private Date parseDateTime(String timestamp) throws IllegalArgumentException {
         if (StringUtils.isBlank(timestamp)) {
             throw new IllegalArgumentException("timestamp must not be null or empty");

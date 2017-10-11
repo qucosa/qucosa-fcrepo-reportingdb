@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Saxon State and University Library Dresden (SLUB)
+ * Copyright 2017 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,20 @@
 
 package de.qucosa.persistence;
 
+import de.qucosa.fedora.mets.ReportingDocumentMetadata;
+import de.qucosa.fedora.oai.OaiHarvesterTest;
+import org.apache.commons.io.IOUtils;
+
 import java.io.InputStream;
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.apache.commons.io.IOUtils;
-
-import de.qucosa.fedora.mets.ReportingDocumentMetadata;
-import de.qucosa.fedora.oai.OaiHarvesterTest;
-import de.qucosa.fedora.oai.OaiHeader;
 
 /**
  * Helper class for integration tests
@@ -86,7 +82,7 @@ public class PostgrePersistenceServiceTestHelper {
         String stm = "SELECT \"recordIdentifier\", \"mandator\" , \"documentType\", \"distributionDate\", \"headerLastModified\" from \"ReportingDocuments\" LIMIT 100";
 
         try (PreparedStatement pst = getConnection().prepareStatement(stm);
-             ResultSet rs = pst.executeQuery();) {
+             ResultSet rs = pst.executeQuery()) {
 
             while (rs.next()) {
                 String recordIdentifier = rs.getString("recordIdentifier");
@@ -113,14 +109,9 @@ public class PostgrePersistenceServiceTestHelper {
      * @return {@link java.util.Date} the converted value or {@code null} if
      * argument timestamp was {@code null}
      */
-//    @Nullable
     private Date convertNullableSQLTimestampToJavaDate(Timestamp timestamp) {
         Date date = null;
         if (timestamp != null) {
-            // do we lose precision? Date has milliseconds, Timestamp
-            // nanoseconds
-            int microsAndNanos = timestamp.getNanos() % 1000000;
-
             Calendar cal = Calendar.getInstance();
             cal.setTime(timestamp);
             date = cal.getTime();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Saxon State and University Library Dresden (SLUB)
+ * Copyright 2017 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,8 +98,7 @@ public final class OaiRunResult {
         this.nextFromTimestamp = nextFromTimestamp;
     }
 
-    //TODO do we really need this empty OaiRunResult? It forces all getters to possibly return null 
-    // hence every caller has to do null checks :/ 
+    //TODO do we really need this empty OaiRunResult? It forces all getters to possibly return null hence every caller has to do null checks :/
     public OaiRunResult() {
         this.timestampOfRun = null;
         this.responseDate = null;
@@ -111,7 +110,6 @@ public final class OaiRunResult {
     /**
      * @return local time stamp when this run was started. May be {@code null}.
      */
-//    @Nullable
     public Date getTimestampOfRun() {
         return timestampOfRun;
     }
@@ -119,7 +117,6 @@ public final class OaiRunResult {
     /** 
      * @return  time stamp received from OAI data provider that was requested. May be {@code null}.
      */
-//    @Nullable
     public Date getResponseDate() {
         return responseDate;
     }
@@ -129,7 +126,6 @@ public final class OaiRunResult {
      * String "" tr represent an empty resumptionToken or a String with
      * length() > 0 containing the resumptionTokens's value.
      */
-//    @Nullable
     public String getResumptionToken() {
         return resumptionToken;
     }
@@ -139,7 +135,6 @@ public final class OaiRunResult {
     /**
      * @return the OAI resumption token's expiration date. May be {@code null}.
      */
-//    @Nullable
     public Date getResumptionTokenExpirationDate() {
         return resumptionTokenExpirationDate;
     }
@@ -151,7 +146,6 @@ public final class OaiRunResult {
      * 
      * @return May be {@code null}.
      */
-//    @Nullable 
     public Date getNextFromTimestamp() {
         return nextFromTimestamp;
     }
@@ -167,14 +161,6 @@ public final class OaiRunResult {
     public boolean hasResumptionToken() {
         return resumptionToken != null && !resumptionToken.isEmpty();
     }
-
-    // deactivated to prevent false negatives, caused by asynchronous local and
-    // remote clocks
-    // public boolean isValidResumptionToken(Date now) {
-    // return resumptionToken != null && !resumptionToken.isEmpty()
-    // && (resumptionTokenExpirationDate == null ||
-    // resumptionTokenExpirationDate.after(now));
-    // }
 
     @Override
     public String toString() {

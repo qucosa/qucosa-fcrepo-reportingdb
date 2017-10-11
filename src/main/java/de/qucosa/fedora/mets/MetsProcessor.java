@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Saxon State and University Library Dresden (SLUB)
+ * Copyright 2017 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,37 +16,10 @@
 
 package de.qucosa.fedora.mets;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.URI;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.ws.rs.core.UriBuilder;
-import javax.xml.namespace.NamespaceContext;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
+import de.qucosa.fedora.oai.OaiHeader;
+import de.qucosa.persistence.PersistenceException;
+import de.qucosa.persistence.PersistenceService;
+import de.qucosa.util.TerminateableRunnable;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -59,10 +32,27 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import de.qucosa.fedora.oai.OaiHeader;
-import de.qucosa.persistence.PersistenceException;
-import de.qucosa.persistence.PersistenceService;
-import de.qucosa.util.TerminateableRunnable;
+import javax.ws.rs.core.UriBuilder;
+import javax.xml.namespace.NamespaceContext;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.URI;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The {@link MetsProcessor} reads {@link OaiHeader}s from
@@ -74,7 +64,7 @@ public class MetsProcessor extends TerminateableRunnable {
 
     public static final String ERROR_MSG_EMPTY_RESPONSE_FROM_METS_DISSEMINATION_SERVICE = "Got empty response from METS dissemination service.";
     public static final String ERROR_MSG_UNEXPECTED_HTTP_RESPONSE = "Unexpected METS dissemination service response HTTP";
-    private static final String XPATH_DISTRIBUTION_DATE = "//v3:originInfo[@eventType='distribution']/v3:dateIssued";
+    private static final String XPATH_DISTRIBUTION_DATE = "//mods:originInfo[@eventType='distribution']/mods:dateIssued";
     private static final String XPATH_DOCUMENT_TYPE = "//mets:structMap[@TYPE='LOGICAL']/mets:div/@TYPE";
     private static final String XPATH_MANDATOR = "//mets:metsHdr/mets:agent[@ROLE='EDITOR']/mets:name";
 
@@ -88,21 +78,22 @@ public class MetsProcessor extends TerminateableRunnable {
     private final Duration pollInterval;
     private final Duration minimumWaittimeBetweenTwoRequests;
     private final PersistenceService persistenceService;
-    private final SimpleNamespaceContext namespaces;
+    private final SimpleNamespaceContext namespaces = new SimpleNamespaceContext(new HashMap<String, String>() {{
+        put("mets", "http://www.loc.gov/METS/");
+        put("mods", "http://www.loc.gov/mods/v3");
+        put("slub", "http://slub-dresden.de/");
+    }});
 
     // TODO better name.
     private boolean moreOAIHeadersToProcess = true;
 
     public MetsProcessor(URI harvestingUri, Duration pollInterval, Duration minimumWaittimeBetweenTwoRequests,
-            HashMap<String, String> xmlPrefixes, PersistenceService persistenceService,
-            CloseableHttpClient httpClient) {
+                         PersistenceService persistenceService, CloseableHttpClient httpClient) {
         this.uri = harvestingUri;
         this.pollInterval = pollInterval;
         this.minimumWaittimeBetweenTwoRequests = minimumWaittimeBetweenTwoRequests;
         this.persistenceService = persistenceService;
         this.httpClient = httpClient;
-        this.namespaces = new SimpleNamespaceContext(xmlPrefixes);
-
     }
 
     @Override
@@ -112,19 +103,23 @@ public class MetsProcessor extends TerminateableRunnable {
         do {
 
             // get OaiHeaders from persistence
-            List<OaiHeader> oaiHeadersToProcess = new LinkedList<>();
+            List<OaiHeader> oaiHeadersToProcess;
             try {
                 oaiHeadersToProcess = persistenceService.getOaiHeaders();
                 if (!oaiHeadersToProcess.isEmpty()) {
                     moreOAIHeadersToProcess = true;
                 } else {
+                    // nothing to do, go to sleep
                     moreOAIHeadersToProcess = false;
-                    continue; // nothing to do, go to sleep
+                    waitForNextRun();
+                    continue;
                 }
             } catch (PersistenceException e) {
                 logger.error("Could not load OaiHeaders from persistence service: ", e);
+                // retry after wait
                 moreOAIHeadersToProcess = false;
-                continue; // nothing to do, go to sleep
+                waitForNextRun();
+                continue;
             }
 
             // request METS dissemination
@@ -205,15 +200,7 @@ public class MetsProcessor extends TerminateableRunnable {
             documentBuilderFactory.setNamespaceAware(true);
             Document document = documentBuilderFactory.newDocumentBuilder().parse(content);
 
-            // TODO nice-to-have: validate httpEntity.getContent() against
-            // schema - is it valid mets?
-
-            // FIXME: remove dirty debug code!!
-            // try {
-            // printDocument(document, System.out);
-            // } catch (TransformerException e) {
-            // e.printStackTrace();
-            // }
+            // TODO nice-to-have: validate httpEntity.getContent() against schema - is it valid mets?
 
             String documentType = extractDocumentType(document);
             Date distributionDate = extractDistributionDate(document);
@@ -229,18 +216,6 @@ public class MetsProcessor extends TerminateableRunnable {
         }
 
         return reportingDoc;
-    }
-
-    public static void printDocument(Document doc, OutputStream out) throws IOException, TransformerException {
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-        transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-
-        transformer.transform(new DOMSource(doc), new StreamResult(new OutputStreamWriter(out, "UTF-8")));
     }
 
     private Date extractDistributionDate(Document document) throws XPathExpressionException {
@@ -283,7 +258,7 @@ public class MetsProcessor extends TerminateableRunnable {
      *         any other case.
      */
     private boolean waitForNextRun() {
-        long waitTime = 1000l;
+        long waitTime;
         if(moreOAIHeadersToProcess) {
             waitTime = minimumWaittimeBetweenTwoRequests.getMillis();
         } else {
@@ -329,7 +304,7 @@ public class MetsProcessor extends TerminateableRunnable {
      */
     class SimpleNamespaceContext implements NamespaceContext {
 
-        private final Map<String, String> PREF_MAP = new HashMap<String, String>();
+        private final Map<String, String> PREF_MAP = new HashMap<>();
 
         public SimpleNamespaceContext(final Map<String, String> prefMap) {
             PREF_MAP.putAll(prefMap);

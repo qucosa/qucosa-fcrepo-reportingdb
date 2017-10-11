@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Saxon State and University Library Dresden (SLUB)
+ * Copyright 2017 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,7 +54,7 @@ public class PostgrePersistenceService implements PersistenceService {
      * @throws SQLException    in case credentials can't be used to extablish a database connection
      * to the url or a database access error occurs 
      */
-    public PostgrePersistenceService(String url, String databaseUser,
+    public PostgrePersistenceService(String driver, String url, String databaseUser,
                                      String databasePassword) throws IllegalArgumentException, SQLException {
         if (url == null) {
             throw new IllegalArgumentException("parameter url must not be null");
@@ -65,6 +66,12 @@ public class PostgrePersistenceService implements PersistenceService {
             throw new IllegalArgumentException("parameter databasePassword must not be null");
         }
 
+        try {
+            Class.forName(driver);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        
         this.url = url;
         this.databaseUser = databaseUser;
         this.databasePassword = databasePassword;
@@ -92,7 +99,7 @@ public class PostgrePersistenceService implements PersistenceService {
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
              PreparedStatement pst = con.prepareStatement(stm);
-             ResultSet rs = pst.executeQuery();) {
+             ResultSet rs = pst.executeQuery()) {
 
             int rowCount = 0;
             while (rs.next()) {
@@ -168,7 +175,7 @@ public class PostgrePersistenceService implements PersistenceService {
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
              PreparedStatement pst = con.prepareStatement(getID);
-             ResultSet rs = pst.executeQuery();) {
+             ResultSet rs = pst.executeQuery()) {
 
             int rowCount = 0;
             while (rs.next()) {
@@ -282,7 +289,7 @@ public class PostgrePersistenceService implements PersistenceService {
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
              PreparedStatement pst = con.prepareStatement(stm);
-             ResultSet rs = pst.executeQuery();) {
+             ResultSet rs = pst.executeQuery()) {
 
             int rowCount = 0;
             while (rs.next()) {
@@ -305,9 +312,7 @@ public class PostgrePersistenceService implements PersistenceService {
                 List<String> setSpec = new LinkedList<>();
                 if (z != null) {
                     String[] setSpecArray = (String[]) z.getArray();
-                    for (String element : setSpecArray) {
-                        setSpec.add(element);
-                    }
+                    Collections.addAll(setSpec, setSpecArray);
                 }
 
                 OaiHeader actualHeader = new OaiHeader(recordIdentifier, datestamp, setSpec,
@@ -339,8 +344,7 @@ public class PostgrePersistenceService implements PersistenceService {
         
         //TODO check headersToRemove == null; throw NPE or PersistenceException?
 
-        // delete statements only if they did not change since we read them from
-        // database
+        // delete statements only if they did not change since we read them from database
         String stm = "DELETE FROM \"OAIHeader\" WHERE \"recordIdentifier\" = ? AND \"datestamp\" = ? AND \"statusIsDeleted\" = ?";
 
         int[] results = {};
@@ -380,11 +384,6 @@ public class PostgrePersistenceService implements PersistenceService {
                 exceptionMsg.append(singleResult)
                         .append(" OaiHeaders have been deleted when trying to delete the single header '")
                         .append(headersToRemove.get(index)).append("'. Database may be corrupted!");
-
-                // logger.error("{} OaiHeaders have been deleted when trying to
-                // delete the single header {}. "
-                // + "Database may be corrupted!", singleResult,
-                // headersToRemove.get(index));
             }
         }
         if (!headersNotRemoved.isEmpty()) {
@@ -393,9 +392,7 @@ public class PostgrePersistenceService implements PersistenceService {
         }
 
         if (exceptionMsg.length() > 0) {
-            // FIXME @Ralf: should we throw an exception here? It hides the
-            // return value. on the other hand,
-            //
+            // FIXME @Ralf: should we throw an exception here? It hides the return value.
             throw new PersistenceException(exceptionMsg.toString());
         }
 
@@ -486,7 +483,6 @@ public class PostgrePersistenceService implements PersistenceService {
      * @return {@link java.sql.Timestamp} the converted value or {@code null} if
      * argument date was {@code null}
      */
-//    @Nullable
     private Timestamp convertNullableJAVADateToSQLTimestamp(Date date) {
         Timestamp sqlTimestamp = null;
 
@@ -503,12 +499,10 @@ public class PostgrePersistenceService implements PersistenceService {
      * @return {@link java.util.Date} the converted value or {@code null} if
      * argument timestamp was {@code null}
      */
-//    @Nullable
     private Date convertNullableSQLTimestampToJavaDate(Timestamp timestamp) {
         Date date = null;
         if (timestamp != null) {
-            // do we lose precision? Date has milliseconds, Timestamp
-            // nanoseconds
+            // do we lose precision? Date has milliseconds, Timestamp nanoseconds
             int microsAndNanos = timestamp.getNanos() % 1000000;
             if (microsAndNanos != 0) {
                 logger.warn("Loosing precision of " + microsAndNanos

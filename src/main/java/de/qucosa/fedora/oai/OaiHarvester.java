@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Saxon State and University Library Dresden (SLUB)
+ * Copyright 2017 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,9 @@
 
 package de.qucosa.fedora.oai;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.URI;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.ws.rs.core.UriBuilder;
-import javax.xml.bind.DatatypeConverter;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
+import de.qucosa.persistence.PersistenceException;
+import de.qucosa.persistence.PersistenceService;
+import de.qucosa.util.TerminateableRunnable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.http.HttpEntity;
@@ -58,9 +37,28 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import de.qucosa.persistence.PersistenceException;
-import de.qucosa.persistence.PersistenceService;
-import de.qucosa.util.TerminateableRunnable;
+import javax.ws.rs.core.UriBuilder;
+import javax.xml.bind.DatatypeConverter;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class OaiHarvester extends TerminateableRunnable {
 
@@ -84,7 +82,6 @@ public class OaiHarvester extends TerminateableRunnable {
     private static final SimpleDateFormat DEFAULT_URI_TIMESTAMP_FORMAT = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final OaiRunResult EMPTY_OAI_RUN_RESULT = new OaiRunResult();
-//    private static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.standardSeconds(1);
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final OaiHeaderFilter oaiHeaderFilter;
     /**
@@ -106,8 +103,7 @@ public class OaiHarvester extends TerminateableRunnable {
      */
     private boolean lastRunResultedInError = false; 
 
-    // TODO constructor does no checks now, everything done by builder. don't
-    // really like this...
+    // TODO constructor does no checks now, everything done by builder.
     protected OaiHarvester(URI harvestingUri, Duration pollInterval, Duration minimumWaittimeBetweenTwoRequests, 
                            OaiHeaderFilter oaiHeaderFilter, PersistenceService persistenceService, 
                            Duration oaiRunResultHistoryLength, boolean useFC3CompatibilityMode,
@@ -257,8 +253,7 @@ public class OaiHarvester extends TerminateableRunnable {
             if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                 HttpEntity httpEntity = httpResponse.getEntity();
                 if (httpEntity != null) {
-                    // TODO nice-to-have validate httpEntity.getContent()
-                    // against schema - is it valid OAI-PMH?
+                    // TODO nice-to-have validate httpEntity.getContent() against schema - is it valid OAI-PMH?
                     result = handleXmlResult(httpEntity.getContent(), startTimeOfCurrentRun, lastRunResult);
                 } else {
                     logger.error("Got empty response from OAI service.");
@@ -298,16 +293,6 @@ public class OaiHarvester extends TerminateableRunnable {
 
         return result;
     }
-
-    // private Date getDate(Map<String, Object> src, String param) {
-    // if (src.containsKey(param)) {
-    // String s = (String) src.get(param);
-    // if (s != null && !s.isEmpty()) {
-    // return DatatypeConverter.parseDateTime(s).getTime();
-    // }
-    // }
-    // return null;
-    // }
 
     /**
      * Build ListIdentifiers URI to request OAI data provider, using the
@@ -503,7 +488,6 @@ public class OaiHarvester extends TerminateableRunnable {
      * String with length() > 0 containing the resumptionTokens's value.
      * @throws XPathExpressionException
      */
-//    @Nullable
     private String extractResumptionToken(Document document) throws XPathExpressionException {
         String resumptionToken = null;
         XPath xPath = XPathFactory.newInstance().newXPath();
@@ -579,7 +563,6 @@ public class OaiHarvester extends TerminateableRunnable {
         }
     }
 
-//    @Nullable
     /**
      * @param timestamp the timestamp to parse, {@code null} allowed
      * @return the date parsed from the timestamp or {@code null} if timestamp was {@code null} or empty string

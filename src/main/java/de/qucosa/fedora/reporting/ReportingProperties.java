@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Saxon State and University Library Dresden (SLUB)
+ * Copyright 2017 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,19 @@
 
 package de.qucosa.fedora.reporting;
 
+import org.joda.time.Duration;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.HashMap;
-import java.util.Map.Entry;
 import java.util.Properties;
-
-import org.joda.time.Duration;
 
 public class ReportingProperties {
 
     private static final String DEFAULT_PROPERTIES_FILE = "/default.properties";
     private static final String LOCAL_PROPERTIES_FILE = "/local.properties";
     private static final String PROPERTIES_FILE_FORMAT = "ISO-8859-1";
-    private static final String XML_PREFIX_IDENTIFIER = "mets.namespace.";
 
     private static ReportingProperties instance;
 
@@ -78,6 +75,10 @@ public class ReportingProperties {
         return props.getProperty("db.url");
     }
 
+    public String getPostgreSQLDriver() {
+        return props.getProperty("db.driver");
+    }
+    
     public String getPostgreSQLUser() {
         return props.getProperty("db.user");
     }
@@ -108,19 +109,5 @@ public class ReportingProperties {
 
     public int getMetsDisseminationPollingInterval() {
         return Integer.parseInt(props.getProperty("mets.pollseconds"));
-    }
-    
-    public HashMap<String, String> getMetsXmlPrefixes(){
-        HashMap<String, String> prefMap = new HashMap<>();
-        for (Entry<Object, Object> property: props.entrySet()){
-            
-            String key = (String)property.getKey();
-            if (key.startsWith(XML_PREFIX_IDENTIFIER)) {
-                String prefix = key.substring(XML_PREFIX_IDENTIFIER.length(), key.length());
-                String uri = (String) property.getValue();
-                prefMap.put(prefix, uri);
-            }
-        }
-        return prefMap;
     }
 }

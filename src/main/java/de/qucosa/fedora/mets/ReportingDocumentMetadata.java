@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Saxon State and University Library Dresden (SLUB)
+ * Copyright 2017 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,20 @@
 
 package de.qucosa.fedora.mets;
 
-import java.util.Date;
-
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.Date;
 
 public class ReportingDocumentMetadata {
 
-    // @NonNull
     private final String recordIdentifier;
 
-    // @NonNull
     private final String mandator;
 
-    // @NonNull
     private final String documentType;
 
-    // @NonNull
     private final Date distributionDate;
 
-    // @NonNull
     private final Date headerLastModified;
 
     

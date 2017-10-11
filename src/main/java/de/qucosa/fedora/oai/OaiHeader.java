@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Saxon State and University Library Dresden (SLUB)
+ * Copyright 2017 Saxon State and University Library Dresden (SLUB)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,8 @@ import java.util.List;
  */
 public class OaiHeader {
 
-//    @NonNull
     private final Date datestamp;
-//    @NonNull
     private final String recordIdentifier;
-//    @NonNull
     private final List<String> setSpec;
     private final boolean statusIsDeleted;
 
@@ -75,7 +72,6 @@ public class OaiHeader {
     /**
      * @return the unique identifier of an item in a repository, never {@code null}.
      */
-//    @NonNull
     public String getRecordIdentifier() {
         return recordIdentifier;
     }
@@ -83,7 +79,6 @@ public class OaiHeader {
     /**
      * @return the date of creation, modification or deletion of the record, never {@code null}.
      */
-//    @NonNull
     public Date getDatestamp() {
         return datestamp;
     }
@@ -92,7 +87,6 @@ public class OaiHeader {
      * @return a list with zero or more elements, each representing the content
      * of a setSpec element, never {@code null}.
      */
-//    @NonNull
     public List<String> getSetSpec() {
         return setSpec;
     }
