@@ -22,7 +22,6 @@ import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import de.qucosa.fedora.oai.OaiHeader;
 import de.qucosa.persistence.PersistenceService;
-import de.qucosa.util.TerminateableRunnable;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
@@ -46,11 +45,10 @@ import java.io.InputStream;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
+import static de.qucosa.util.TerminateableRunner.runAndWait;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -62,7 +60,7 @@ import static org.mockito.Mockito.when;
 
 public class MetsProcessorTest {
 
-    private static final int SLEEP_TIME_RUN_AND_WAIT = 0;
+    private static final int RUN_TIMEOUT_MILLISECONDS = 1000;
     private static final Duration POLLING_INTERVAL = Duration.millis(0);
     private static final Duration MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS = Duration.millis(0);
 
@@ -71,28 +69,23 @@ public class MetsProcessorTest {
     private static final String METS_QUCOSA_7455_XML = "/mets/qucosa7455-mets.xml";
     private static final String METS_QUCOSA_31789_XML = "/mets/qucosa31789-mets.xml";
     private static final String METS_QUCOSA_31790_XML = "/mets/qucosa31790-mets.xml";
-
-    private PersistenceService mockedPersistenceService;
-    private CloseableHttpClient mockedHttpClient;
-    private CloseableHttpResponse mockedHttpResponse;
-    private StatusLine mockedStatusLine;
-    private HttpEntity mockedHttpEntity;
     private MetsProcessor metsHarvester;
-
-    @Captor
-    private ArgumentCaptor<List<ReportingDocumentMetadata>> reportingDocumentMetadataCaptor;
-
+    private CloseableHttpClient mockedHttpClient;
+    private HttpEntity mockedHttpEntity;
+    private CloseableHttpResponse mockedHttpResponse;
+    private PersistenceService mockedPersistenceService;
+    private StatusLine mockedStatusLine;
     @Captor
     private ArgumentCaptor<List<OaiHeader>> oaiHeaderCaptor;
-
-
+    @Captor
+    private ArgumentCaptor<List<ReportingDocumentMetadata>> reportingDocumentMetadataCaptor;
 
     /**
      * Test standard functionality of {@link MetsProcessor}.<br />
      * Load one {@link OaiHeader} from persistence, query mets dissemination service, parse METS XML and extract data
      * relevant to reporting, store {@link ReportingDocumentMetadata} in persistence and remove {@link OaiHeader} from
      * persistence.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -114,7 +107,7 @@ public class MetsProcessorTest {
             }
         });
 
-        runAndWait(metsHarvester);
+        runAndWait(metsHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         Date distributionDate = new Date(new DateTime("2016-05-24T12:33:56+0200").getMillis());
         ReportingDocumentMetadata expectedReportingDoc = new ReportingDocumentMetadata(recordIdentifier,
@@ -138,14 +131,14 @@ public class MetsProcessorTest {
         assertEquals("The removed OaiHeader object is not equal to the expected object.", oaiHeaders.get(0),
                 actualOaiHeaders.get(0));
     }
-    
+
 
     /**
      * Test standard functionality of {@link MetsProcessor}.<br />
      * Load two {@link OaiHeader}s from persistence, query mets dissemination service, parse METS XML and extract data
      * relevant to reporting, store {@link ReportingDocumentMetadata} objects in persistence and remove both
      * {@link OaiHeader}s from persistence.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -179,7 +172,7 @@ public class MetsProcessorTest {
             }
         });
 
-        runAndWait(metsHarvester);
+        runAndWait(metsHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         // assert that ReportingDocumentMetadata has been parsed from mets
         // dissemination and put to persistence
@@ -219,7 +212,7 @@ public class MetsProcessorTest {
      * If receiving an incomplete METS XML that does not contain all required data such as a documentType, no
      * {@link ReportingDocumentMetadata} is persisted. Anyhow, the OaiHeader is removed from persistence to avoid
      * processing this document again as long as it has not been modified on the server.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -243,7 +236,7 @@ public class MetsProcessorTest {
             }
         });
 
-        runAndWait(metsHarvester);
+        runAndWait(metsHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         // assert that no ReportingDocumentMetadata object has been put to
         // persistence
@@ -264,7 +257,7 @@ public class MetsProcessorTest {
     /**
      * Make sure the date parser used by {@link MetsProcessor} can parse a date such as "2016-10-10T11:27:33+0200".
      * (There is no colon in the time zone, some parsers have problem with that)
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -288,7 +281,7 @@ public class MetsProcessorTest {
             }
         });
 
-        runAndWait(metsHarvester);
+        runAndWait(metsHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         // assert that ReportingDocumentMetadata has been parsed from mets dissemination and put to persistence
         verify(mockedPersistenceService, atLeastOnce())
@@ -318,7 +311,7 @@ public class MetsProcessorTest {
      * {@link ReportingDocumentMetadata} is written to persistence. A message is written to error log, containing the
      * recordIdentifier of the document that has not been processed successfully. The {@link OaiHeader} is removed from
      * persistence.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -343,7 +336,7 @@ public class MetsProcessorTest {
         when(mockAppender.getName()).thenReturn("MOCK");
         rootLogger.addAppender(mockAppender);
 
-        runAndWait(metsHarvester);
+        runAndWait(metsHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         // assert that a message has been written to error log, containing the recordIdentifier of the document
         verify(mockAppender).doAppend(argThat(new ArgumentMatcher() {
@@ -378,7 +371,7 @@ public class MetsProcessorTest {
      * In case the METS dissemination service's http response is 404, no {@link ReportingDocumentMetadata} is written to
      * persistence. A message is written to error log, containing the recordIdentifier of the document that has not been
      * processed successfully. The {@link OaiHeader} is removed from persistence.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -404,7 +397,7 @@ public class MetsProcessorTest {
         when(mockAppender.getName()).thenReturn("MOCK");
         rootLogger.addAppender(mockAppender);
 
-        runAndWait(metsHarvester);
+        runAndWait(metsHarvester, RUN_TIMEOUT_MILLISECONDS);
 
         // assert that a message has been written to error log, containing the recordIdentifier of the document
         verify(mockAppender).doAppend(argThat(new ArgumentMatcher() {
@@ -449,21 +442,13 @@ public class MetsProcessorTest {
         mockedHttpEntity = mock(HttpEntity.class);
         when(mockedHttpResponse.getEntity()).thenReturn(mockedHttpEntity);
 
-        HashMap<String, String> prefMap = new HashMap<>();
-        prefMap.put("mets", "http://www.loc.gov/METS/");
-        prefMap.put("slub", "http://slub-dresden.de/");
-        prefMap.put("v3", "http://www.loc.gov/mods/v3");
-
-        metsHarvester = new MetsProcessor(new URI("http://localhost:8080/mets/"), POLLING_INTERVAL,
-                MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS, prefMap, mockedPersistenceService, mockedHttpClient);
+        metsHarvester = new MetsProcessor(
+                new URI("http://localhost:8080/mets/"),
+                POLLING_INTERVAL,
+                MINIMUM_WAITTIME_BETWEEN_TWO_REQUESTS,
+                mockedPersistenceService,
+                mockedHttpClient);
 
     }
 
-    private void runAndWait(TerminateableRunnable runnable) throws InterruptedException {
-        Thread thread = new Thread(runnable);
-        thread.start();
-        TimeUnit.MILLISECONDS.sleep(SLEEP_TIME_RUN_AND_WAIT);
-        runnable.terminate();
-        thread.join();
-    }
 }
