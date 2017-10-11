@@ -103,7 +103,7 @@ public class MetsProcessor extends TerminateableRunnable {
         do {
 
             // get OaiHeaders from persistence
-            List<OaiHeader> oaiHeadersToProcess = new LinkedList<>();
+            List<OaiHeader> oaiHeadersToProcess;
             try {
                 oaiHeadersToProcess = persistenceService.getOaiHeaders();
                 if (!oaiHeadersToProcess.isEmpty()) {
@@ -304,7 +304,7 @@ public class MetsProcessor extends TerminateableRunnable {
      */
     class SimpleNamespaceContext implements NamespaceContext {
 
-        private final Map<String, String> PREF_MAP = new HashMap<String, String>();
+        private final Map<String, String> PREF_MAP = new HashMap<>();
 
         public SimpleNamespaceContext(final Map<String, String> prefMap) {
             PREF_MAP.putAll(prefMap);
