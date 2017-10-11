@@ -29,14 +29,13 @@ public interface PersistenceService {
      * @return The details of the last run or {@code null} if there isn't any
      * last run.
      */
-//    @Nullable
-    public OaiRunResult getLastOaiRunResult();
+    OaiRunResult getLastOaiRunResult();
 
     /**
      * @param oaiRunResult the data to be persisted. 
      * @throws PersistenceException if any error occurred.
      */
-    public void storeOaiRunResult(OaiRunResult oaiRunResult) throws PersistenceException;
+    void storeOaiRunResult(OaiRunResult oaiRunResult) throws PersistenceException;
 
     /**
      * Delete all {@link OaiRunResult}s whose
@@ -48,7 +47,7 @@ public interface PersistenceService {
      * @param oldestResultToKeep the timestamp of run of the oldest OaiRunResult to keep.
      * @throws PersistenceException if any error occurred.
      */
-    public void cleanupOaiRunResults(Date oldestResultToKeep) throws PersistenceException;
+    void cleanupOaiRunResults(Date oldestResultToKeep) throws PersistenceException;
 
     /**
      * Persist all {@link OaiHeader}s. If the persistence layer already contains
@@ -58,7 +57,7 @@ public interface PersistenceService {
      * @param headers {@link OaiHeader}s to add or update.
      * @throws PersistenceException if any error occurred.
      */
-    public void addOrUpdateOaiHeaders(List<OaiHeader> headers) throws PersistenceException;
+    void addOrUpdateOaiHeaders(List<OaiHeader> headers) throws PersistenceException;
 
     /**
      * Get {@link OaiHeader}s from persistence. At most 100 headers are
@@ -68,7 +67,7 @@ public interface PersistenceService {
      * @throws PersistenceException if any error occurred.
      */
 //    @NonNull
-    public List<OaiHeader> getOaiHeaders() throws PersistenceException;
+    List<OaiHeader> getOaiHeaders() throws PersistenceException;
 
     /**
      * Deletes the {@link OaiHeader}s. An {@link OaiHeader} is removed from
@@ -83,7 +82,7 @@ public interface PersistenceService {
      * @throws PersistenceException if any error occurred.
      */
 //    @NonNull
-    public List<OaiHeader> removeOaiHeadersIfUnmodified(List<OaiHeader> headersToRemove)
+    List<OaiHeader> removeOaiHeadersIfUnmodified(List<OaiHeader> headersToRemove)
             throws PersistenceException;
 
 
@@ -96,6 +95,6 @@ public interface PersistenceService {
      * @throws PersistenceException if any error occurred.
      */
     //  @NonNull    
-    public void addOrUpdateReportingDocuments(List<ReportingDocumentMetadata> reportingDocuments) 
+    void addOrUpdateReportingDocuments(List<ReportingDocumentMetadata> reportingDocuments)
             throws PersistenceException;
 }

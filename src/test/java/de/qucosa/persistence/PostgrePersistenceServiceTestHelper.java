@@ -82,7 +82,7 @@ public class PostgrePersistenceServiceTestHelper {
         String stm = "SELECT \"recordIdentifier\", \"mandator\" , \"documentType\", \"distributionDate\", \"headerLastModified\" from \"ReportingDocuments\" LIMIT 100";
 
         try (PreparedStatement pst = getConnection().prepareStatement(stm);
-             ResultSet rs = pst.executeQuery();) {
+             ResultSet rs = pst.executeQuery()) {
 
             while (rs.next()) {
                 String recordIdentifier = rs.getString("recordIdentifier");

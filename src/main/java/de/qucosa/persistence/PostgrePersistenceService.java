@@ -98,7 +98,7 @@ public class PostgrePersistenceService implements PersistenceService {
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
              PreparedStatement pst = con.prepareStatement(stm);
-             ResultSet rs = pst.executeQuery();) {
+             ResultSet rs = pst.executeQuery()) {
 
             int rowCount = 0;
             while (rs.next()) {
@@ -174,7 +174,7 @@ public class PostgrePersistenceService implements PersistenceService {
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
              PreparedStatement pst = con.prepareStatement(getID);
-             ResultSet rs = pst.executeQuery();) {
+             ResultSet rs = pst.executeQuery()) {
 
             int rowCount = 0;
             while (rs.next()) {
@@ -288,7 +288,7 @@ public class PostgrePersistenceService implements PersistenceService {
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
              PreparedStatement pst = con.prepareStatement(stm);
-             ResultSet rs = pst.executeQuery();) {
+             ResultSet rs = pst.executeQuery()) {
 
             int rowCount = 0;
             while (rs.next()) {
