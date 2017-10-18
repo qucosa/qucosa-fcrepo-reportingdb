@@ -1,0 +1,28 @@
+$script = <<SCRIPT
+  
+SCRIPT
+
+CONTROLLER = ENV.fetch('CONTROLLER', 'IDE Controller')
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/jessie64"
+  config.vm.box_version = "8.9.0"
+  config.vm.hostname = 'ReportingDB'
+  config.vm.network :forwarded_port, guest:8080, host:4713
+  config.vm.network :forwarded_port, guest:5432, host:2345
+  config.vm.network "private_network", ip: "192.168.42.12"
+  config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
+
+
+    
+  config.vm.provider :virtualbox do |vb|
+    vb.customize ["modifyvm", :id, "--memory", "2048"]
+    vb.customize ["modifyvm", :id, "--name", "ReportingDB"]      
+    vb.customize ["modifyvm", :id, "--cpus", "2"]     
+  end
+
+  config.vm.provision :ansible do |ansible|
+    ansible.playbook = "ansible/playbook.yml"
+    ansible.sudo = true
+  end
+end

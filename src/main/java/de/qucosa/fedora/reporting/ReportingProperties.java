@@ -16,15 +16,21 @@
 
 package de.qucosa.fedora.reporting;
 
-import org.joda.time.Duration;
-
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Properties;
 
+import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ReportingProperties {
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private static final String DEFAULT_PROPERTIES_FILE = "/default.properties";
     private static final String LOCAL_PROPERTIES_FILE = "/local.properties";
@@ -35,9 +41,15 @@ public class ReportingProperties {
     private final Properties props = new Properties();
 
     private ReportingProperties() throws IOException {
-        try (InputStream in = getClass().getResourceAsStream(DEFAULT_PROPERTIES_FILE);
-             Reader reader = new InputStreamReader(in, PROPERTIES_FILE_FORMAT)) {
+        // try (InputStream in =
+        // getClass().getResourceAsStream(DEFAULT_PROPERTIES_FILE);
+        File f = new File("/var/local/" + DEFAULT_PROPERTIES_FILE);
+        logger.debug(
+                String.format("Properties file %s %s", f.getAbsoluteFile(), (f.exists()) ? "exists" : "doesn't exist"));
+        try (InputStream in = new FileInputStream(f);
+                Reader reader = new InputStreamReader(in, PROPERTIES_FILE_FORMAT)) {
             props.load(reader);
+            logger.debug("Successful loaded properties");
         }
         overwriteWithLocalProperties();
         overwriteWithSystemProperties();
@@ -49,14 +61,14 @@ public class ReportingProperties {
         }
         return instance;
     }
-    
+
     private void overwriteWithLocalProperties() throws IOException {
             try (InputStream in = getClass().getResourceAsStream(LOCAL_PROPERTIES_FILE)) {
 
-                // file local.properties is optional, it may not exist  
+                // file local.properties is optional, it may not exist
                 if (in != null) {
                     try (Reader reader = new InputStreamReader(in, PROPERTIES_FILE_FORMAT)) {
-                        props.load(reader);                        
+                        props.load(reader);
                     }
                 }
             }
@@ -78,7 +90,7 @@ public class ReportingProperties {
     public String getPostgreSQLDriver() {
         return props.getProperty("db.driver");
     }
-    
+
     public String getPostgreSQLUser() {
         return props.getProperty("db.user");
     }
@@ -101,7 +113,7 @@ public class ReportingProperties {
 
     public Duration getOaiRunResultHistoryLength() {
         return Duration.standardHours(Long.parseLong(props.getProperty("oai.runresulthistorylengthhours")));
-    }  
+    }
 
     public String getMetsDisseminationURL() {
         return props.getProperty("mets.url");
