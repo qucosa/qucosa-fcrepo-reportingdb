@@ -15,15 +15,26 @@
 
   - name: Install unzip
     package: name=unzip state=latest
+    
+  - name: Install python-software-properties
+    command: apt-get install -y python-software-properties
+    become: true  
+    
+  - name: Install software properties
+    command: apt-get install -y software-properties-common
+    become: true
+    
+  - name: Install https driver
+    command: apt-get install apt-transport-https
+    become: true
 
-# Upload configs
   - name: Upload create tables file
     template:
       src: "files/config/default.properties"
       dest: "/var/local"
     become: true
 
-  # install postgres sql
+  # install postgresql 9.5
   - name: Configure the PostgreSQL APT key
     apt_key: url=https://www.postgresql.org/media/keys/ACCC4CF8.asc state=present
 
@@ -62,9 +73,9 @@
     copy:
       dest: "/etc/postgresql/9.5/main/pg_hba.conf"
       content: |
-        local	all	postgres	md5
-        local	all	all			md5
-        host	all	all			0.0.0.0/0	md5
+        local all postgres  md5
+        local all all     md5
+        host  all all     0.0.0.0/0 md5
     become: true
     notify: restart postgres
 
@@ -83,90 +94,47 @@
   - name: Delete create tables file
     command: rm /home/createSequencesAndTablesProductionDB.sql
 
-  # install jdk 8
-  - name: Add Debian Repository.
-    apt_repository: 
-      repo: 'deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main'
+  # install openjdk 8
+  - name: Add openjdk in debian repo
+    raw: echo "deb http://ftp2.de.debian.org/debian jessie-backports main contrib non-free" | sudo tee /etc/apt/sources.list.d/jessie-backports.list > /dev/null
 
-  - name: Add Debian src Respository.    
-    apt_repository:
-      repo: 'deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main'
-
-  - name: Add key for Repository.
-    apt_key:
-      keyserver: hkp://keyserver.ubuntu.com:80
-      id: EEA14886
-
-  - name: Accept Java Licence
-    shell: echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | tee /etc/oracle-java-8-licence-acceptance | /usr/bin/debconf-set-selections
-    args:
-      creates: /etc/oracle-java-8-licence-acceptance
-
-#  - name: Install Java Package
-#    apt:
-#      name: 'oracle-java8-installer'
-#      update_cache: yes
-
-  - name: Install Java 7
-    apt:
-      name: openjdk-7-jre
-      update_cache: yes
-
-  # define java home
- # - shell: echo JAVA_HOME is $JAVA_HOME
- #   environment:
- #     JAVA_HOME: /usr/lib/jvm/java-8-oracle
-
- # - file:
- #     src: /usr/lib/jvm/java-8-oracle
- #     dest: /usr/lib/jvm/default-java
- #     state: link
-
+  - name: Update Jessie
+    command: sudo apt-get update
+    become: true
+    become_user: root
+    
+  - name: Istalll jdk 8
+    command: apt-get install -y -t jessie-backports openjdk-8-jdk openjdk-8-jdk-headless openjdk-8-jre openjdk-8-jre-headless ca-certificates-java
+    become: true
+    become_user: root
+    
   - shell: echo JAVA_HOME is $JAVA_HOME
     environment:
-      JAVA_HOME: /usr/lib/jvm/java-7-openjdk-amd64
+      JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
 
   - file:
-      src: /usr/lib/jvm/java-7-openjdk-amd64
+      src: /usr/lib/jvm/java-8-openjdk-amd64
       dest: /usr/lib/jvm/default-java
       state: link
 
   # install tomcat 8
-  #- name: Install Tomcat 8
-  #  package: name=tomcat8 state=latest
-
-  #- name: Stop Tomcat
-  #  command: systemctl stop tomcat8.service
-
-  #- name: Install Tomcat 8 Admin
-  #  package: name=tomcat8-admin state=latest
-
-  #- name: Overwrite Tomcat 8 Usersr
-  #  template:
-  #    src: "templates/tomcat-users.xml"
-  #    dest: "/etc/tomcat8/tomcat-users.xml"
-  #- name: create reporting folder
-  #  command: mkdir /var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb
-
-# install tomcat 7
-  - name: Install Tomcat 7
-    package: name=tomcat7 state=latest
+  - name: Install Tomcat 8
+    package: name=tomcat8 state=latest
 
   - name: Stop Tomcat
-    command: systemctl stop tomcat7.service
+    command: systemctl stop tomcat8.service
 
-  - name: Install Tomcat 7 Admin
-    package: name=tomcat7-admin state=latest
+  - name: Install Tomcat 8 Admin
+    package: name=tomcat8-admin state=latest
 
-  - name: Overwrite Tomcat 7 Usersr
+  - name: Overwrite Tomcat 8 Usersr
     template:
       src: "templates/tomcat-users.xml"
-      dest: "/etc/tomcat7/tomcat-users.xml"
-
+      dest: "/etc/tomcat8/tomcat-users.xml"
   - name: create reporting folder
-    command: mkdir /var/lib/tomcat7/webapps/qucosa-fcrepo-reportingdb
+    command: mkdir /var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb
 
-# deploy reportingdb war in tomcat
+# deploy reportingdb war in tomcat from artifactory
   #- name: download war file from artifactory
   #  command: wget http://192.168.42.11:8081/artifactory/qucosa/de/qucosa/qucosa-fcrepo-reportingdb/1.0.0-SNAPSHOT/qucosa-fcrepo-reportingdb-1.0.0-20171012.082841-1.war -O /var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb-1.0.0-20171012.082841-1.war
 
@@ -176,31 +144,17 @@
   #- name: remove war file
   #  file: path=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb-1.0.0-20171012.082841-1.war state=absent
 
-  #- copy:
-  #    src: files/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war
-  #    dest: /var/lib/tomcat8/webapps
-  #    mode: 0755
-
-  #- name: unzip deployed war
-  #  unarchive: src=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war dest=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb copy=no mode=0755
-    
-  #- name: remove war file
-  #  file: path=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war state=absent
-
-  #- name: Restart tomcat8
-  #  command: systemctl start tomcat8.service
-
-# deploy in tomcat 7  
+# deploy reportingdb war in tomcat from local folder
   - copy:
       src: files/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war
-      dest: /var/lib/tomcat7/webapps
+      dest: /var/lib/tomcat8/webapps
       mode: 0755
 
   - name: unzip deployed war
-    unarchive: src=/var/lib/tomcat7/webapps/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war dest=/var/lib/tomcat7/webapps/qucosa-fcrepo-reportingdb copy=no mode=0755
+    unarchive: src=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war dest=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb copy=no mode=0755
     
   - name: remove war file
-    file: path=/var/lib/tomcat7/webapps/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war state=absent
+    file: path=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war state=absent
 
-  - name: Restart tomcat7
-    command: systemctl start tomcat7.service
+  - name: Restart tomcat8
+    command: systemctl start tomcat8.service
