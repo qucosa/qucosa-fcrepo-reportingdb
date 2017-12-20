@@ -1,7 +1,3 @@
-$script = <<SCRIPT
-  
-SCRIPT
-
 CONTROLLER = ENV.fetch('CONTROLLER', 'IDE Controller')
 
 Vagrant.configure("2") do |config|

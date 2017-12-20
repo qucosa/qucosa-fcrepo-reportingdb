@@ -5,13 +5,17 @@
     - name: restart postgres
       service: name=postgresql state=restarted
 
+  vars:
+    system: "{{ lookup('file', '/home/dseelig/opt/reporting/ansible/system-vars.json') | from_json }}"
+    app: "{{system.prod}}"
+
   tasks:
   
   - name: Install python2.7
     raw: "sudo apt-get update -qq && sudo apt-get install -qq python2.7 aptitude"
 
   - name: Install psycopg2
-    raw: "sudo apt-get install -y python-psycopg2"
+    command: sudo apt-get install -y python-psycopg2
 
   - name: Install unzip
     package: name=unzip state=latest
@@ -28,15 +32,42 @@
     command: apt-get install apt-transport-https
     become: true
 
-  - name: Upload application properties file
-    template:
-      src: "files/config/default.properties"
-      dest: "/var/local"
-    become: true
-
   - name: install setfacl support
     become: yes
     apt: pkg=acl
+
+  - name: Creating multiple folders
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: 0755
+      group: root
+      owner: root
+    with_items:
+      - ~/opt
+      - ~/opt/reporting
+      - ~/opt/reporting/bin
+      - ~/opt/reporting/config
+      - ~/opt/reporting/log
+      - ~/opt/reporting/data
+
+  - name: Create and write the default.properties file
+    blockinfile:
+      path: ~/opt/reporting/config/default.properties
+      create: yes
+      content: |
+        db.url={{app.db.url}}
+        db.driver={{app.db.driver}}
+        db.user={{app.db.user}}
+        db.passwd={{app.db.passwd}}
+        oai.url={{app.oai.url}}
+        oai.pollseconds={{app.oai.pollseconds}}
+        oai.fc3compatibility={{app.oai.fc3compatibility}}
+        oai.runresulthistorylengthhours={{app.oai.runresulthistorylengthhours}}
+        mets.url={{app.mets.url}}
+        mets.pollseconds={{app.mets.pollseconds}}
+    become: true
+    become_user: root
 
   # install postgresql 9.5
   - name: Configure the PostgreSQL APT key
@@ -123,34 +154,21 @@
   - name: Install Tomcat 8 Admin
     package: name=tomcat8-admin state=latest
 
-  - name: Overwrite Tomcat 8 Usersr
-    template:
-      src: "templates/tomcat-users.xml"
-      dest: "/etc/tomcat8/tomcat-users.xml"
-  - name: create reporting folder
-    command: mkdir /var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb
-
-# deploy reportingdb war in tomcat from artifactory
-  #- name: download war file from artifactory
-  #  command: wget http://192.168.42.11:8081/artifactory/qucosa/de/qucosa/qucosa-fcrepo-reportingdb/1.0.0-SNAPSHOT/qucosa-fcrepo-reportingdb-1.0.0-20171012.082841-1.war -O /var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb-1.0.0-20171012.082841-1.war
-
-  #- name: unzip deployed war file
-  #  unarchive: src=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb-1.0.0-20171012.082841-1.war dest=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb copy=no mode=0755
-
-  #- name: remove war file
-  #  file: path=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb-1.0.0-20171012.082841-1.war state=absent
-
-# deploy reportingdb war in tomcat from local folder
-  - copy:
-      src: files/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war
-      dest: /var/lib/tomcat8/webapps
-      mode: 0755
-
-  - name: unzip deployed war
-    unarchive: src=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war dest=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb copy=no mode=0755
-    
-  - name: remove war file
-    file: path=/var/lib/tomcat8/webapps/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war state=absent
-
-  - name: Restart tomcat8
-    command: systemctl start tomcat8.service
+  - name: Create tomcat 8 user
+    blockinfile:
+      path: /etc/tomcat8/tomcat-users.xml
+      marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+      create: yes
+      block: |
+        <tomcat-users>
+          <role rolename="manager-script" />
+          <role rolename="manager-gui" />
+          <role rolename="manager-status" />
+          <role rolename="manager-jmx" />
+          <role rolename="standard" />
+          <role rolename="manager-admin" />
+          <role rolename="admin-gui" />
+          <user username="admin" password="admin" roles="standard, admin-gui, manager-gui, manager-admin, manager-script, manager-status, manager-jmx"/>
+        </tomcat-users>
+    become: true
+    become_user: root
