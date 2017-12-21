@@ -11,30 +11,24 @@
 
   tasks:
   
-  - name: Install python2.7
-    raw: "sudo apt-get update -qq && sudo apt-get install -qq python2.7 aptitude"
-
-  - name: Install psycopg2
-    command: sudo apt-get install -y python-psycopg2
+  - name: Install python stuff
+    package: name={{ item }} state=latest
+    with_items:
+        - python2.7
+        - python-psycopg2
+        - python3-software-properties
 
   - name: Install unzip
     package: name=unzip state=latest
     
-  - name: Install python3-software-properties
-    command: apt-get install -y python3-software-properties
-    become: true  
-    
   - name: Install software properties
-    command: apt-get install -y software-properties-common
-    become: true
+    package: name=software-properties-common state=latest
     
   - name: Install https driver
-    command: apt-get install apt-transport-https
-    become: true
+    package: name=apt-transport-https state=latest
 
   - name: install setfacl support
-    become: yes
-    apt: pkg=acl
+    package: name=acl
 
   - name: Creating multiple folders
     file:
@@ -86,11 +80,10 @@
     apt_repository: repo="deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release}}-pgdg main" state=present
 
   - name: Install PostgreSQL
-    apt: pkg={{ item }} state=present
+    package: name={{ item }} state=present
     with_items:
       - postgresql-9.5
       - postgresql-server-dev-9.5
-    become: true
 
   - name: Create reporting databse
     postgresql_db:
@@ -140,9 +133,7 @@
 
   # install openjdk 8 and set the global java_home var
   - name: Install openJDK 8
-    command: sudo apt-get -y install default-jdk
-    become: true
-    become_user: root
+    package: name=default-jdk state=latest
     
   - shell: echo JAVA_HOME is $JAVA_HOME
     environment:
@@ -156,8 +147,6 @@
   # Install libservlet3.1-java
   - name: Install libservlet3.1-java
     package: name=libservlet3.1-java state=latest
-    become: true
-    become_user: root
 
   # install tomcat 8 and tomcat modules
   - name: Install Tomcat 8
