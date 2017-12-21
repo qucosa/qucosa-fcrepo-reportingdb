@@ -1,3 +1,2 @@
-vagrant/ansible/files/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war
-vagrant/.vagrant/
-
+target/
+.vagrant
