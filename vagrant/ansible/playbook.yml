@@ -18,9 +18,6 @@
         - python-psycopg2
         - python3-software-properties
 
-  - name: Install unzip
-    package: name=unzip state=latest
-    
   - name: Install software properties
     package: name=software-properties-common state=latest
     
