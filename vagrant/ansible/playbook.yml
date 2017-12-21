@@ -35,8 +35,8 @@
       path: "{{ item }}"
       state: directory
       mode: 0755
-      group: root
-      owner: root
+      group: tomcat8
+      owner: tomcat8
     with_items:
       - /home/opt
       - /home/opt/reporting
