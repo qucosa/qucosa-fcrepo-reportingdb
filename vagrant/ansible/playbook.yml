@@ -6,11 +6,10 @@
       service: name=postgresql state=restarted
 
   vars:
-    system: "{{ lookup('file', '/home/dseelig/opt/reporting/ansible/system-vars.json') | from_json }}"
-    app: "{{system.prod}}"
+    system: "{{ lookup('file', 'system-vars.json') | from_json }}"
+    app: "{{ system.prod }}"
 
   tasks:
-  
   - name: Install python stuff
     package: name={{ item }} state=latest
     with_items:
@@ -167,7 +166,7 @@
 
   - name: Deploy the reporting war file
     copy:
-      src: /home/dseelig/projects/java/qucosa/qucosa-fcrepo-reporting/target/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war
+      src: ../target/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war
       dest: /home/opt/reporting/bin
       mode: 0755
 
