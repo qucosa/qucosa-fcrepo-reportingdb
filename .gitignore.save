@@ -1,0 +1,11 @@
+/target/
+/src/main/resources/local.properties
+vagrant/ansible/files/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war
+.classpath
+.project
+.settings/
+
+
+
+vagrant/.vagrant/
+

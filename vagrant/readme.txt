@@ -1,9 +1,25 @@
-Installation mit Vagrant
+Install reportingDB project
+
+If you use the project local, then follow local installation, otherwise follow install with ansible only.
 
 
-- Installation von VirtualBox auf dem Host System
-- Installation Vagrant auf dem Host System
-- Installation von Ansible auf dem Host System
+Local installation.
+
+	- Install or update virtual box by the latest exists version on your host system.
+	- Install or upadate vagrant by the latest exists version on your host system.
+	- Install or update ansible by the latest exists version on your host system.
+
+
+Install with ansible only.
+
+
+
+
+
+
+
+
+
 
 - ausführen eines mvn clean install -DskipITs über die Konsole, oder Projekt Entwickler IDE
 

@@ -1,0 +1,41 @@
+{
+	"prod" : {
+		"db" : {
+			"url" : "jdbc:postgresql://localhost:5432/reporting",
+			"driver" : "org.postgresql.Driver",
+			"user" : "reportingDB",
+			"passwd" : "reportingDB"
+		},
+		"oai" : {
+			"url" : "http://sdvcmr-prod-core01.slub-dresden.de:8080/fedora/oai",
+			"pollseconds" : 360,
+			"fc3compatibility" : true,
+			"runresulthistorylengthhours" : 48
+		},
+		"mets" : {
+			"url" : "http://sdvcmr-prod-core01.slub-dresden.de:8080/mets",
+			"pollseconds" : 600
+		}
+	},
+	"test" : {
+	
+	},
+	"local" : {
+		"db" : {
+			"url" : "jdbc:postgresql://localhost:5432/reporting",
+			"driver" : "org.postgresql.Driver",
+			"user" : "reportingDB",
+			"passwd" : "reportingDB"
+		},
+		"oai" : {
+			"url" : "http://localhost:8080/fedora/oai",
+			"pollseconds" : 90,
+			"fc3compatibility" : true,
+			"runresulthistorylengthhours" : 2
+		},
+		"mets" : {
+			"url" : "http://localhost:8080/mets",
+			"pollseconds" : 150
+		}
+	}
+}

@@ -43,7 +43,12 @@ public class ReportingProperties {
     private ReportingProperties() throws IOException {
         // try (InputStream in =
         // getClass().getResourceAsStream(DEFAULT_PROPERTIES_FILE);
-        File f = new File("/var/local/" + DEFAULT_PROPERTIES_FILE);
+        File f = new File("/home/opt/reporting/config/" + DEFAULT_PROPERTIES_FILE);
+        f.exists();
+        File ef = new File("/home/opt/reporting/log/test.log");
+        ef.mkdirs();
+        ef.createNewFile();
+
         logger.debug(
                 String.format("Properties file %s %s", f.getAbsoluteFile(), (f.exists()) ? "exists" : "doesn't exist"));
         try (InputStream in = new FileInputStream(f);
