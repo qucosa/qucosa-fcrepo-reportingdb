@@ -1,0 +1,9 @@
+{
+  "build" : {
+    "artifactid" : "${project.artifactId}",
+    "version" : "${project.version}",
+    "target" : "../../target/",
+    "classes" : "../../target/classes/",
+    "war" : "${project.artifactId}-${project.version}.war"
+  }
+}

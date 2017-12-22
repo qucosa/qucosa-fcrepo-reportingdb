@@ -134,6 +134,24 @@
                 </executions>
             </plugin>
         </plugins>
+        <resources>
+        	<resource>
+        		<directory>src/main/resources</directory>
+        		<filtering>true</filtering>
+        		<includes>
+        			<include>**/qucosa-fcrepo-reporting.xml</include>
+        			<include>**/project.json</include>
+        		</includes>
+        	</resource>
+        	<resource>
+        		<directory>src/main/resources</directory>
+        		<filtering>false</filtering>
+        		<excludes>
+        			<exclude>**/qucosa-fcrepo-reporting.xml</exclude>
+        			<exclude>**/project.json</exclude>
+        		</excludes>
+        	</resource>
+        </resources>
     </build>
 
 </project>

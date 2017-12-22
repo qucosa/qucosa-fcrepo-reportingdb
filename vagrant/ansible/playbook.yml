@@ -13,6 +13,7 @@
   vars:
     system: "{{ lookup('file', 'system-vars.json') | from_json }}"
     app: "{{ system.prod }}"
+    project: "{{ lookup('file', '../../target/classes/project.json') | from_json }}"
 
   tasks:
   - name: Install python stuff
@@ -192,19 +193,24 @@
 
   - name: Deploy the reporting war file
     copy:
-      src: ../../target/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war
+      src: "{{project.build.target + project.build.war}}"
       dest: /home/opt/reporting/bin
       mode: 0755
     become: true
     become_user: root
 
-  - name: Write and create the reporting.xml (context)
-    blockinfile:
-      path: /etc/tomcat8/Catalina/localhost/qucosa-fcrepo-reporting.xml
-      marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
-      create: yes
-      content: |
-        <Context path="/qucosa-fcrepo-reporting" docBase="/home/opt/reporting/bin/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war" antiResourceLocking="false" privileged="false" />
+  - name: Copy context reporting xml file
+    copy:
+      src: "{{project.build.classes}}qucosa-fcrepo-reporting.xml"
+      dest: /etc/tomcat8/Catalina/localhost/
     become: true
     become_user: root
+    #blockinfile:
+    #  path: /etc/tomcat8/Catalina/localhost/qucosa-fcrepo-reporting.xml
+    #  marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+    #  create: yes
+    #  content: |
+    #    <Context path="/qucosa-fcrepo-reporting" docBase="/home/opt/reporting/bin/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war" antiResourceLocking="false" privileged="false" />
+    #become: true
+    #become_user: root
     notify: Restart Tomcat
