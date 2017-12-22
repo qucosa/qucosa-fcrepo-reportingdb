@@ -70,7 +70,10 @@
     become: true
     become_user: postgres
 
-  - postgresql_user:
+  - name: Ensure PostgreSQL service is running
+    service: name=postgresql state=started enabled=yes
+
+    postgresql_user:
       db: reporting
       name: reportingDB
       password: reportingDB
