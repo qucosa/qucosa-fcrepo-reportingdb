@@ -2,8 +2,13 @@
 - hosts: all
 
   handlers:
-    - name: restart postgres
+    - name: Restart Postgres
+      become: true
       service: name=postgresql state=restarted
+
+    - name: Restart Tomcat
+      become: true
+      service: name=tomcat8 state=restarted
 
   vars:
     system: "{{ lookup('file', 'system-vars.json') | from_json }}"
@@ -16,17 +21,128 @@
         - python2.7
         - python-psycopg2
         - python3-software-properties
+    become: true
+    become_user: root
 
   - name: Install software properties
     package: name=software-properties-common state=latest
+    become: true
+    become_user: root
     
   - name: Install https driver
     package: name=apt-transport-https state=latest
+    become: true
+    become_user: root
 
   - name: install setfacl support
     package: name=acl
+    become: true
+    become_user: root
 
-  - name: Creating multiple folders
+  - name: Install PostgreSQL 9.6
+    package: name={{ item }} state=present
+    with_items:
+        - postgresql-9.6
+    become: true
+    become_user: root
+
+  - name: Create reporting databse
+    postgresql_db:
+      name: reporting
+    become: true
+    become_user: postgres
+
+  - postgresql_user:
+      db: reporting
+      name: reportingDB
+      password: reportingDB
+      priv: ALL
+    become: true
+    become_user: postgres
+
+  - name: Overwrite postgresql.conf
+    lineinfile: 
+      dest=/etc/postgresql/9.6/main/postgresql.conf
+      regexp="^listen_addresses"
+      line="listen_addresses = '*'" state=present
+    become: true
+
+  - name: Overwrite pg_hba.conf
+    copy:
+      dest: "/etc/postgresql/9.6/main/pg_hba.conf"
+      content: |
+        local all postgres  md5
+        local all all     md5
+        host  all all     0.0.0.0/0 md5
+    become: true
+    notify: Restart Postgres
+
+  - name: Upload create tables file
+    template:
+      src: "files/postgresql/createSequencesAndTablesProductionDB.sql"
+      dest: "/tmp"
+
+  - name: Create Tables
+    become: true
+    become_user: postgres
+    shell: psql reporting < /tmp/createSequencesAndTablesProductionDB.sql
+    ignore_errors: true
+
+  - name: Delete create tables file
+    file: path=/tmp/createSequencesAndTablesProductionDB.sql state=absent
+
+  # install openjdk 8 and set the global java_home var
+  - name: Install openJDK 8
+    package: name=default-jdk state=latest
+    become: true
+    become_user: root
+
+  - shell: echo JAVA_HOME is $JAVA_HOME
+    environment:
+      JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
+
+  - file:
+      src: /usr/lib/jvm/java-8-openjdk-amd64
+      dest: /usr/lib/jvm/default-java
+      state: link
+    become: true
+    become_user: root
+
+  # Install libservlet3.1-java
+  - name: Install libservlet3.1-java
+    package: name=libservlet3.1-java state=latest
+    become: true
+    become_user: root
+
+  # install tomcat 8 and tomcat modules
+  - name: Install Tomcat 8
+    package: name=tomcat8 state=latest
+    become: true
+    become_user: root
+
+  - name: Install Tomcat 8 Admin
+    package: name=tomcat8-admin state=latest
+    become: true
+    become_user: root
+
+  - name: Update tomcat 8 tomcat-users
+    blockinfile:
+      path: /etc/tomcat8/tomcat-users.xml
+      marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+      insertbefore: "</tomcat-users>"
+      content: |
+        <role rolename="manager-script"/>
+        <role rolename="manager-gui"/>
+        <role rolename="manager-status"/>
+        <role rolename="manager-jmx"/>
+        <role rolename="standard"/>
+        <role rolename="manager-admin"/>
+        <role rolename="admin-gui"/>
+        <user username="admin" password="admin" roles="standard, admin-gui, manager-gui, manager-admin, manager-script, manager-status, manager-jmx"/>
+    become: true
+    become_user: root
+
+  - name: Creating application folders
     file:
       path: "{{ item }}"
       state: directory
@@ -40,15 +156,8 @@
       - /home/opt/reporting/config
       - /home/opt/reporting/log
       - /home/opt/reporting/data
-
-  - name: Create log files
-    copy:
-      content: ""
-      dest: /home/opt/reporting/log/properties.txt
-      force: no
-      group: sys
-      owner: root
-      mode: 0755
+    become: true
+    become_user: root
 
   - name: Create and write the default.properties file
     blockinfile:
@@ -68,93 +177,13 @@
     become: true
     become_user: root
 
-  # install postgresql 9.5
-  - name: Configure the PostgreSQL APT key
-    apt_key: url=https://www.postgresql.org/media/keys/ACCC4CF8.asc state=present
+  - name: Deploy the reporting war file
+    copy:
+      src: ../../target/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war
+      dest: /home/opt/reporting/bin
+      mode: 0755
     become: true
     become_user: root
-
-  - name: Configure the PostgreSQL APT repositories
-    apt_repository: repo="deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release}}-pgdg main" state=present
-
-  - name: Install PostgreSQL
-    package: name={{ item }} state=present
-    with_items:
-      - postgresql-9.5
-      - postgresql-server-dev-9.5
-
-  - name: Create reporting databse
-    postgresql_db:
-      name: reporting
-    become: true
-    become_user: postgres
-
-  - postgresql_user:
-      db: reporting
-      name: reportingDB
-      password: reportingDB
-      priv: ALL
-    become: true
-    become_user: postgres
-
-  - name: Overwrite postgresql.conf
-    lineinfile: 
-      dest=/etc/postgresql/9.5/main/postgresql.conf
-      regexp="^listen_addresses"
-      line="listen_addresses = '*'" state=present
-    become: true
-
-  - name: Overwrite pg_hba.conf
-    copy:
-      dest: "/etc/postgresql/9.5/main/pg_hba.conf"
-      content: |
-        local all postgres  md5
-        local all all     md5
-        host  all all     0.0.0.0/0 md5
-    become: true
-    notify: restart postgres
-
-  - name: Upload create tables file
-    template:
-      src: "files/postgresql/createSequencesAndTablesProductionDB.sql"
-      dest: "/home"
-
-  - name: Create Tables
-    become: true
-    become_user: postgres
-    shell: psql reporting < /home/createSequencesAndTablesProductionDB.sql
-    ignore_errors: true
-    notify: restart postgres
-
-  - name: Delete create tables file
-    command: rm /home/createSequencesAndTablesProductionDB.sql
-
-  # install openjdk 8 and set the global java_home var
-  - name: Install openJDK 8
-    package: name=default-jdk state=latest
-    
-  - shell: echo JAVA_HOME is $JAVA_HOME
-    environment:
-      JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
-
-  - file:
-      src: /usr/lib/jvm/java-8-openjdk-amd64
-      dest: /usr/lib/jvm/default-java
-      state: link
-
-  # Install libservlet3.1-java
-  - name: Install libservlet3.1-java
-    package: name=libservlet3.1-java state=latest
-
-  # install tomcat 8 and tomcat modules
-  - name: Install Tomcat 8
-    package: name=tomcat8 state=latest
-
-  - name: Stop Tomcat
-    command: systemctl stop tomcat8.service
-
-  - name: Install Tomcat 8 Admin
-    package: name=tomcat8-admin state=latest
 
   - name: Write and create the reporting.xml (context)
     blockinfile:
@@ -165,29 +194,4 @@
         <Context path="/qucosa-fcrepo-reporting" docBase="/home/opt/reporting/bin/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war" antiResourceLocking="false" privileged="false" />
     become: true
     become_user: root
-
-  - name: Deploy the reporting war file
-    copy:
-      src: ../target/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war
-      dest: /home/opt/reporting/bin
-      mode: 0755
-
-  - name: Update tomcat 8 tomcat-users
-    blockinfile:
-      path: /etc/tomcat8/tomcat-users.xml
-      marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
-      insertbefore: "</tomcat-users>"
-      content: |
-        <role rolename="manager-script"/>
-        <role rolename="manager-gui"/>
-        <role rolename="manager-status"/>
-        <role rolename="manager-jmx"/>
-        <role rolename="standard"/>
-        <role rolename="manager-admin"/>
-        <role rolename="admin-gui"/>
-        <user username="admin" password="admin" roles="standard, admin-gui, manager-gui, manager-admin, manager-script, manager-status, manager-jmx"/>
-    become: true
-    become_user: root
-
-  - name: Restart tomcat8
-    command: systemctl start tomcat8.service
+    notify: Restart Tomcat
