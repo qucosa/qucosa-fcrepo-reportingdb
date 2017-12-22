@@ -205,12 +205,4 @@
       dest: /etc/tomcat8/Catalina/localhost/
     become: true
     become_user: root
-    #blockinfile:
-    #  path: /etc/tomcat8/Catalina/localhost/qucosa-fcrepo-reporting.xml
-    #  marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
-    #  create: yes
-    #  content: |
-    #    <Context path="/qucosa-fcrepo-reporting" docBase="/home/opt/reporting/bin/qucosa-fcrepo-reportingdb-1.0.0-SNAPSHOT.war" antiResourceLocking="false" privileged="false" />
-    #become: true
-    #become_user: root
     notify: Restart Tomcat
