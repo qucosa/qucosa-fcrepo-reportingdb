@@ -46,7 +46,25 @@
     become: true
     become_user: root
 
-  - name: Create reporting databse
+  - name: Overwrite postgresql.conf
+    lineinfile: 
+      dest=/etc/postgresql/9.6/main/postgresql.conf
+      regexp="^listen_addresses"
+      line="listen_addresses = '*'" state=present
+    become: true
+    notify: Restart Postgres
+
+  - name: Overwrite pg_hba.conf
+    copy:
+      dest: "/etc/postgresql/9.6/main/pg_hba.conf"
+      content: |
+        local all postgres  md5
+        local all all     md5
+        host  all all     0.0.0.0/0 md5
+    become: true
+    notify: Restart Postgres
+
+  - name: Create reporting database
     postgresql_db:
       name: reporting
     become: true
@@ -59,23 +77,6 @@
       priv: ALL
     become: true
     become_user: postgres
-
-  - name: Overwrite postgresql.conf
-    lineinfile: 
-      dest=/etc/postgresql/9.6/main/postgresql.conf
-      regexp="^listen_addresses"
-      line="listen_addresses = '*'" state=present
-    become: true
-
-  - name: Overwrite pg_hba.conf
-    copy:
-      dest: "/etc/postgresql/9.6/main/pg_hba.conf"
-      content: |
-        local all postgres  md5
-        local all all     md5
-        host  all all     0.0.0.0/0 md5
-    become: true
-    notify: Restart Postgres
 
   - name: Upload create tables file
     template:
