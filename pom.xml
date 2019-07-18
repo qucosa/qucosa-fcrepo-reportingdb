@@ -63,7 +63,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>9.3-1102-jdbc41</version>
+            <version>42.1.4</version>
         </dependency>
 
         <dependency>
@@ -133,7 +133,33 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+            	<artifactId>maven-resources-plugin</artifactId>
+            	<version>3.0.2</version>
+            	<executions>
+            		<execution>
+            			<phase>package</phase>
+            			<goals>
+            				<goal>copy-resources</goal>
+            			</goals>
+            			<configuration>
+							<outputDirectory>${basedir}/target</outputDirectory>
+					        <resources>
+					        	<resource>
+					        		<directory>src/main/deploy</directory>
+					        		<filtering>true</filtering>
+					        		<includes>
+					        			<include>**/project.json</include>
+					        		</includes>
+					        	</resource>
+					        </resources>
+            			</configuration>
+            		</execution>
+            	</executions>
+            </plugin>
         </plugins>
+        
     </build>
 
 </project>

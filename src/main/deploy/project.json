@@ -1,0 +1,7 @@
+{
+  "build" : {
+    "artifactid" : "${project.artifactId}",
+    "version" : "${project.version}",
+    "war" : "${project.artifactId}-${project.version}.war"
+  }
+}

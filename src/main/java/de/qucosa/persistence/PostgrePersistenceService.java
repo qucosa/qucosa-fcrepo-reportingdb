@@ -16,12 +16,6 @@
 
 package de.qucosa.persistence;
 
-import de.qucosa.fedora.mets.ReportingDocumentMetadata;
-import de.qucosa.fedora.oai.OaiHeader;
-import de.qucosa.fedora.oai.OaiRunResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -35,6 +29,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import de.qucosa.fedora.mets.ReportingDocumentMetadata;
+import de.qucosa.fedora.oai.OaiHeader;
+import de.qucosa.fedora.oai.OaiRunResult;
 
 public class PostgrePersistenceService implements PersistenceService {
 
@@ -52,7 +53,7 @@ public class PostgrePersistenceService implements PersistenceService {
      *                         {@link DriverManager#getConnection(String, String, String)}
      * @throws IllegalArgumentException if any parameter is {@code null}
      * @throws SQLException    in case credentials can't be used to extablish a database connection
-     * to the url or a database access error occurs 
+     * to the url or a database access error occurs
      */
     public PostgrePersistenceService(String driver, String url, String databaseUser,
                                      String databasePassword) throws IllegalArgumentException, SQLException {
@@ -69,12 +70,14 @@ public class PostgrePersistenceService implements PersistenceService {
         try {
             Class.forName(driver);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
         }
-        
+
         this.url = url;
         this.databaseUser = databaseUser;
         this.databasePassword = databasePassword;
+
+        logger.debug(String.format("Attempt to connect to `%s` with user `%s`", url, databaseUser));
 
         // check url and credentials and throw SQLException if a database access error occurs
         Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
@@ -83,7 +86,7 @@ public class PostgrePersistenceService implements PersistenceService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see de.qucosa.persistence.PersistenceService#getLastOaiRunResult()
      */
     @Override
@@ -137,7 +140,7 @@ public class PostgrePersistenceService implements PersistenceService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * de.qucosa.persistence.PersistenceService#storeOaiRunResult(de.qucosa.fedora.
      * oai.OaiRunResult)
@@ -146,7 +149,7 @@ public class PostgrePersistenceService implements PersistenceService {
     public void storeOaiRunResult(OaiRunResult oaiRunResult) throws PersistenceException {
 
         //TODO check oaiRunResult == null; throw NPE or PersistenceException?
-        
+
         String insertStm = "INSERT INTO \"OAIRunResult\"(\"timestampOfRun\", \"responseDate\", \"resumptionToken\", \"resumptionTokenExpirationDate\", \"nextFromTimestamp\") VALUES(?, ?, ?, ?, ?)";
 
         try (Connection con = DriverManager.getConnection(url, databaseUser, databasePassword);
@@ -169,7 +172,7 @@ public class PostgrePersistenceService implements PersistenceService {
     public void cleanupOaiRunResults(Date oldestResultToKeep) throws PersistenceException {
 
         //TODO check oldestResultToKeep == null; throw NPE or PersistenceException?
-        
+
         Integer lastOaiRunResultIDtoKeep = null;
         String getID = "SELECT \"ID\" FROM \"OAIRunResult\" order by \"ID\" desc limit 1";
 
@@ -216,7 +219,7 @@ public class PostgrePersistenceService implements PersistenceService {
     public void addOrUpdateOaiHeaders(List<OaiHeader> headers) throws PersistenceException {
 
         //TODO check headers == null; throw NPE or PersistenceException?
-        
+
         String basicErrorMsg = "Could not store all OaiHeaders in database. ";
         String stm = "INSERT INTO \"OAIHeader\" (\"recordIdentifier\", \"datestamp\" , \"setSpec\", \"statusIsDeleted\") VALUES (?, ?, ?, ?) ON CONFLICT (\"recordIdentifier\") DO UPDATE SET \"datestamp\" = ?, \"setSpec\" = ?, \"statusIsDeleted\" = ?";
         int[] results = {};
@@ -249,7 +252,7 @@ public class PostgrePersistenceService implements PersistenceService {
             con.commit();
 
         } catch (SQLException e) {
-            throw new PersistenceException(basicErrorMsg, e);
+            throw new PersistenceException(basicErrorMsg, e.getNextException());
         }
 
         StringBuilder resultError = new StringBuilder();
@@ -270,7 +273,7 @@ public class PostgrePersistenceService implements PersistenceService {
             }
         }
         if (!allUpdatesSuccess) {
-            
+
             //TODO @Ralf: should we rollback if there were items not persisted?
             throw new PersistenceException(basicErrorMsg + resultError);
         }
@@ -278,7 +281,7 @@ public class PostgrePersistenceService implements PersistenceService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see de.qucosa.persistence.PersistenceService#getOaiHeaders()
      */
     @Override
@@ -331,17 +334,17 @@ public class PostgrePersistenceService implements PersistenceService {
 
         return headers;
     }
-    
+
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see de.qucosa.persistence.PersistenceService#getOaiHeaders()
      */
     @Override
     public List<OaiHeader> removeOaiHeadersIfUnmodified(List<OaiHeader> headersToRemove)
             throws PersistenceException {
-        
+
         //TODO check headersToRemove == null; throw NPE or PersistenceException?
 
         // delete statements only if they did not change since we read them from database
@@ -398,13 +401,13 @@ public class PostgrePersistenceService implements PersistenceService {
 
         return headersNotRemoved;
     }
-    
-      
-    
+
+
+
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see de.qucosa.persistence.PersistenceService#getOaiHeaders()
      */
     @Override
@@ -412,7 +415,7 @@ public class PostgrePersistenceService implements PersistenceService {
             throws PersistenceException {
 
         //TODO check reportingDocuments == null; throw NPE or PersistenceException?
-        
+
         String basicErrorMsg = "Could not store all OaiHeaders in database. ";
         String stm = "INSERT INTO \"ReportingDocuments\" (\"recordIdentifier\", \"mandator\" , \"documentType\", \"distributionDate\", \"headerLastModified\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"recordIdentifier\") DO UPDATE SET \"mandator\" = ?, \"documentType\" = ?, \"distributionDate\" = ?, \"headerLastModified\" = ?";
         int[] results = {};
@@ -472,7 +475,7 @@ public class PostgrePersistenceService implements PersistenceService {
             }
         }
         if (!allUpdatesSuccess) {
-            
+
             //TODO @Ralf: should we rollback if there were items not persisted or updated?
             throw new PersistenceException(basicErrorMsg + resultError);
         }
